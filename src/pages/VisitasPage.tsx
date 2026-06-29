@@ -698,46 +698,48 @@ export default function VisitasPage() {
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field id="visita-motivo" label="Motivo" className="sm:col-span-2" required>
-              <ServerSearchableSelect
-                ref={motivoRef}
-                id="visita-motivo"
-                value={form.motivoVisitaId}
-                onChange={(value) => {
-                  setForm((current) => ({ ...current, motivoVisitaId: value }));
-                  setRequiredErrors((current) => ({ ...current, motivoVisitaId: false }));
-                }}
-                onLoadOptions={loadMotivoSelectOptions}
-                resolveSelectedOption={editing ? resolveEditMotivoSelectOption : resolveMotivoSelectOption}
-                placeholder="Seleccionar motivo"
-                searchPlaceholder="Buscar motivo…"
-                noResultsText="Sin resultados"
-                loadingText="Buscando…"
-                disabled={saving}
-                invalid={requiredErrors.motivoVisitaId}
-              />
-            </Field>
-            <Field id="visita-responsable" label="Responsable" required>
-              <ServerSearchableSelect
-                ref={responsableRef}
-                id="visita-responsable"
-                value={form.responsableValue}
-                onChange={(value) => {
-                  setForm((current) => ({ ...current, responsableValue: value }));
-                  setRequiredErrors((current) => ({ ...current, responsableValue: false }));
-                }}
-                onLoadOptions={loadCreateResponsableOptions}
-                resolveSelectedOption={
-                  editing ? resolveEditResponsableOption : resolveCreateResponsableOption
-                }
-                placeholder="Seleccionar responsable"
-                searchPlaceholder="Buscar usuario GLPI…"
-                noResultsText="Sin resultados"
-                loadingText="Buscando…"
-                disabled={saving}
-                invalid={requiredErrors.responsableValue}
-              />
-            </Field>
+            <div className="col-span-full grid gap-4 sm:grid-cols-5">
+              <Field id="visita-motivo" label="Motivo" className="sm:col-span-2" required>
+                <ServerSearchableSelect
+                  ref={motivoRef}
+                  id="visita-motivo"
+                  value={form.motivoVisitaId}
+                  onChange={(value) => {
+                    setForm((current) => ({ ...current, motivoVisitaId: value }));
+                    setRequiredErrors((current) => ({ ...current, motivoVisitaId: false }));
+                  }}
+                  onLoadOptions={loadMotivoSelectOptions}
+                  resolveSelectedOption={editing ? resolveEditMotivoSelectOption : resolveMotivoSelectOption}
+                  placeholder="Seleccionar motivo"
+                  searchPlaceholder="Buscar motivo…"
+                  noResultsText="Sin resultados"
+                  loadingText="Buscando…"
+                  disabled={saving}
+                  invalid={requiredErrors.motivoVisitaId}
+                />
+              </Field>
+              <Field id="visita-responsable" label="Responsable" className="sm:col-span-3" required>
+                <ServerSearchableSelect
+                  ref={responsableRef}
+                  id="visita-responsable"
+                  value={form.responsableValue}
+                  onChange={(value) => {
+                    setForm((current) => ({ ...current, responsableValue: value }));
+                    setRequiredErrors((current) => ({ ...current, responsableValue: false }));
+                  }}
+                  onLoadOptions={loadCreateResponsableOptions}
+                  resolveSelectedOption={
+                    editing ? resolveEditResponsableOption : resolveCreateResponsableOption
+                  }
+                  placeholder="Seleccionar responsable"
+                  searchPlaceholder="Buscar usuario GLPI…"
+                  noResultsText="Sin resultados"
+                  loadingText="Buscando…"
+                  disabled={saving}
+                  invalid={requiredErrors.responsableValue}
+                />
+              </Field>
+            </div>
             {editing ? (
               <Field id="visita-estado" label="Estado">
                 <Select
