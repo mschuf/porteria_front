@@ -3,7 +3,7 @@
  * @description Tipos del reporte superadmin de auditoría de portería.
  */
 import type { VisitaEstado } from "@/api/visitas";
-import type { PageSize as TicketsPageSize } from "@/lib/pagination";
+import type { PageSize } from "@/lib/pagination";
 
 export type PorteriaAuditAction =
   | "visita.created"
@@ -58,7 +58,7 @@ export type PorteriaAuditSortState = {
 
 export interface PorteriaAuditPaginationState {
   page: number;
-  limit: TicketsPageSize;
+  limit: PageSize;
   total: number;
   totalPages: number;
 }
@@ -70,7 +70,7 @@ export interface UsePorteriaAuditReportResult {
   applyFilters: (filters?: PorteriaAuditFilterState) => void;
   pagination: PorteriaAuditPaginationState;
   setPage: (page: number) => void;
-  setPageLimit: (limit: TicketsPageSize) => void;
+  setPageLimit: (limit: PageSize) => void;
   sort: PorteriaAuditSortState;
   setSortColumn: (column: PorteriaAuditSortColumn) => void;
   loading: boolean;

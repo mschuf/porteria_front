@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 }
 
 /**
- * Redirige a login o tickets si el usuario no cumple autenticación/rol.
+ * Redirige a login o al inicio del perfil si el usuario no cumple autenticación/rol.
  * @param props - Contenido hijo y roles permitidos opcionales.
  * @returns Children o redirección.
  */

@@ -14,7 +14,10 @@ import type {
 } from "../types/context/auth-context.types";
 import { clearAuthPublicKeyCache, encryptPassword, loadAuthPublicKey } from "../utils/crypto";
 import { parseExpiresInSeconds } from "../utils/parseExpiresIn";
-import { accessFlagsFromUser, canAccessTickets as resolveCanAccessTickets } from "../utils/auth-access";
+import {
+  isAdminRole,
+  isPorteriaRole,
+} from "../utils/auth-access";
 import { isTechnicianRole, resolveRole } from "../utils/role";
 import { useLoading } from "./LoadingContext";
 import { useToast } from "./ToastContext";
@@ -164,9 +167,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const role = resolveRole(user);
-  const isSuperAdmin = Boolean(user?.isSuperAdmin);
-  const isPorteriaUser = Boolean(user?.isPorteriaUser);
-  const canAccessTickets = resolveCanAccessTickets(accessFlagsFromUser(user));
+  const isSuperAdmin = isAdminRole(role);
+  const isPorteriaUser = isPorteriaRole(role);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -177,12 +179,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isTechnician: isTechnicianRole(role),
       isSuperAdmin,
       isPorteriaUser,
-      canAccessTickets,
       login,
       logout,
       clearSession
     }),
-    [user, role, isBootstrapping, isSuperAdmin, isPorteriaUser, canAccessTickets, login, logout, clearSession]
+    [user, role, isBootstrapping, isSuperAdmin, isPorteriaUser, login, logout, clearSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

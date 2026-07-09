@@ -11,10 +11,10 @@ import { Loading } from "@/components/ui/loading";
 import { Select } from "@/components/ui/select";
 import { usePorteriaReport } from "@/hooks/usePorteriaReport";
 import {
-  isAllPageSize as isTicketsAllPageSize,
-  parsePageSize as parseTicketsPageSize,
-  PAGE_SIZE_ALL as TICKETS_PAGE_SIZE_ALL,
-  PAGE_SIZE_OPTIONS as TICKETS_PAGE_SIZE_OPTIONS,
+  isAllPageSize,
+  parsePageSize,
+  PAGE_SIZE_ALL,
+  PAGE_SIZE_OPTIONS,
 } from "@/lib/pagination";
 
 /**
@@ -40,8 +40,8 @@ export default function PorteriaReportPage() {
   } = usePorteriaReport();
 
   const numericLimit =
-    typeof pagination.limit === "number" ? pagination.limit : TICKETS_PAGE_SIZE_OPTIONS[0];
-  const showingAll = isTicketsAllPageSize(pagination.limit);
+    typeof pagination.limit === "number" ? pagination.limit : PAGE_SIZE_OPTIONS[0];
+  const showingAll = isAllPageSize(pagination.limit);
   const paginationFrom =
     pagination.total === 0 ? 0 : showingAll ? 1 : (pagination.page - 1) * numericLimit + 1;
   const paginationTo = showingAll
@@ -116,21 +116,21 @@ export default function PorteriaReportPage() {
                     aria-label="Mostrar por página"
                     className="h-9 w-24 shrink-0 px-2 py-1 text-center text-sm font-medium tabular-nums text-foreground"
                     value={
-                      isTicketsAllPageSize(pagination.limit)
-                        ? TICKETS_PAGE_SIZE_ALL
+                      isAllPageSize(pagination.limit)
+                        ? PAGE_SIZE_ALL
                         : String(pagination.limit)
                     }
                     onChange={(event) => {
-                      const nextLimit = parseTicketsPageSize(event.target.value);
+                      const nextLimit = parsePageSize(event.target.value);
                       if (nextLimit) setPageLimit(nextLimit);
                     }}
                   >
-                    {TICKETS_PAGE_SIZE_OPTIONS.map((size) => (
+                    {PAGE_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
                         {size}
                       </option>
                     ))}
-                    <option value={TICKETS_PAGE_SIZE_ALL}>Todos</option>
+                    <option value={PAGE_SIZE_ALL}>Todos</option>
                   </Select>
                 </label>
                 <p className="text-sm text-muted-foreground">

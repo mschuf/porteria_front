@@ -1,6 +1,6 @@
 /**
  * @file LoginPage.tsx
- * @description Página de inicio de sesión con credenciales LDAP corporativas.
+ * @description Página de inicio de sesión con credenciales locales.
  */
 import type { FormEvent } from "react";
 import { useState } from "react";
@@ -16,7 +16,7 @@ import { ApiError } from "@/api/apiClient";
 import { accessFlagsFromUser, resolveDefaultAuthenticatedPath } from "@/utils/auth-access";
 
 /**
- * Formulario de login y redirección a tickets tras autenticación exitosa.
+ * Formulario de login y redirección tras autenticación exitosa.
  * @returns Pantalla de inicio de sesión.
  */
 export default function LoginPage() {
@@ -28,7 +28,7 @@ export default function LoginPage() {
   const [revealPassword, setRevealPassword] = useState(false);
 
   /**
-   * Envía credenciales al contexto de auth y redirige a tickets.
+   * Envía credenciales al contexto de auth y redirige al inicio del perfil.
    * @param event - Evento submit del formulario.
    * @returns void
    */
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </div>
           <h1 className="mt-4 text-xl font-semibold">Iniciar sesión</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Usá tu usuario de red corporativo (LDAP).
+            Usá tu usuario y contraseña del sistema.
           </p>
         </div>
 

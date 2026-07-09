@@ -1,23 +1,27 @@
 /**
  * @file auth-access.ts
- * @description Utilidades para determinar acceso a módulos según grupos y rol del usuario.
+ * @description Utilidades para determinar acceso a módulos según rol local.
  */
 import type { AuthUser } from "../types/auth";
 
 /** Flags mínimos para evaluar permisos de módulos. */
 export interface AccessFlags {
-  isPorteriaUser: boolean;
   role: AuthUser["role"] | null;
-  isSuperAdmin: boolean;
 }
 
-/**
- * Indica si el usuario pertenece solo al grupo portería (sin rol TI ni super-admin).
- * @param flags - Flags de sesión del usuario.
- * @returns `true` si debe acceder únicamente al módulo Portería.
- */
-export function isPorteriaOnlyUser(flags: AccessFlags): boolean {
-  return Boolean(flags.isPorteriaUser && flags.role === "final_user" && !flags.isSuperAdmin);
+/** Indica si el rol tiene acceso administrativo. */
+export function isAdminRole(role: AuthUser["role"] | null): boolean {
+  return role === "super_admin" || role === "admin_empresa";
+}
+
+/** Indica si el rol tiene acceso al módulo Portería. */
+export function isPorteroRole(role: AuthUser["role"] | null): boolean {
+  return role === "portero";
+}
+
+/** Indica si el rol puede acceder al modulo Porteria. */
+export function isPorteriaRole(role: AuthUser["role"] | null): boolean {
+  return isPorteroRole(role) || isAdminRole(role);
 }
 
 /**
@@ -26,17 +30,7 @@ export function isPorteriaOnlyUser(flags: AccessFlags): boolean {
  * @returns Ruta por defecto para usuarios autenticados.
  */
 export function resolveDefaultAuthenticatedPath(flags: AccessFlags): "/porteria" | "/admin/reporte-porteria" {
-  if (flags.isPorteriaUser || isPorteriaOnlyUser(flags)) {
-    return "/porteria";
-  }
-  return "/admin/reporte-porteria";
-}
-
-/**
- * Mantiene compatibilidad con contexto antiguo; tickets ya no está habilitado.
- */
-export function canAccessTickets(_flags: AccessFlags): boolean {
-  return false;
+  return isPorteroRole(flags.role) ? "/porteria" : "/admin/reporte-porteria";
 }
 
 /**
@@ -46,8 +40,6 @@ export function canAccessTickets(_flags: AccessFlags): boolean {
  */
 export function accessFlagsFromUser(user: AuthUser | null): AccessFlags {
   return {
-    isPorteriaUser: Boolean(user?.isPorteriaUser),
     role: user?.role ?? null,
-    isSuperAdmin: Boolean(user?.isSuperAdmin),
   };
 }

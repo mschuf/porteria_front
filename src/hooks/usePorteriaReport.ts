@@ -16,11 +16,11 @@ import type { VisitaEstado } from "@/api/visitas";
 import { useToast } from "@/context/ToastContext";
 import { isAbortError } from "@/lib/http";
 import {
-  DEFAULT_PAGE_SIZE as TICKETS_PAGE_SIZE,
-  isAllPageSize as isTicketsAllPageSize,
-  isValidPageSize as isValidTicketsPageSize,
-  resolveApiLimit as resolveTicketsApiLimit,
-  type PageSize as TicketsPageSize,
+  DEFAULT_PAGE_SIZE,
+  isAllPageSize,
+  isValidPageSize,
+  resolveApiLimit,
+  type PageSize,
 } from "@/lib/pagination";
 import type {
   PorteriaReportFilterState,
@@ -127,7 +127,7 @@ export function usePorteriaReport(): UsePorteriaReportResult {
     buildInitialReportFilters(),
   );
   const [page, setPageState] = useState(1);
-  const [pageLimit, setPageLimitState] = useState<TicketsPageSize>(TICKETS_PAGE_SIZE);
+  const [pageLimit, setPageLimitState] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [sort, setSortState] = useState<PorteriaReportSortState>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -140,13 +140,13 @@ export function usePorteriaReport(): UsePorteriaReportResult {
   );
 
   const listParams = useMemo(
-    () => toListParams(appliedFilters, page, resolveTicketsApiLimit(pageLimit, total), sort),
+    () => toListParams(appliedFilters, page, resolveApiLimit(pageLimit, total), sort),
     [appliedFilters, page, pageLimit, sort, total],
   );
   const fetchKey = JSON.stringify(listParams);
   const loadedFetchKeyRef = useRef<string | null>(null);
 
-  const totalPages = isTicketsAllPageSize(pageLimit)
+  const totalPages = isAllPageSize(pageLimit)
     ? 1
     : Math.max(1, Math.ceil(total / pageLimit));
 
@@ -164,8 +164,8 @@ export function usePorteriaReport(): UsePorteriaReportResult {
     setPageState(Math.max(1, nextPage));
   }, []);
 
-  const setPageLimit = useCallback((limit: TicketsPageSize) => {
-    if (!isValidTicketsPageSize(limit)) return;
+  const setPageLimit = useCallback((limit: PageSize) => {
+    if (!isValidPageSize(limit)) return;
     setPageLimitState(limit);
     setPageState(1);
     loadedFetchKeyRef.current = null;

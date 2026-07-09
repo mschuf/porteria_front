@@ -1,6 +1,6 @@
 /**
  * @file site-metric-bar-colors.ts
- * @description Colores de barras del gráfico de tickets abiertos por sede.
+ * @description Colores de barras para métricas agrupadas por sede.
  */
 import type { CSSProperties } from "react";
 

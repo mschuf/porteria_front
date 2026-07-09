@@ -101,6 +101,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   const navigate = useNavigate();
   const onPorteriaRoute = location.pathname.startsWith("/porteria");
   const onSuperAdminRoute = location.pathname.startsWith("/admin");
+  const homePath = isPorteriaUser ? "/porteria" : "/admin/reporte-porteria";
   const [porteriaExpanded, setPorteriaExpanded] = useState(onPorteriaRoute);
   const [superAdminExpanded, setSuperAdminExpanded] = useState(onSuperAdminRoute);
 
@@ -140,7 +141,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
               <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
             <Link
-              to="/porteria"
+              to={homePath}
               className="min-w-0 rounded-sm text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Ir a Portería"
             >
@@ -175,7 +176,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
       >
         <div className="flex h-16 items-center justify-between border-b px-4">
           <Link
-            to="/porteria"
+            to={homePath}
             className="min-w-0 rounded-sm text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={() => setOpen(false)}
             aria-label="Ir a Portería"
@@ -242,7 +243,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
           ) : null}
           {isSuperAdmin ? (
             <NavSection
-              title="Super-Admin"
+              title="Administración"
               expanded={superAdminExpanded}
               onToggle={() => setSuperAdminExpanded((current) => !current)}
               showBorder

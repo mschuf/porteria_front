@@ -1,6 +1,6 @@
 /**
  * @file PublicOnlyRoute.tsx
- * @description Ruta accesible solo sin sesión; redirige a tickets si el usuario ya está autenticado.
+ * @description Ruta accesible solo sin sesión; redirige al inicio si el usuario ya está autenticado.
  */
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -13,7 +13,7 @@ interface PublicOnlyRouteProps {
 /**
  * Renderiza hijos solo para visitantes no autenticados (p. ej. login).
  * @param props - Contenido de la ruta pública.
- * @returns `null` durante bootstrap, redirección a `/tickets` o los hijos.
+ * @returns `null` durante bootstrap, redirección al inicio o los hijos.
  */
 export default function PublicOnlyRoute({ children }: PublicOnlyRouteProps) {
   const { isAuthenticated, isBootstrapping, user } = useAuth();

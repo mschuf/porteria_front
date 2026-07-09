@@ -1,6 +1,6 @@
 /**
  * @file PorteriaRoute.tsx
- * @description Guard de ruta exclusivo para usuarios del grupo GLPI portería.
+ * @description Guard de ruta para usuarios con acceso al modulo Porteria.
  */
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -11,14 +11,10 @@ interface PorteriaRouteProps {
   fallbackPath?: string;
 }
 
-/**
- * Envuelve ProtectedRoute y exige flag `isPorteriaUser`.
- * @param props - Contenido hijo de la ruta portería.
- * @returns Children o redirección a tickets.
- */
+/** Envuelve ProtectedRoute y exige acceso al modulo Porteria. */
 export default function PorteriaRoute({
   children,
-  fallbackPath = "/porteria",
+  fallbackPath = "/admin/reporte-porteria",
 }: PorteriaRouteProps) {
   const { isPorteriaUser } = useAuth();
   const location = useLocation();

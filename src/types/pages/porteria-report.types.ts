@@ -4,7 +4,7 @@
  */
 import type { VisitaEstado } from "@/api/visitas";
 import type { PorteriaReportExportFormat } from "@/api/reports";
-import type { PageSize as TicketsPageSize } from "@/lib/pagination";
+import type { PageSize } from "@/lib/pagination";
 
 /** Estado de filtros del reporte de visitas de portería. */
 export interface PorteriaReportFilterState {
@@ -40,7 +40,7 @@ export type PorteriaReportSortState = {
 /** Estado de paginación del reporte. */
 export interface PorteriaReportPaginationState {
   page: number;
-  limit: TicketsPageSize;
+  limit: PageSize;
   total: number;
   totalPages: number;
 }
@@ -69,7 +69,7 @@ export interface UsePorteriaReportResult {
   applyFilters: (filters?: PorteriaReportFilterState) => void;
   pagination: PorteriaReportPaginationState;
   setPage: (page: number) => void;
-  setPageLimit: (limit: TicketsPageSize) => void;
+  setPageLimit: (limit: PageSize) => void;
   sort: PorteriaReportSortState;
   setSortColumn: (column: PorteriaReportSortColumn) => void;
   loading: boolean;
