@@ -17,6 +17,11 @@ import {
   X,
   Truck,
   ListChecks,
+  Building2,
+  Building,
+  ShieldCheck,
+  Link2,
+  UserCheck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +42,35 @@ const superAdminNavItems: Array<{
   label: string;
   icon: typeof MapPin;
   path: string;
+  strictSuperAdminOnly?: boolean;
 }> = [
+  { label: "Empresas", icon: Building2, path: "/admin/empresas", strictSuperAdminOnly: true },
+  {
+    label: "Empresas de seguridad",
+    icon: ShieldCheck,
+    path: "/admin/empresa-porteria",
+    strictSuperAdminOnly: true,
+  },
+  { label: "Sedes", icon: Building, path: "/admin/sedes", strictSuperAdminOnly: true },
+  {
+    label: "Asignaciones sede-portería",
+    icon: Link2,
+    path: "/admin/sede-empresa-porteria",
+    strictSuperAdminOnly: true,
+  },
+  { label: "Usuarios", icon: Users, path: "/admin/usuarios", strictSuperAdminOnly: true },
+  {
+    label: "Usuarios por empresa",
+    icon: UserCheck,
+    path: "/admin/usuario-empresa",
+    strictSuperAdminOnly: true,
+  },
+  {
+    label: "Usuarios por empresa de portería",
+    icon: Link2,
+    path: "/admin/usuario-empresa-porteria",
+    strictSuperAdminOnly: true,
+  },
   { label: "Reporte portería", icon: MapPin, path: "/admin/reporte-porteria" },
   {
     label: "Auditoría portería",
@@ -248,7 +281,9 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
               onToggle={() => setSuperAdminExpanded((current) => !current)}
               showBorder
             >
-              {superAdminNavItems.map((item) => {
+              {superAdminNavItems
+                .filter((item) => !item.strictSuperAdminOnly || role === "super_admin")
+                .map((item) => {
                 const Icon = item.icon;
                 const isActive = isNavPathActive(location.pathname, item.path);
                 return (

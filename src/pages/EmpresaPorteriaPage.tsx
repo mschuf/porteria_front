@@ -1,57 +1,69 @@
 /**
- * @file ProveedoresPage.tsx
- * @description CRUD de proveedores del módulo Portería.
+ * @file EmpresaPorteriaPage.tsx
+ * @description CRUD de empresas de porteria (seguridad) para super_admin.
  */
 import { Plus } from "lucide-react";
-import { useCallback, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  activarProveedor,
-  actualizarProveedor,
-  crearProveedor,
-  desactivarProveedor,
-  eliminarProveedor,
-  type CrearProveedorPayload,
-  type Proveedor,
-} from "@/api/proveedores";
+  activarEmpresaPorteria,
+  actualizarEmpresaPorteria,
+  crearEmpresaPorteria,
+  desactivarEmpresaPorteria,
+  eliminarEmpresaPorteria,
+  type CrearEmpresaPorteriaPayload,
+  type EmpresaPorteria,
+} from "@/api/empresa-porteria";
 import { ApiError } from "@/api/apiClient";
-import { ProveedoresFilters } from "@/components/proveedores/ProveedoresFilters";
-import { ProveedoresTable } from "@/components/proveedores/ProveedoresTable";
-import { PorteriaTabs } from "@/components/porteria/PorteriaTabs";
+import { EmpresaPorteriaFilters } from "@/components/empresa-porteria/EmpresaPorteriaFilters";
+import { EmpresaPorteriaTable } from "@/components/empresa-porteria/EmpresaPorteriaTable";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/context/ToastContext";
-import { useProveedores } from "@/hooks/useProveedores";
+import { useEmpresaPorteria } from "@/hooks/useEmpresaPorteria";
 import {
   isPorteriaAllPageSize,
   parsePorteriaPageSize,
   PORTERIA_PAGE_SIZE_ALL,
   PORTERIA_PAGE_SIZE_OPTIONS,
 } from "@/lib/porteria";
-import { PORTERIA_TAB_PATHS, resolvePorteriaTab } from "@/lib/porteria-navigation";
-import type { PorteriaTab } from "@/types/pages/porteria-page.types";
 
-interface ProveedorFormState {
+interface EmpresaPorteriaFormState {
   nombre: string;
   ruc: string;
+  telefono: string;
+  correo: string;
   activo: boolean;
 }
 
-const EMPTY_FORM: ProveedorFormState = {
+const EMPTY_FORM: EmpresaPorteriaFormState = {
   nombre: "",
   ruc: "",
+  telefono: "",
+  correo: "",
   activo: true,
 };
 
-/** CRUD de proveedores con filtros, orden y paginación. */
-export default function ProveedoresPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const tab = resolvePorteriaTab(location.pathname);
+type RequiredEmpresaPorteriaField = "nombre" | "ruc" | "telefono" | "correo";
+
+const REQUIRED_CREATE_FIELDS: Array<{ key: RequiredEmpresaPorteriaField; label: string }> = [
+  { key: "nombre", label: "Nombre" },
+  { key: "ruc", label: "RUC" },
+  { key: "telefono", label: "Telefono" },
+  { key: "correo", label: "Correo" },
+];
+
+/** CRUD de empresas de porteria con filtros, orden y paginacion. */
+export default function EmpresaPorteriaPage() {
   const toast = useToast();
+  const inputRefs = useRef<Record<RequiredEmpresaPorteriaField, HTMLInputElement | null>>({
+    nombre: null,
+    ruc: null,
+    telefono: null,
+    correo: null,
+  });
   const {
     items,
     filters,
@@ -65,14 +77,14 @@ export default function ProveedoresPage() {
     loading,
     error,
     reload,
-  } = useProveedores();
+  } = useEmpresaPorteria();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editing, setEditing] = useState<Proveedor | null>(null);
-  const [confirmProveedor, setConfirmProveedor] = useState<Proveedor | null>(null);
+  const [editing, setEditing] = useState<EmpresaPorteria | null>(null);
+  const [confirmEmpresaPorteria, setConfirmEmpresaPorteria] = useState<EmpresaPorteria | null>(null);
   const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate" | "delete" | null>(null);
-  const [form, setForm] = useState<ProveedorFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<EmpresaPorteriaFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -84,6 +96,11 @@ export default function ProveedoresPage() {
   const paginationTo = showingAll
     ? pagination.total
     : Math.min(pagination.page * numericLimit, pagination.total);
+  const firstMissingCreateField = useMemo(
+    () => REQUIRED_CREATE_FIELDS.find((field) => !form[field.key].trim()) ?? null,
+    [form],
+  );
+  const isCreateFormComplete = !firstMissingCreateField;
 
   const openCreateDialog = useCallback(() => {
     setEditing(null);
@@ -91,19 +108,21 @@ export default function ProveedoresPage() {
     setDialogOpen(true);
   }, []);
 
-  const openEditDialog = useCallback((proveedor: Proveedor) => {
-    setEditing(proveedor);
+  const openEditDialog = useCallback((empresaPorteria: EmpresaPorteria) => {
+    setEditing(empresaPorteria);
     setForm({
-      nombre: proveedor.nombre,
-      ruc: proveedor.ruc,
-      activo: proveedor.activo,
+      nombre: empresaPorteria.nombre,
+      ruc: empresaPorteria.ruc ?? "",
+      telefono: empresaPorteria.telefono ?? "",
+      correo: empresaPorteria.correo ?? "",
+      activo: empresaPorteria.activo,
     });
     setDialogOpen(true);
   }, []);
 
   const openConfirm = useCallback(
-    (proveedor: Proveedor, action: "activate" | "deactivate" | "delete") => {
-      setConfirmProveedor(proveedor);
+    (empresaPorteria: EmpresaPorteria, action: "activate" | "deactivate" | "delete") => {
+      setConfirmEmpresaPorteria(empresaPorteria);
       setConfirmAction(action);
       setConfirmOpen(true);
     },
@@ -111,108 +130,100 @@ export default function ProveedoresPage() {
   );
 
   const handleSave = useCallback(async () => {
-    if (!form.nombre.trim()) {
-      toast.error("El nombre es obligatorio.", "Proveedores");
-      return;
-    }
-
-    if (!form.ruc.trim()) {
-      toast.error("El RUC es obligatorio.", "Proveedores");
+    if (!editing && firstMissingCreateField) {
+      toast.error(`Complete el campo ${firstMissingCreateField.label}.`, "Empresas de seguridad");
+      inputRefs.current[firstMissingCreateField.key]?.focus();
       return;
     }
 
     setSaving(true);
     try {
-      const payload: CrearProveedorPayload = {
+      const payload: CrearEmpresaPorteriaPayload = {
         nombre: form.nombre.trim(),
         ruc: form.ruc.trim(),
+        telefono: form.telefono.trim(),
+        correo: form.correo.trim(),
         activo: form.activo,
       };
 
       if (editing) {
-        await actualizarProveedor(editing.id, payload);
+        await actualizarEmpresaPorteria(editing.id, payload);
       } else {
-        await crearProveedor(payload);
+        await crearEmpresaPorteria(payload);
       }
 
-      toast.success(editing ? "Proveedor actualizado." : "Proveedor creado.", "Proveedores");
+      toast.success(editing ? "Empresa de seguridad actualizada." : "Empresa de seguridad creada.", "Empresas de seguridad");
       setDialogOpen(false);
       await reload();
     } catch (saveError) {
-      const message = saveError instanceof ApiError ? saveError.message : "No se pudo guardar el proveedor.";
-      toast.error(message, "Proveedores");
+      const message =
+        saveError instanceof ApiError ? saveError.message : "No se pudo guardar la empresa de seguridad.";
+      toast.error(message, "Empresas de seguridad");
     } finally {
       setSaving(false);
     }
-  }, [editing, form, reload, toast]);
+  }, [editing, firstMissingCreateField, form, reload, toast]);
 
   const handleConfirm = useCallback(async () => {
-    if (!confirmProveedor || !confirmAction) return;
+    if (!confirmEmpresaPorteria || !confirmAction) return;
 
     setConfirmLoading(true);
     try {
       if (confirmAction === "activate") {
-        await activarProveedor(confirmProveedor.id);
-        toast.success("Proveedor activado.", "Proveedores");
+        await activarEmpresaPorteria(confirmEmpresaPorteria.id);
+        toast.success("Empresa de seguridad activada.", "Empresas de seguridad");
       } else if (confirmAction === "deactivate") {
-        await desactivarProveedor(confirmProveedor.id);
-        toast.success("Proveedor desactivado.", "Proveedores");
+        await desactivarEmpresaPorteria(confirmEmpresaPorteria.id);
+        toast.success("Empresa de seguridad desactivada.", "Empresas de seguridad");
       } else {
-        await eliminarProveedor(confirmProveedor.id);
-        toast.success("Proveedor eliminado.", "Proveedores");
+        await eliminarEmpresaPorteria(confirmEmpresaPorteria.id);
+        toast.success("Empresa de seguridad eliminada.", "Empresas de seguridad");
       }
       setConfirmOpen(false);
       await reload();
     } catch (confirmError) {
       const message =
-        confirmError instanceof ApiError ? confirmError.message : "No se pudo completar la acción.";
-      toast.error(message, "Proveedores");
+        confirmError instanceof ApiError ? confirmError.message : "No se pudo completar la accion.";
+      toast.error(message, "Empresas de seguridad");
     } finally {
       setConfirmLoading(false);
     }
-  }, [confirmAction, confirmProveedor, reload, toast]);
+  }, [confirmAction, confirmEmpresaPorteria, reload, toast]);
 
   const confirmTitle =
     confirmAction === "activate"
-      ? "Activar proveedor"
+      ? "Activar empresa de seguridad"
       : confirmAction === "deactivate"
-        ? "Desactivar proveedor"
-        : "Eliminar proveedor";
+        ? "Desactivar empresa de seguridad"
+        : "Eliminar empresa de seguridad";
 
   const confirmDescription =
     confirmAction === "activate"
-      ? `¿Activar a ${confirmProveedor?.nombre}?`
+      ? `¿Activar a ${confirmEmpresaPorteria?.nombre}?`
       : confirmAction === "deactivate"
-        ? `¿Desactivar a ${confirmProveedor?.nombre}?`
-        : `¿Eliminar permanentemente a ${confirmProveedor?.nombre}? Solo es posible si no tiene personas asociadas.`;
+        ? `¿Desactivar a ${confirmEmpresaPorteria?.nombre}?`
+        : `¿Eliminar permanentemente a ${confirmEmpresaPorteria?.nombre}? Solo es posible si no tiene sedes ni usuarios asociados.`;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs text-muted-foreground">Portería</p>
-          <h1 className="text-lg font-semibold">Proveedores</h1>
+          <p className="text-xs text-muted-foreground">Administracion</p>
+          <h1 className="text-lg font-semibold">Empresas de seguridad</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Empresas y contratistas a los que pertenecen las personas visitantes.
+            Empresas privadas de seguridad que operan la porteria.
           </p>
-        </div>
-
-        <div className="flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
-          <PorteriaTabs
-            value={tab}
-            onChange={(nextTab: PorteriaTab) => navigate(PORTERIA_TAB_PATHS[nextTab])}
-          />
         </div>
       </div>
 
-      <ProveedoresFilters
+      <EmpresaPorteriaFilters
         filters={filters}
         onChange={setFilters}
         onApply={applyFilters}
         actions={
           <Button type="button" className="w-full sm:w-auto" onClick={openCreateDialog}>
             <Plus className="h-4 w-4" aria-hidden="true" />
-            Nuevo proveedor
+            Nueva empresa de seguridad
           </Button>
         }
       />
@@ -223,18 +234,18 @@ export default function ProveedoresPage() {
 
       {loading ? (
         <div className="rounded-md border bg-card p-6 text-sm text-muted-foreground shadow-soft">
-          Cargando proveedores…
+          Cargando empresas de seguridad...
         </div>
       ) : (
-        <ProveedoresTable
+        <EmpresaPorteriaTable
           rows={items}
           sortColumn={sort?.column ?? null}
           sortOrder={sort?.order ?? null}
           onSortColumnChange={setSortColumn}
           onEdit={openEditDialog}
-          onActivate={(proveedor) => openConfirm(proveedor, "activate")}
-          onDeactivate={(proveedor) => openConfirm(proveedor, "deactivate")}
-          onDelete={(proveedor) => openConfirm(proveedor, "delete")}
+          onActivate={(empresaPorteria) => openConfirm(empresaPorteria, "activate")}
+          onDeactivate={(empresaPorteria) => openConfirm(empresaPorteria, "deactivate")}
+          onDelete={(empresaPorteria) => openConfirm(empresaPorteria, "delete")}
         />
       )}
 
@@ -242,9 +253,9 @@ export default function ProveedoresPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="whitespace-nowrap">Mostrar por página</span>
+              <span className="whitespace-nowrap">Mostrar por pagina</span>
               <Select
-                aria-label="Mostrar por página"
+                aria-label="Mostrar por pagina"
                 className="h-9 w-24 shrink-0 px-2 py-1 text-center text-sm font-medium tabular-nums text-foreground"
                 value={showingAll ? PORTERIA_PAGE_SIZE_ALL : String(pagination.limit)}
                 onChange={(event) => {
@@ -261,7 +272,7 @@ export default function ProveedoresPage() {
               </Select>
             </label>
             <p className="text-sm text-muted-foreground">
-              Mostrando {paginationFrom}-{paginationTo} de {pagination.total} proveedores
+              Mostrando {paginationFrom}-{paginationTo} de {pagination.total} elementos
             </p>
           </div>
           {!showingAll ? (
@@ -276,7 +287,7 @@ export default function ProveedoresPage() {
                 Anterior
               </Button>
               <span className="min-w-24 text-center text-sm text-muted-foreground">
-                Página {pagination.page} de {pagination.totalPages}
+                Pagina {pagination.page} de {pagination.totalPages}
               </span>
               <Button
                 type="button"
@@ -295,8 +306,8 @@ export default function ProveedoresPage() {
       <Dialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={editing ? "Editar proveedor" : "Nuevo proveedor"}
-        description="Registre la empresa o contratista."
+        title={editing ? "Editar empresa de seguridad" : "Nueva empresa de seguridad"}
+        description="Registre los datos de la empresa de seguridad."
       >
         <form
           className="space-y-4"
@@ -305,26 +316,58 @@ export default function ProveedoresPage() {
             void handleSave();
           }}
         >
-          <Field id="proveedor-nombre" label="Nombre">
+          <Field id="empresa-porteria-nombre" label="Nombre" required={!editing}>
             <Input
-              id="proveedor-nombre"
+              id="empresa-porteria-nombre"
+              ref={(element) => {
+                inputRefs.current.nombre = element;
+              }}
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-              required
+              placeholder="Ej: Seguridad Total SA"
+              aria-required={!editing}
             />
           </Field>
-          <Field id="proveedor-ruc" label="RUC">
+          <Field id="empresa-porteria-ruc" label="RUC" required={!editing}>
             <Input
-              id="proveedor-ruc"
+              id="empresa-porteria-ruc"
+              ref={(element) => {
+                inputRefs.current.ruc = element;
+              }}
               value={form.ruc}
               onChange={(e) => setForm({ ...form, ruc: e.target.value })}
-              required
+              placeholder="Ej: 80012345-6"
+              aria-required={!editing}
+            />
+          </Field>
+          <Field id="empresa-porteria-telefono" label="Telefono" required={!editing}>
+            <Input
+              id="empresa-porteria-telefono"
+              ref={(element) => {
+                inputRefs.current.telefono = element;
+              }}
+              value={form.telefono}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              placeholder="Ej: 021555123"
+              aria-required={!editing}
+            />
+          </Field>
+          <Field id="empresa-porteria-correo" label="Correo" required={!editing}>
+            <Input
+              id="empresa-porteria-correo"
+              ref={(element) => {
+                inputRefs.current.correo = element;
+              }}
+              value={form.correo}
+              onChange={(e) => setForm({ ...form, correo: e.target.value })}
+              placeholder="Ej: contacto@seguridadtotal.com.py"
+              aria-required={!editing}
             />
           </Field>
           {editing ? (
-            <Field id="proveedor-activo" label="Estado">
+            <Field id="empresa-porteria-activo" label="Estado">
               <Select
-                id="proveedor-activo"
+                id="empresa-porteria-activo"
                 value={form.activo ? "true" : "false"}
                 onChange={(e) => setForm({ ...form, activo: e.target.value === "true" })}
               >
@@ -337,9 +380,27 @@ export default function ProveedoresPage() {
             <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Guardando…" : editing ? "Guardar cambios" : "Crear proveedor"}
-            </Button>
+            <span
+              className="inline-flex"
+              onClick={(event) => {
+                if (!editing && !isCreateFormComplete) {
+                  event.preventDefault();
+                  if (firstMissingCreateField) {
+                    toast.error(`Complete el campo ${firstMissingCreateField.label}.`, "Empresas de seguridad");
+                    inputRefs.current[firstMissingCreateField.key]?.focus();
+                  }
+                }
+              }}
+            >
+              <Button
+                type="submit"
+                disabled={saving || (!editing && !isCreateFormComplete)}
+                title={!editing && !isCreateFormComplete ? "Complete todos los campos obligatorios" : undefined}
+                className={!editing && !isCreateFormComplete ? "pointer-events-none" : undefined}
+              >
+                {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear empresa de seguridad"}
+              </Button>
+            </span>
           </div>
         </form>
       </Dialog>
@@ -371,7 +432,7 @@ export default function ProveedoresPage() {
             disabled={confirmLoading}
             className="rounded-xl bg-[#EF4444] font-semibold text-white hover:bg-[#DC2626] dark:hover:bg-[#F87171]"
           >
-            {confirmLoading ? "Procesando…" : "Confirmar"}
+            {confirmLoading ? "Procesando..." : "Confirmar"}
           </Button>
         </div>
       </Dialog>

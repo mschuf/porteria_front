@@ -1,6 +1,6 @@
 /**
- * @file MotivosVisitaFilters.tsx
- * @description Barra de búsqueda y filtros avanzados del CRUD de motivos de visita.
+ * @file UsuariosAdminFilters.tsx
+ * @description Barra de busqueda y filtros avanzados del CRUD de usuarios.
  */
 import { useCallback, useState, type ReactNode } from "react";
 import { ChevronDown, Search } from "lucide-react";
@@ -8,22 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { MotivosVisitaFilterState } from "@/types/pages/motivos-visita-page.types";
+import type { UsuariosAdminFilterState } from "@/types/pages/usuarios-admin-page.types";
 
-interface MotivosVisitaFiltersProps {
-  filters: MotivosVisitaFilterState;
-  onChange: (filters: MotivosVisitaFilterState) => void;
-  onApply: (filters?: MotivosVisitaFilterState) => void;
+interface UsuariosAdminFiltersProps {
+  filters: UsuariosAdminFilterState;
+  onChange: (filters: UsuariosAdminFilterState) => void;
+  onApply: (filters?: UsuariosAdminFilterState) => void;
   actions?: ReactNode;
 }
 
-/** Filtros de motivos de visita con búsqueda rápida y panel avanzado. */
-export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: MotivosVisitaFiltersProps) {
+/** Filtros de usuarios con busqueda rapida y panel avanzado. */
+export function UsuariosAdminFilters({ filters, onChange, onApply, actions }: UsuariosAdminFiltersProps) {
   const [expanded, setExpanded] = useState(false);
 
   const update = useCallback(
-    (key: keyof MotivosVisitaFilterState, value: string) => {
-      onChange({ ...filters, [key]: value });
+    (key: keyof UsuariosAdminFilterState, value: string) => {
+      onChange({ ...filters, [key]: value } as UsuariosAdminFilterState);
     },
     [filters, onChange],
   );
@@ -36,7 +36,7 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
           <Input
             value={filters.search}
             onChange={(event) => update("search", event.target.value)}
-            placeholder="Buscar por ID o nombre..."
+            placeholder="Buscar en todos los campos..."
             className="pl-9 pr-10"
           />
           <button
@@ -56,13 +56,27 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2 overflow-visible pb-1">
+        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-3 xl:grid-cols-[repeat(5,minmax(0,1fr))_auto]">
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Usuario</span>
+            <Input value={filters.usuario} onChange={(event) => update("usuario", event.target.value)} />
+          </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Nombre</span>
-            <Input
-              value={filters.nombre}
-              onChange={(event) => update("nombre", event.target.value)}
-            />
+            <Input value={filters.nombre} onChange={(event) => update("nombre", event.target.value)} />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Correo</span>
+            <Input value={filters.correo} onChange={(event) => update("correo", event.target.value)} />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Rol</span>
+            <Select value={filters.rol} onChange={(event) => update("rol", event.target.value)}>
+              <option value="">Todos</option>
+              <option value="super_admin">Super admin</option>
+              <option value="admin_empresa">Admin empresa</option>
+              <option value="portero">Portero</option>
+            </Select>
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Estado</span>

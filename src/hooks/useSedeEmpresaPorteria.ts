@@ -1,10 +1,14 @@
 /**
- * @file usePersonas.ts
- * @description Hook del listado CRUD de personas con filtros, orden y paginación.
+ * @file useSedeEmpresaPorteria.ts
+ * @description Hook del listado CRUD de asignaciones sede-empresa de porteria con filtros, orden y paginacion.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/api/apiClient";
-import { listarPersonas, type ListarPersonasQuery, type PersonaSortColumn } from "@/api/personas";
+import {
+  listarSedeEmpresaPorteria,
+  type SedeEmpresaPorteriaSortColumn,
+  type ListarSedeEmpresaPorteriaQuery,
+} from "@/api/sede-empresa-porteria";
 import {
   PORTERIA_PAGE_SIZE,
   isPorteriaAllPageSize,
@@ -13,53 +17,49 @@ import {
   type PorteriaPageSize,
 } from "@/lib/porteria";
 import type {
-  PersonasFilterState,
-  PersonasSortState,
-  UsePersonasResult,
-} from "@/types/pages/personas-page.types";
+  SedeEmpresaPorteriaFilterState,
+  SedeEmpresaPorteriaSortState,
+  UseSedeEmpresaPorteriaResult,
+} from "@/types/pages/sede-empresa-porteria-page.types";
 
-/** @returns Estado inicial de filtros de personas. */
-function createInitialFilters(): PersonasFilterState {
+/** @returns Estado inicial de filtros de asignaciones sede-empresa de porteria. */
+function createInitialFilters(): SedeEmpresaPorteriaFilterState {
   return {
     search: "",
-    nombre: "",
-    documento: "",
-    proveedor: "",
+    sedeId: "",
+    empresaPorteriaId: "",
     activo: "",
   };
 }
 
 /** Mapea filtros UI a query params del backend. */
 function toListParams(
-  filters: PersonasFilterState,
+  filters: SedeEmpresaPorteriaFilterState,
   page: number,
   limit: number,
-  sort: PersonasSortState | null,
-): ListarPersonasQuery {
+  sort: SedeEmpresaPorteriaSortState | null,
+): ListarSedeEmpresaPorteriaQuery {
   return {
     page,
     limit,
     search: filters.search || undefined,
-    nombre: filters.nombre || undefined,
-    documento: filters.documento || undefined,
-    proveedor: filters.proveedor || undefined,
+    sedeId: filters.sedeId ? Number(filters.sedeId) : undefined,
+    empresaPorteriaId: filters.empresaPorteriaId ? Number(filters.empresaPorteriaId) : undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,
   };
 }
 
-/** Orquesta estado, listado y paginación de personas. */
-export function usePersonas(): UsePersonasResult {
-  const [items, setItems] = useState<UsePersonasResult["items"]>([]);
-  const [filters, setFiltersState] = useState<PersonasFilterState>(createInitialFilters);
-  const [appliedFilters, setAppliedFilters] = useState<PersonasFilterState>(createInitialFilters);
+/** Orquesta estado, listado y paginacion de asignaciones sede-empresa de porteria. */
+export function useSedeEmpresaPorteria(): UseSedeEmpresaPorteriaResult {
+  const [items, setItems] = useState<UseSedeEmpresaPorteriaResult["items"]>([]);
+  const [filters, setFiltersState] = useState<SedeEmpresaPorteriaFilterState>(createInitialFilters);
+  const [appliedFilters, setAppliedFilters] =
+    useState<SedeEmpresaPorteriaFilterState>(createInitialFilters);
   const [page, setPageState] = useState(1);
   const [pageLimit, setPageLimitState] = useState<PorteriaPageSize>(PORTERIA_PAGE_SIZE);
-  const [sort, setSortState] = useState<PersonasSortState | null>({
-    column: "id",
-    order: "desc",
-  });
+  const [sort, setSortState] = useState<SedeEmpresaPorteriaSortState | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -74,14 +74,17 @@ export function usePersonas(): UsePersonasResult {
     ? 1
     : Math.max(1, Math.ceil(total / pageLimit));
 
-  const setFilters = useCallback((value: PersonasFilterState) => {
+  const setFilters = useCallback((value: SedeEmpresaPorteriaFilterState) => {
     setFiltersState(value);
   }, []);
 
-  const applyFilters = useCallback((nextFilters?: PersonasFilterState) => {
-    setAppliedFilters(nextFilters ?? filters);
-    setPageState(1);
-  }, [filters]);
+  const applyFilters = useCallback(
+    (nextFilters?: SedeEmpresaPorteriaFilterState) => {
+      setAppliedFilters(nextFilters ?? filters);
+      setPageState(1);
+    },
+    [filters],
+  );
 
   const setPage = useCallback((nextPage: number) => {
     setPageState(Math.max(1, nextPage));
@@ -93,7 +96,7 @@ export function usePersonas(): UsePersonasResult {
     setPageState(1);
   }, []);
 
-  const setSortColumn = useCallback((column: PersonaSortColumn) => {
+  const setSortColumn = useCallback((column: SedeEmpresaPorteriaSortColumn) => {
     setSortState((current) => {
       if (!current || current.column !== column) {
         return { column, order: "desc" };
@@ -117,14 +120,16 @@ export function usePersonas(): UsePersonasResult {
       setLoading(true);
       setError("");
       try {
-        const result = await listarPersonas(listParams);
+        const result = await listarSedeEmpresaPorteria(listParams);
         if (cancelled) return;
         setItems(result.items);
         setTotal(result.total);
       } catch (fetchError) {
         if (cancelled) return;
         const message =
-          fetchError instanceof ApiError ? fetchError.message : "No se pudieron cargar las personas.";
+          fetchError instanceof ApiError
+            ? fetchError.message
+            : "No se pudieron cargar las asignaciones.";
         setError(message);
         setItems([]);
         setTotal(0);

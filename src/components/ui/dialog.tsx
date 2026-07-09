@@ -39,7 +39,11 @@ interface DialogProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  headerClassName?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
   contentClassName?: string;
+  closeButtonClassName?: string;
   /** Evita recortar menús desplegables (p. ej. SearchableSelect) dentro del modal. */
   allowOverflow?: boolean;
 }
@@ -55,7 +59,11 @@ export function Dialog({
   description,
   children,
   className,
+  headerClassName,
+  titleClassName,
+  descriptionClassName,
   contentClassName,
+  closeButtonClassName,
   allowOverflow = false,
 }: DialogProps) {
   const titleId = useId();
@@ -100,13 +108,13 @@ export function Dialog({
           className
         )}
       >
-        <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-5">
+        <div className={cn("flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-5", headerClassName)}>
           <div className="min-w-0 space-y-1">
-            <h2 id={titleId} className="text-lg font-semibold leading-tight">
+            <h2 id={titleId} className={cn("text-lg font-semibold leading-tight", titleClassName)}>
               {title}
             </h2>
             {description ? (
-              <p id={descriptionId} className="text-sm text-muted-foreground">
+              <p id={descriptionId} className={cn("text-sm text-muted-foreground", descriptionClassName)}>
                 {description}
               </p>
             ) : null}
@@ -115,7 +123,7 @@ export function Dialog({
             type="button"
             variant="ghost"
             size="icon"
-            className="shrink-0"
+            className={cn("shrink-0", closeButtonClassName)}
             aria-label="Cerrar"
             onClick={() => onOpenChange(false)}
           >

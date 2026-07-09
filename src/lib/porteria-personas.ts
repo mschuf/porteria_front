@@ -1,6 +1,6 @@
 /**
  * @file porteria-personas.ts
- * @description Utilidades para el selector de persona en visitas (tabla prt_persona).
+ * @description Utilidades para el selector de persona en visitas (tabla persona).
  */
 import { obtenerPersona, searchVisitPersonCandidates, type VisitPersonCandidate } from "@/api/personas";
 import type { SearchableSelectOption } from "@/components/ui/searchable-select";
@@ -77,7 +77,7 @@ export function mapCandidatesToSelectOptions(candidates: VisitPersonCandidate[])
 }
 
 /**
- * Carga opciones del selector desde prt_persona.
+ * Carga opciones del selector desde persona.
  * @param query - Texto de búsqueda.
  * @param signal - Señal de cancelación.
  * @param limit - Cantidad máxima de resultados.

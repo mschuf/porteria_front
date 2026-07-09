@@ -165,6 +165,20 @@ export default function PersonasPage() {
     }
   }, [confirmAction, confirmPersona, reload, toast]);
 
+  const confirmTitle =
+    confirmAction === "activate"
+      ? "Activar persona"
+      : confirmAction === "deactivate"
+        ? "Desactivar persona"
+        : "Eliminar persona";
+
+  const confirmDescription =
+    confirmAction === "activate"
+      ? `Activar a ${confirmPersona?.nombre}? Podra usarse nuevamente en visitas.`
+      : confirmAction === "deactivate"
+        ? `Desactivar a ${confirmPersona?.nombre}? No podra usarse en nuevas visitas.`
+        : `Eliminar definitivamente a ${confirmPersona?.nombre}? Solo es posible si no tiene visitas registradas.`;
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -306,38 +320,31 @@ export default function PersonasPage() {
       <Dialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={
-          confirmAction === "delete"
-            ? "Eliminar persona"
-            : confirmAction === "activate"
-              ? "Activar persona"
-              : "Desactivar persona"
-        }
-        description={
-          confirmAction === "delete"
-            ? `¿Eliminar definitivamente a ${confirmPersona?.nombre}? Solo es posible si no tiene visitas registradas.`
-            : confirmAction === "activate"
-              ? `¿Activar a ${confirmPersona?.nombre}? Podrá usarse nuevamente en visitas.`
-              : `¿Desactivar a ${confirmPersona?.nombre}? No podrá usarse en nuevas visitas.`
-        }
+        title={confirmTitle}
+        description={confirmDescription}
+        className="max-w-sm rounded-2xl border-transparent bg-white p-5 shadow-[0_20px_25px_-5px_rgba(17,24,39,0.10),0_8px_10px_-6px_rgba(17,24,39,0.08)] dark:border-[#374151] dark:bg-[#1F2937] dark:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.45),0_8px_10px_-6px_rgba(0,0,0,0.35)]"
+        headerClassName="border-b-0 p-0"
+        titleClassName="text-lg ml-4 font-bold text-[#111827] dark:text-white"
+        descriptionClassName="mb-1.5 ml-4 mt-3 text-[15px] leading-relaxed text-[#4B5563] dark:text-[#E5E7EB]"
+        contentClassName="p-0 pt-4"
+        closeButtonClassName="text-[#9CA3AF] hover:bg-transparent hover:text-[#4B5563] dark:hover:text-white"
       >
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)} disabled={confirmLoading}>
+        <div className="flex justify-end gap-2.5">
+          <Button
+            type="button"
+            onClick={() => setConfirmOpen(false)}
+            disabled={confirmLoading}
+            className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] font-semibold text-[#111827] hover:bg-[#F3F4F6] dark:border-transparent dark:bg-[#374151] dark:text-[#E5E7EB] dark:hover:bg-[#4B5563]"
+          >
             Cancelar
           </Button>
           <Button
             type="button"
-            variant={confirmAction === "delete" ? "destructive" : "default"}
             onClick={() => void handleConfirm()}
             disabled={confirmLoading}
+            className="rounded-xl bg-[#EF4444] font-semibold text-white hover:bg-[#DC2626] dark:hover:bg-[#F87171]"
           >
-            {confirmLoading
-              ? "Procesando…"
-              : confirmAction === "delete"
-                ? "Eliminar"
-                : confirmAction === "activate"
-                  ? "Activar"
-                  : "Desactivar"}
+            {confirmLoading ? "Procesando..." : "Confirmar"}
           </Button>
         </div>
       </Dialog>

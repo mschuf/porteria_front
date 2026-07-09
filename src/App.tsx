@@ -17,6 +17,7 @@ import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 import PorteriaRoute from "@/components/PorteriaRoute";
 
 import SuperAdminRoute from "@/components/SuperAdminRoute";
+import StrictSuperAdminRoute from "@/components/StrictSuperAdminRoute";
 
 import { Loading } from "@/components/ui/loading";
 
@@ -45,6 +46,14 @@ const VisitasPage = lazy(() => import("./pages/VisitasPage"));
 
 const PorteriaReportPage = lazy(() => import("./pages/PorteriaReportPage"));
 const PorteriaAuditReportPage = lazy(() => import("./pages/PorteriaAuditReportPage"));
+const EmpresasPage = lazy(() => import("./pages/EmpresasPage"));
+const EmpresaPorteriaPage = lazy(() => import("./pages/EmpresaPorteriaPage"));
+const SedesPage = lazy(() => import("./pages/SedesPage"));
+const SedeEmpresaPorteriaPage = lazy(() => import("./pages/SedeEmpresaPorteriaPage"));
+const UsuarioEmpresaPage = lazy(() => import("./pages/UsuarioEmpresaPage"));
+const UsuarioEmpresaPorteriaPage = lazy(() => import("./pages/UsuarioEmpresaPorteriaPage"));
+
+const UsuariosAdminPage = lazy(() => import("./pages/UsuariosAdminPage"));
 
 
 
@@ -133,6 +142,118 @@ export default function App() {
             <Route path="proveedores" element={<ProveedoresPage />} />
 
           </Route>
+
+          <Route
+
+            path="admin/empresas"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <EmpresasPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/empresa-porteria"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <EmpresaPorteriaPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/sedes"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <SedesPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/sede-empresa-porteria"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <SedeEmpresaPorteriaPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/usuario-empresa"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <UsuarioEmpresaPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/usuario-empresa-porteria"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <UsuarioEmpresaPorteriaPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/usuarios"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <UsuariosAdminPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
 
           <Route
 

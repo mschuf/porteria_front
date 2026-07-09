@@ -1,10 +1,14 @@
 /**
- * @file usePersonas.ts
- * @description Hook del listado CRUD de personas con filtros, orden y paginación.
+ * @file useEmpresaPorteria.ts
+ * @description Hook del listado CRUD de empresas de porteria con filtros, orden y paginacion.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/api/apiClient";
-import { listarPersonas, type ListarPersonasQuery, type PersonaSortColumn } from "@/api/personas";
+import {
+  listarEmpresasPorteria,
+  type EmpresaPorteriaSortColumn,
+  type ListarEmpresaPorteriaQuery,
+} from "@/api/empresa-porteria";
 import {
   PORTERIA_PAGE_SIZE,
   isPorteriaAllPageSize,
@@ -13,53 +17,52 @@ import {
   type PorteriaPageSize,
 } from "@/lib/porteria";
 import type {
-  PersonasFilterState,
-  PersonasSortState,
-  UsePersonasResult,
-} from "@/types/pages/personas-page.types";
+  EmpresaPorteriaFilterState,
+  EmpresaPorteriaSortState,
+  UseEmpresaPorteriaResult,
+} from "@/types/pages/empresa-porteria-page.types";
 
-/** @returns Estado inicial de filtros de personas. */
-function createInitialFilters(): PersonasFilterState {
+/** @returns Estado inicial de filtros de empresas de porteria. */
+function createInitialFilters(): EmpresaPorteriaFilterState {
   return {
     search: "",
     nombre: "",
-    documento: "",
-    proveedor: "",
+    ruc: "",
+    telefono: "",
+    correo: "",
     activo: "",
   };
 }
 
 /** Mapea filtros UI a query params del backend. */
 function toListParams(
-  filters: PersonasFilterState,
+  filters: EmpresaPorteriaFilterState,
   page: number,
   limit: number,
-  sort: PersonasSortState | null,
-): ListarPersonasQuery {
+  sort: EmpresaPorteriaSortState | null,
+): ListarEmpresaPorteriaQuery {
   return {
     page,
     limit,
     search: filters.search || undefined,
     nombre: filters.nombre || undefined,
-    documento: filters.documento || undefined,
-    proveedor: filters.proveedor || undefined,
+    ruc: filters.ruc || undefined,
+    telefono: filters.telefono || undefined,
+    correo: filters.correo || undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,
   };
 }
 
-/** Orquesta estado, listado y paginación de personas. */
-export function usePersonas(): UsePersonasResult {
-  const [items, setItems] = useState<UsePersonasResult["items"]>([]);
-  const [filters, setFiltersState] = useState<PersonasFilterState>(createInitialFilters);
-  const [appliedFilters, setAppliedFilters] = useState<PersonasFilterState>(createInitialFilters);
+/** Orquesta estado, listado y paginacion de empresas de porteria. */
+export function useEmpresaPorteria(): UseEmpresaPorteriaResult {
+  const [items, setItems] = useState<UseEmpresaPorteriaResult["items"]>([]);
+  const [filters, setFiltersState] = useState<EmpresaPorteriaFilterState>(createInitialFilters);
+  const [appliedFilters, setAppliedFilters] = useState<EmpresaPorteriaFilterState>(createInitialFilters);
   const [page, setPageState] = useState(1);
   const [pageLimit, setPageLimitState] = useState<PorteriaPageSize>(PORTERIA_PAGE_SIZE);
-  const [sort, setSortState] = useState<PersonasSortState | null>({
-    column: "id",
-    order: "desc",
-  });
+  const [sort, setSortState] = useState<EmpresaPorteriaSortState | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -74,11 +77,11 @@ export function usePersonas(): UsePersonasResult {
     ? 1
     : Math.max(1, Math.ceil(total / pageLimit));
 
-  const setFilters = useCallback((value: PersonasFilterState) => {
+  const setFilters = useCallback((value: EmpresaPorteriaFilterState) => {
     setFiltersState(value);
   }, []);
 
-  const applyFilters = useCallback((nextFilters?: PersonasFilterState) => {
+  const applyFilters = useCallback((nextFilters?: EmpresaPorteriaFilterState) => {
     setAppliedFilters(nextFilters ?? filters);
     setPageState(1);
   }, [filters]);
@@ -93,7 +96,7 @@ export function usePersonas(): UsePersonasResult {
     setPageState(1);
   }, []);
 
-  const setSortColumn = useCallback((column: PersonaSortColumn) => {
+  const setSortColumn = useCallback((column: EmpresaPorteriaSortColumn) => {
     setSortState((current) => {
       if (!current || current.column !== column) {
         return { column, order: "desc" };
@@ -117,14 +120,16 @@ export function usePersonas(): UsePersonasResult {
       setLoading(true);
       setError("");
       try {
-        const result = await listarPersonas(listParams);
+        const result = await listarEmpresasPorteria(listParams);
         if (cancelled) return;
         setItems(result.items);
         setTotal(result.total);
       } catch (fetchError) {
         if (cancelled) return;
         const message =
-          fetchError instanceof ApiError ? fetchError.message : "No se pudieron cargar las personas.";
+          fetchError instanceof ApiError
+            ? fetchError.message
+            : "No se pudieron cargar las empresas de porteria.";
         setError(message);
         setItems([]);
         setTotal(0);

@@ -1,6 +1,6 @@
 /**
- * @file MotivosVisitaFilters.tsx
- * @description Barra de búsqueda y filtros avanzados del CRUD de motivos de visita.
+ * @file EmpresasFilters.tsx
+ * @description Barra de busqueda y filtros avanzados del CRUD de empresas.
  */
 import { useCallback, useState, type ReactNode } from "react";
 import { ChevronDown, Search } from "lucide-react";
@@ -8,21 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { MotivosVisitaFilterState } from "@/types/pages/motivos-visita-page.types";
+import type { EmpresasFilterState } from "@/types/pages/empresas-page.types";
 
-interface MotivosVisitaFiltersProps {
-  filters: MotivosVisitaFilterState;
-  onChange: (filters: MotivosVisitaFilterState) => void;
-  onApply: (filters?: MotivosVisitaFilterState) => void;
+interface EmpresasFiltersProps {
+  filters: EmpresasFilterState;
+  onChange: (filters: EmpresasFilterState) => void;
+  onApply: (filters?: EmpresasFilterState) => void;
   actions?: ReactNode;
 }
 
-/** Filtros de motivos de visita con búsqueda rápida y panel avanzado. */
-export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: MotivosVisitaFiltersProps) {
+/** Filtros de empresas con busqueda rapida y panel avanzado. */
+export function EmpresasFilters({ filters, onChange, onApply, actions }: EmpresasFiltersProps) {
   const [expanded, setExpanded] = useState(false);
 
   const update = useCallback(
-    (key: keyof MotivosVisitaFilterState, value: string) => {
+    (key: keyof EmpresasFilterState, value: string) => {
       onChange({ ...filters, [key]: value });
     },
     [filters, onChange],
@@ -36,7 +36,7 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
           <Input
             value={filters.search}
             onChange={(event) => update("search", event.target.value)}
-            placeholder="Buscar por ID o nombre..."
+            placeholder="Buscar en todos los campos..."
             className="pl-9 pr-10"
           />
           <button
@@ -56,13 +56,26 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2 overflow-visible pb-1">
+        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-3 xl:grid-cols-[repeat(6,minmax(0,1fr))_auto]">
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Nombre</span>
-            <Input
-              value={filters.nombre}
-              onChange={(event) => update("nombre", event.target.value)}
-            />
+            <Input value={filters.nombre} onChange={(event) => update("nombre", event.target.value)} />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">RUC</span>
+            <Input value={filters.ruc} onChange={(event) => update("ruc", event.target.value)} />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Direccion</span>
+            <Input value={filters.direccion} onChange={(event) => update("direccion", event.target.value)} />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Telefono</span>
+            <Input value={filters.telefono} onChange={(event) => update("telefono", event.target.value)} />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Correo</span>
+            <Input value={filters.correo} onChange={(event) => update("correo", event.target.value)} />
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Estado</span>
@@ -80,3 +93,4 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
     </div>
   );
 }
+

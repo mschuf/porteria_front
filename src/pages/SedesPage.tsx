@@ -1,57 +1,61 @@
 /**
- * @file ProveedoresPage.tsx
- * @description CRUD de proveedores del módulo Portería.
+ * @file SedesPage.tsx
+ * @description CRUD de sedes para super_admin.
  */
 import { Plus } from "lucide-react";
-import { useCallback, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  activarProveedor,
-  actualizarProveedor,
-  crearProveedor,
-  desactivarProveedor,
-  eliminarProveedor,
-  type CrearProveedorPayload,
-  type Proveedor,
-} from "@/api/proveedores";
+  activarSede,
+  actualizarSede,
+  crearSede,
+  desactivarSede,
+  eliminarSede,
+  type CrearSedePayload,
+  type Sede,
+} from "@/api/sedes";
 import { ApiError } from "@/api/apiClient";
-import { ProveedoresFilters } from "@/components/proveedores/ProveedoresFilters";
-import { ProveedoresTable } from "@/components/proveedores/ProveedoresTable";
-import { PorteriaTabs } from "@/components/porteria/PorteriaTabs";
+import { SedesFilters } from "@/components/sedes/SedesFilters";
+import { SedesTable } from "@/components/sedes/SedesTable";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import {
+  ServerSearchableSelect,
+  type ServerSearchableSelectHandle,
+} from "@/components/ui/server-searchable-select";
 import { useToast } from "@/context/ToastContext";
-import { useProveedores } from "@/hooks/useProveedores";
+import { useSedes } from "@/hooks/useSedes";
+import { loadEmpresaSelectOptions, resolveEmpresaSelectOption } from "@/lib/porteria-empresas";
 import {
   isPorteriaAllPageSize,
   parsePorteriaPageSize,
   PORTERIA_PAGE_SIZE_ALL,
   PORTERIA_PAGE_SIZE_OPTIONS,
 } from "@/lib/porteria";
-import { PORTERIA_TAB_PATHS, resolvePorteriaTab } from "@/lib/porteria-navigation";
-import type { PorteriaTab } from "@/types/pages/porteria-page.types";
 
-interface ProveedorFormState {
+interface SedeFormState {
+  empresaId: string;
   nombre: string;
-  ruc: string;
+  direccion: string;
+  telefono: string;
   activo: boolean;
 }
 
-const EMPTY_FORM: ProveedorFormState = {
+const EMPTY_FORM: SedeFormState = {
+  empresaId: "",
   nombre: "",
-  ruc: "",
+  direccion: "",
+  telefono: "",
   activo: true,
 };
 
-/** CRUD de proveedores con filtros, orden y paginación. */
-export default function ProveedoresPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const tab = resolvePorteriaTab(location.pathname);
+/** CRUD de sedes con filtros, orden y paginacion. */
+export default function SedesPage() {
   const toast = useToast();
+  const nombreRef = useRef<HTMLInputElement | null>(null);
+  const empresaRef = useRef<ServerSearchableSelectHandle | null>(null);
   const {
     items,
     filters,
@@ -65,14 +69,15 @@ export default function ProveedoresPage() {
     loading,
     error,
     reload,
-  } = useProveedores();
+  } = useSedes();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editing, setEditing] = useState<Proveedor | null>(null);
-  const [confirmProveedor, setConfirmProveedor] = useState<Proveedor | null>(null);
+  const [editing, setEditing] = useState<Sede | null>(null);
+  const [confirmSede, setConfirmSede] = useState<Sede | null>(null);
   const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate" | "delete" | null>(null);
-  const [form, setForm] = useState<ProveedorFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<SedeFormState>(EMPTY_FORM);
+  const [requiredErrors, setRequiredErrors] = useState({ empresaId: false });
   const [saving, setSaving] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -85,134 +90,140 @@ export default function ProveedoresPage() {
     ? pagination.total
     : Math.min(pagination.page * numericLimit, pagination.total);
 
+  const isCreateFormComplete = useMemo(
+    () => Boolean(form.nombre.trim()) && Boolean(form.empresaId),
+    [form],
+  );
+
   const openCreateDialog = useCallback(() => {
     setEditing(null);
     setForm(EMPTY_FORM);
+    setRequiredErrors({ empresaId: false });
     setDialogOpen(true);
   }, []);
 
-  const openEditDialog = useCallback((proveedor: Proveedor) => {
-    setEditing(proveedor);
+  const openEditDialog = useCallback((sede: Sede) => {
+    setEditing(sede);
     setForm({
-      nombre: proveedor.nombre,
-      ruc: proveedor.ruc,
-      activo: proveedor.activo,
+      empresaId: String(sede.empresaId),
+      nombre: sede.nombre,
+      direccion: sede.direccion ?? "",
+      telefono: sede.telefono ?? "",
+      activo: sede.activo,
     });
+    setRequiredErrors({ empresaId: false });
     setDialogOpen(true);
   }, []);
 
-  const openConfirm = useCallback(
-    (proveedor: Proveedor, action: "activate" | "deactivate" | "delete") => {
-      setConfirmProveedor(proveedor);
-      setConfirmAction(action);
-      setConfirmOpen(true);
-    },
-    [],
-  );
+  const openConfirm = useCallback((sede: Sede, action: "activate" | "deactivate" | "delete") => {
+    setConfirmSede(sede);
+    setConfirmAction(action);
+    setConfirmOpen(true);
+  }, []);
 
   const handleSave = useCallback(async () => {
-    if (!form.nombre.trim()) {
-      toast.error("El nombre es obligatorio.", "Proveedores");
-      return;
-    }
-
-    if (!form.ruc.trim()) {
-      toast.error("El RUC es obligatorio.", "Proveedores");
-      return;
+    const nombre = form.nombre.trim();
+    if (!editing) {
+      if (!nombre) {
+        toast.error("Complete el campo Nombre.", "Sedes");
+        nombreRef.current?.focus();
+        return;
+      }
+      if (!form.empresaId) {
+        toast.error("Seleccione una empresa.", "Sedes");
+        setRequiredErrors({ empresaId: true });
+        empresaRef.current?.focusAndOpen();
+        return;
+      }
     }
 
     setSaving(true);
     try {
-      const payload: CrearProveedorPayload = {
-        nombre: form.nombre.trim(),
-        ruc: form.ruc.trim(),
+      const payload: CrearSedePayload = {
+        empresaId: Number(form.empresaId),
+        nombre,
+        direccion: form.direccion.trim(),
+        telefono: form.telefono.trim(),
         activo: form.activo,
       };
 
       if (editing) {
-        await actualizarProveedor(editing.id, payload);
+        await actualizarSede(editing.id, payload);
       } else {
-        await crearProveedor(payload);
+        await crearSede(payload);
       }
 
-      toast.success(editing ? "Proveedor actualizado." : "Proveedor creado.", "Proveedores");
+      toast.success(editing ? "Sede actualizada." : "Sede creada.", "Sedes");
       setDialogOpen(false);
       await reload();
     } catch (saveError) {
-      const message = saveError instanceof ApiError ? saveError.message : "No se pudo guardar el proveedor.";
-      toast.error(message, "Proveedores");
+      const message = saveError instanceof ApiError ? saveError.message : "No se pudo guardar la sede.";
+      toast.error(message, "Sedes");
     } finally {
       setSaving(false);
     }
   }, [editing, form, reload, toast]);
 
   const handleConfirm = useCallback(async () => {
-    if (!confirmProveedor || !confirmAction) return;
+    if (!confirmSede || !confirmAction) return;
 
     setConfirmLoading(true);
     try {
       if (confirmAction === "activate") {
-        await activarProveedor(confirmProveedor.id);
-        toast.success("Proveedor activado.", "Proveedores");
+        await activarSede(confirmSede.id);
+        toast.success("Sede activada.", "Sedes");
       } else if (confirmAction === "deactivate") {
-        await desactivarProveedor(confirmProveedor.id);
-        toast.success("Proveedor desactivado.", "Proveedores");
+        await desactivarSede(confirmSede.id);
+        toast.success("Sede desactivada.", "Sedes");
       } else {
-        await eliminarProveedor(confirmProveedor.id);
-        toast.success("Proveedor eliminado.", "Proveedores");
+        await eliminarSede(confirmSede.id);
+        toast.success("Sede eliminada.", "Sedes");
       }
       setConfirmOpen(false);
       await reload();
     } catch (confirmError) {
       const message =
-        confirmError instanceof ApiError ? confirmError.message : "No se pudo completar la acción.";
-      toast.error(message, "Proveedores");
+        confirmError instanceof ApiError ? confirmError.message : "No se pudo completar la accion.";
+      toast.error(message, "Sedes");
     } finally {
       setConfirmLoading(false);
     }
-  }, [confirmAction, confirmProveedor, reload, toast]);
+  }, [confirmAction, confirmSede, reload, toast]);
 
   const confirmTitle =
     confirmAction === "activate"
-      ? "Activar proveedor"
+      ? "Activar sede"
       : confirmAction === "deactivate"
-        ? "Desactivar proveedor"
-        : "Eliminar proveedor";
+        ? "Desactivar sede"
+        : "Eliminar sede";
 
   const confirmDescription =
     confirmAction === "activate"
-      ? `¿Activar a ${confirmProveedor?.nombre}?`
+      ? `¿Activar ${confirmSede?.nombre}?`
       : confirmAction === "deactivate"
-        ? `¿Desactivar a ${confirmProveedor?.nombre}?`
-        : `¿Eliminar permanentemente a ${confirmProveedor?.nombre}? Solo es posible si no tiene personas asociadas.`;
+        ? `¿Desactivar ${confirmSede?.nombre}?`
+        : `¿Eliminar permanentemente ${confirmSede?.nombre}? Solo es posible si no tiene empresas de portería asignadas.`;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs text-muted-foreground">Portería</p>
-          <h1 className="text-lg font-semibold">Proveedores</h1>
+          <p className="text-xs text-muted-foreground">Administracion</p>
+          <h1 className="text-lg font-semibold">Sedes</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Empresas y contratistas a los que pertenecen las personas visitantes.
+            Sedes fisicas pertenecientes a las empresas receptoras.
           </p>
-        </div>
-
-        <div className="flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
-          <PorteriaTabs
-            value={tab}
-            onChange={(nextTab: PorteriaTab) => navigate(PORTERIA_TAB_PATHS[nextTab])}
-          />
         </div>
       </div>
 
-      <ProveedoresFilters
+      <SedesFilters
         filters={filters}
         onChange={setFilters}
         onApply={applyFilters}
         actions={
           <Button type="button" className="w-full sm:w-auto" onClick={openCreateDialog}>
             <Plus className="h-4 w-4" aria-hidden="true" />
-            Nuevo proveedor
+            Nueva sede
           </Button>
         }
       />
@@ -223,18 +234,18 @@ export default function ProveedoresPage() {
 
       {loading ? (
         <div className="rounded-md border bg-card p-6 text-sm text-muted-foreground shadow-soft">
-          Cargando proveedores…
+          Cargando sedes...
         </div>
       ) : (
-        <ProveedoresTable
+        <SedesTable
           rows={items}
           sortColumn={sort?.column ?? null}
           sortOrder={sort?.order ?? null}
           onSortColumnChange={setSortColumn}
           onEdit={openEditDialog}
-          onActivate={(proveedor) => openConfirm(proveedor, "activate")}
-          onDeactivate={(proveedor) => openConfirm(proveedor, "deactivate")}
-          onDelete={(proveedor) => openConfirm(proveedor, "delete")}
+          onActivate={(sede) => openConfirm(sede, "activate")}
+          onDeactivate={(sede) => openConfirm(sede, "deactivate")}
+          onDelete={(sede) => openConfirm(sede, "delete")}
         />
       )}
 
@@ -242,9 +253,9 @@ export default function ProveedoresPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="whitespace-nowrap">Mostrar por página</span>
+              <span className="whitespace-nowrap">Mostrar por pagina</span>
               <Select
-                aria-label="Mostrar por página"
+                aria-label="Mostrar por pagina"
                 className="h-9 w-24 shrink-0 px-2 py-1 text-center text-sm font-medium tabular-nums text-foreground"
                 value={showingAll ? PORTERIA_PAGE_SIZE_ALL : String(pagination.limit)}
                 onChange={(event) => {
@@ -261,7 +272,7 @@ export default function ProveedoresPage() {
               </Select>
             </label>
             <p className="text-sm text-muted-foreground">
-              Mostrando {paginationFrom}-{paginationTo} de {pagination.total} proveedores
+              Mostrando {paginationFrom}-{paginationTo} de {pagination.total} elementos
             </p>
           </div>
           {!showingAll ? (
@@ -276,7 +287,7 @@ export default function ProveedoresPage() {
                 Anterior
               </Button>
               <span className="min-w-24 text-center text-sm text-muted-foreground">
-                Página {pagination.page} de {pagination.totalPages}
+                Pagina {pagination.page} de {pagination.totalPages}
               </span>
               <Button
                 type="button"
@@ -295,8 +306,8 @@ export default function ProveedoresPage() {
       <Dialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={editing ? "Editar proveedor" : "Nuevo proveedor"}
-        description="Registre la empresa o contratista."
+        title={editing ? "Editar sede" : "Nueva sede"}
+        description="Registre los datos de la sede."
       >
         <form
           className="space-y-4"
@@ -305,26 +316,55 @@ export default function ProveedoresPage() {
             void handleSave();
           }}
         >
-          <Field id="proveedor-nombre" label="Nombre">
+          <Field id="sede-nombre" label="Nombre" required={!editing}>
             <Input
-              id="proveedor-nombre"
+              id="sede-nombre"
+              ref={nombreRef}
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-              required
+              placeholder="Ej: Casa Matriz"
+              aria-required={!editing}
             />
           </Field>
-          <Field id="proveedor-ruc" label="RUC">
+          <Field id="sede-empresa" label="Empresa" required={!editing}>
+            <ServerSearchableSelect
+              ref={empresaRef}
+              id="sede-empresa"
+              value={form.empresaId}
+              onChange={(value) => {
+                setForm({ ...form, empresaId: value });
+                setRequiredErrors((current) => ({ ...current, empresaId: false }));
+              }}
+              onLoadOptions={loadEmpresaSelectOptions}
+              resolveSelectedOption={resolveEmpresaSelectOption}
+              defaultSelectedOption={
+                editing ? { value: String(editing.empresaId), label: editing.empresaNombre } : null
+              }
+              placeholder="Seleccione una empresa"
+              searchPlaceholder="Buscar empresa..."
+              invalid={requiredErrors.empresaId}
+            />
+          </Field>
+          <Field id="sede-direccion" label="Direccion">
             <Input
-              id="proveedor-ruc"
-              value={form.ruc}
-              onChange={(e) => setForm({ ...form, ruc: e.target.value })}
-              required
+              id="sede-direccion"
+              value={form.direccion}
+              onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+              placeholder="Ej: Av. Mariscal Lopez 123"
+            />
+          </Field>
+          <Field id="sede-telefono" label="Telefono">
+            <Input
+              id="sede-telefono"
+              value={form.telefono}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              placeholder="Ej: 021555123"
             />
           </Field>
           {editing ? (
-            <Field id="proveedor-activo" label="Estado">
+            <Field id="sede-activo" label="Estado">
               <Select
-                id="proveedor-activo"
+                id="sede-activo"
                 value={form.activo ? "true" : "false"}
                 onChange={(e) => setForm({ ...form, activo: e.target.value === "true" })}
               >
@@ -337,9 +377,23 @@ export default function ProveedoresPage() {
             <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Guardando…" : editing ? "Guardar cambios" : "Crear proveedor"}
-            </Button>
+            <span
+              className="inline-flex"
+              onClick={(event) => {
+                if (!editing && !isCreateFormComplete) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <Button
+                type="submit"
+                disabled={saving || (!editing && !isCreateFormComplete)}
+                title={!editing && !isCreateFormComplete ? "Complete todos los campos obligatorios" : undefined}
+                className={!editing && !isCreateFormComplete ? "pointer-events-none" : undefined}
+              >
+                {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear sede"}
+              </Button>
+            </span>
           </div>
         </form>
       </Dialog>
@@ -371,7 +425,7 @@ export default function ProveedoresPage() {
             disabled={confirmLoading}
             className="rounded-xl bg-[#EF4444] font-semibold text-white hover:bg-[#DC2626] dark:hover:bg-[#F87171]"
           >
-            {confirmLoading ? "Procesando…" : "Confirmar"}
+            {confirmLoading ? "Procesando..." : "Confirmar"}
           </Button>
         </div>
       </Dialog>

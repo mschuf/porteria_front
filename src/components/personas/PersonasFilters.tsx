@@ -91,7 +91,7 @@ export function PersonasFilters({ filters, onChange, onApply, actions }: Persona
             </Select>
           </label>
           <Button type="button" className="mb-0.5 shrink-0" onClick={() => onApply()}>
-            Aplicar filtros
+            Buscar
           </Button>
         </div>
       ) : null}

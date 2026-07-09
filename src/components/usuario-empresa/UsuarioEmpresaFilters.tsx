@@ -1,28 +1,31 @@
 /**
- * @file MotivosVisitaFilters.tsx
- * @description Barra de búsqueda y filtros avanzados del CRUD de motivos de visita.
+ * @file UsuarioEmpresaFilters.tsx
+ * @description Barra de busqueda y filtros avanzados del CRUD de asignaciones usuario-empresa.
  */
 import { useCallback, useState, type ReactNode } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { ServerSearchableSelect } from "@/components/ui/server-searchable-select";
+import { loadEmpresaSelectOptions, resolveEmpresaSelectOption } from "@/lib/porteria-empresas";
+import { loadUsuarioSelectOptions, resolveUsuarioSelectOption } from "@/lib/porteria-usuarios";
 import { cn } from "@/lib/utils";
-import type { MotivosVisitaFilterState } from "@/types/pages/motivos-visita-page.types";
+import type { UsuarioEmpresaFilterState } from "@/types/pages/usuario-empresa-page.types";
 
-interface MotivosVisitaFiltersProps {
-  filters: MotivosVisitaFilterState;
-  onChange: (filters: MotivosVisitaFilterState) => void;
-  onApply: (filters?: MotivosVisitaFilterState) => void;
+interface UsuarioEmpresaFiltersProps {
+  filters: UsuarioEmpresaFilterState;
+  onChange: (filters: UsuarioEmpresaFilterState) => void;
+  onApply: (filters?: UsuarioEmpresaFilterState) => void;
   actions?: ReactNode;
 }
 
-/** Filtros de motivos de visita con búsqueda rápida y panel avanzado. */
-export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: MotivosVisitaFiltersProps) {
+/** Filtros de asignaciones usuario-empresa con busqueda rapida y panel avanzado. */
+export function UsuarioEmpresaFilters({ filters, onChange, onApply, actions }: UsuarioEmpresaFiltersProps) {
   const [expanded, setExpanded] = useState(false);
 
   const update = useCallback(
-    (key: keyof MotivosVisitaFilterState, value: string) => {
+    (key: keyof UsuarioEmpresaFilterState, value: string) => {
       onChange({ ...filters, [key]: value });
     },
     [filters, onChange],
@@ -36,7 +39,7 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
           <Input
             value={filters.search}
             onChange={(event) => update("search", event.target.value)}
-            placeholder="Buscar por ID o nombre..."
+            placeholder="Buscar en todos los campos..."
             className="pl-9 pr-10"
           />
           <button
@@ -56,12 +59,29 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2 overflow-visible pb-1">
+        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
-            <span className="text-muted-foreground">Nombre</span>
-            <Input
-              value={filters.nombre}
-              onChange={(event) => update("nombre", event.target.value)}
+            <span className="text-muted-foreground">Usuario</span>
+            <ServerSearchableSelect
+              value={filters.usuarioId}
+              onChange={(value) => update("usuarioId", value)}
+              onLoadOptions={loadUsuarioSelectOptions}
+              resolveSelectedOption={resolveUsuarioSelectOption}
+              placeholder="Todos"
+              searchPlaceholder="Buscar usuario..."
+              emptyOption={{ value: "", label: "Todos" }}
+            />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Empresa</span>
+            <ServerSearchableSelect
+              value={filters.empresaId}
+              onChange={(value) => update("empresaId", value)}
+              onLoadOptions={loadEmpresaSelectOptions}
+              resolveSelectedOption={resolveEmpresaSelectOption}
+              placeholder="Todas"
+              searchPlaceholder="Buscar empresa..."
+              emptyOption={{ value: "", label: "Todas" }}
             />
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
