@@ -28,6 +28,7 @@ function createInitialFilters(): ProveedoresFilterState {
     search: "",
     nombre: "",
     ruc: "",
+    sedeId: "",
     activo: "",
   };
 }
@@ -45,6 +46,7 @@ function toListParams(
     search: filters.search || undefined,
     nombre: filters.nombre || undefined,
     ruc: filters.ruc || undefined,
+    sedeId: filters.sedeId ? Number(filters.sedeId) : undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,

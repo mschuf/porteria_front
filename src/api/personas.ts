@@ -21,6 +21,8 @@ const PERSONA_PHOTO_UPLOAD_TIMEOUT_MS = 180_000;
 
 
 export interface Persona {
+  sedeId: number | null;
+  sedeNombre: string | null;
 
   id: number;
 
@@ -88,7 +90,7 @@ export interface PersonaListado {
 
 
 
-export type PersonaSortColumn = "id" | "nombre" | "documento" | "proveedorNombre" | "createdAt";
+export type PersonaSortColumn = "id" | "sedeNombre" | "nombre" | "documento" | "proveedorNombre" | "createdAt";
 
 export type PersonaSortOrder = "asc" | "desc";
 
@@ -110,6 +112,8 @@ export interface ListarPersonasQuery {
 
   proveedorId?: number;
 
+  sedeId?: number;
+
   activo?: boolean;
 
   sortBy?: PersonaSortColumn;
@@ -121,6 +125,7 @@ export interface ListarPersonasQuery {
 
 
 export interface CrearPersonaPayload {
+  sedeId: number;
 
   nombre: string;
 

@@ -25,6 +25,7 @@ function createInitialFilters(): PersonasFilterState {
     nombre: "",
     documento: "",
     proveedor: "",
+    sedeId: "",
     activo: "",
   };
 }
@@ -43,6 +44,7 @@ function toListParams(
     nombre: filters.nombre || undefined,
     documento: filters.documento || undefined,
     proveedor: filters.proveedor || undefined,
+    sedeId: filters.sedeId ? Number(filters.sedeId) : undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,

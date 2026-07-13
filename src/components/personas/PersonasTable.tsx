@@ -22,6 +22,7 @@ interface PersonasTableProps {
 
 const SORTABLE_COLUMNS: Array<{ id: PersonaSortColumn; label: string }> = [
   { id: "id", label: "ID" },
+  { id: "sedeNombre", label: "Sede" },
   { id: "nombre", label: "Nombre" },
   { id: "documento", label: "Documento" },
   { id: "proveedorNombre", label: "Proveedor" },
@@ -117,6 +118,7 @@ export function PersonasTable({
             {rows.map((persona) => (
               <tr key={persona.id} className="hover:bg-muted/40">
                 <td className="px-4 py-3 tabular-nums">{persona.id}</td>
+                <td className="px-4 py-3">{persona.sedeNombre ?? "Sin asignar"}</td>
                 <td className="px-4 py-3 font-medium">{persona.nombre}</td>
                 <td className="px-4 py-3">{persona.documento}</td>
                 <td className="px-4 py-3">{persona.proveedorNombre ?? "—"}</td>

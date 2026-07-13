@@ -17,6 +17,7 @@ export interface AuthUser {
   sedeName: string | null;
   empresaName: string | null;
   empresaPorteriaName: string | null;
+  sedes: Array<{ id: number; nombre: string; empresaId: number; empresaNombre: string }>;
 }
 
 /** Credenciales enviadas al endpoint de login. */

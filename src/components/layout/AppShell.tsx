@@ -21,7 +21,6 @@ import {
   Building,
   ShieldCheck,
   Link2,
-  UserCheck,
   FolderCog,
   CreditCard,
   LayoutGrid,
@@ -55,9 +54,9 @@ const superAdminNavItems: Array<{
     strictSuperAdminOnly: true,
   },
   { label: "Sedes", icon: Building, path: "/admin/sedes", strictSuperAdminOnly: true },
-  { label: "Usuarios", icon: Users, path: "/admin/usuarios", strictSuperAdminOnly: true },
-  { label: "Areas", icon: LayoutGrid, path: "/admin/areas", strictSuperAdminOnly: true },
-  { label: "Tarjetas", icon: CreditCard, path: "/admin/tarjetas", strictSuperAdminOnly: true },
+  { label: "Usuarios", icon: Users, path: "/admin/usuarios" },
+  { label: "Areas", icon: LayoutGrid, path: "/admin/areas" },
+  { label: "Tarjetas", icon: CreditCard, path: "/admin/tarjetas" },
 ];
 
 const auditoriaNavItems: Array<{
@@ -82,11 +81,6 @@ const asignacionesNavItems: Array<{
     label: "Asignaciones sede-portería",
     icon: Link2,
     path: "/admin/sede-empresa-porteria",
-  },
-  {
-    label: "Usuarios por empresa",
-    icon: UserCheck,
-    path: "/admin/usuario-empresa",
   },
   {
     label: "Usuarios por empresa de portería",

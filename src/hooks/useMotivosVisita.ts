@@ -27,6 +27,7 @@ function createInitialFilters(): MotivosVisitaFilterState {
   return {
     search: "",
     nombre: "",
+    sedeId: "",
     activo: "",
   };
 }
@@ -43,6 +44,7 @@ function toListParams(
     limit,
     search: filters.search || undefined,
     nombre: filters.nombre || undefined,
+    sedeId: filters.sedeId ? Number(filters.sedeId) : undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,
@@ -93,10 +95,10 @@ export function useMotivosVisita(): UseMotivosVisitaResult {
   const setSortColumn = useCallback((column: MotivoVisitaSortColumn) => {
     setSortState((current) => {
       if (!current || current.column !== column) {
-        return { column, order: "asc" };
-      }
-      if (current.order === "asc") {
         return { column, order: "desc" };
+      }
+      if (current.order === "desc") {
+        return { column, order: "asc" };
       }
       return null;
     });

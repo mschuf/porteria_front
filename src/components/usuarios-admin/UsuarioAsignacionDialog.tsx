@@ -16,9 +16,10 @@ import {
   Warehouse,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   obtenerAsignacionUsuarioAdmin,
+  reemplazarSedesUsuarioAdmin,
   type UsuarioAdmin,
   type UsuarioAdminAsignacion,
 } from "@/api/usuariosAdmin";
@@ -27,6 +28,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { isAbortError } from "@/lib/http";
 import { cn } from "@/lib/utils";
+import { listarSedes, type Sede } from "@/api/sedes";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 interface UsuarioAsignacionDialogProps {
   open: boolean;
@@ -105,6 +109,89 @@ function EmptyAssignment({ role }: { role: UsuarioAdmin["rol"] }) {
   );
 }
 
+interface BranchPath {
+  id: number;
+  d: string;
+}
+
+/** Dibuja conexiones ortogonales desde el administrador hasta cada sede visible. */
+function SedesAssignmentDiagram({
+  userNode,
+  data,
+}: {
+  userNode: React.ReactNode;
+  data: Extract<UsuarioAdminAsignacion, { tipo: "sedes" }>;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sourceRef = useRef<HTMLDivElement>(null);
+  const targetRefs = useRef(new Map<number, HTMLDivElement>());
+  const [paths, setPaths] = useState<BranchPath[]>([]);
+  const sedeIds = data.sedes.map((sede) => sede.id).join(",");
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const source = sourceRef.current;
+    if (!container || !source) return;
+
+    const updatePaths = () => {
+      const containerRect = container.getBoundingClientRect();
+      const sourceRect = source.getBoundingClientRect();
+      const targets = data.sedes
+        .map((sede) => ({ id: sede.id, element: targetRefs.current.get(sede.id) }))
+        .filter((target): target is { id: number; element: HTMLDivElement } => Boolean(target.element));
+
+      if (targets.length === 0) {
+        setPaths([]);
+        return;
+      }
+
+      const sourceX = sourceRect.left - containerRect.left + sourceRect.width / 2;
+      const sourceY = sourceRect.bottom - containerRect.top;
+      const targetRects = targets.map(({ id, element }) => ({ id, rect: element.getBoundingClientRect() }));
+      const firstTargetY = Math.min(...targetRects.map(({ rect }) => rect.top - containerRect.top));
+      const branchY = sourceY + (firstTargetY - sourceY) / 2;
+
+      setPaths(targetRects.map(({ id, rect }) => {
+        const targetX = rect.left - containerRect.left + rect.width / 2;
+        const targetY = rect.top - containerRect.top;
+        return { id, d: `M ${sourceX} ${sourceY} V ${branchY} H ${targetX} V ${targetY}` };
+      }));
+    };
+
+    updatePaths();
+    const observer = new ResizeObserver(updatePaths);
+    observer.observe(container);
+    observer.observe(source);
+    targetRefs.current.forEach((target) => observer.observe(target));
+    return () => observer.disconnect();
+  }, [data.sedes, sedeIds]);
+
+  return (
+    <div ref={containerRef} className="relative flex w-full flex-col items-center">
+      <div ref={sourceRef} className="relative z-10">{userNode}</div>
+      <svg className="pointer-events-none absolute inset-0 h-full w-full stroke-border" aria-hidden="true">
+        {paths.map((path) => (
+          <path key={path.id} d={path.d} fill="none" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        ))}
+      </svg>
+      <div className="mt-14 flex w-full flex-wrap justify-center gap-3">
+        {data.sedes.map((sede) => (
+          <div
+            key={sede.id}
+            ref={(element) => {
+              if (element) targetRefs.current.set(sede.id, element);
+              else targetRefs.current.delete(sede.id);
+            }}
+            className="relative z-10 flex w-full justify-center sm:w-[calc(50%-0.375rem)] lg:w-[calc(33.333333%-0.5rem)]"
+          >
+            <AssignmentNode icon={MapPin} eyebrow={data.empresa?.nombre ?? "Sede"} title={sede.nombre} tone="info" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function AssignmentDiagram({ data }: { data: UsuarioAdminAsignacion }) {
   const userNode = (
     <AssignmentNode
@@ -125,22 +212,9 @@ function AssignmentDiagram({ data }: { data: UsuarioAdminAsignacion }) {
     );
   }
 
-  if (data.tipo === "empresa") {
-    if (data.empresas.length === 0) return <EmptyAssignment role={data.usuario.rol} />;
-
-    return (
-      <div className="flex flex-col items-center">
-        {userNode}
-        <div className="h-7 w-px bg-border" aria-hidden="true" />
-        <div className="relative grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.empresas.map((empresa) => (
-            <div key={empresa.id} className="flex justify-center">
-              <AssignmentNode icon={Building2} eyebrow="Empresa receptora" title={empresa.nombre} tone="info" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  if (data.tipo === "sedes") {
+    if (data.sedes.length === 0) return <EmptyAssignment role={data.usuario.rol} />;
+    return <SedesAssignmentDiagram userNode={userNode} data={data} />;
   }
 
   if (!data.asignacion) return <EmptyAssignment role={data.usuario.rol} />;
@@ -170,16 +244,29 @@ function AssignmentDiagram({ data }: { data: UsuarioAdminAsignacion }) {
 
 function hasEffectiveAssignment(data: UsuarioAdminAsignacion): boolean {
   if (data.tipo === "global") return true;
-  if (data.tipo === "empresa") return data.empresas.length > 0;
+  if (data.tipo === "sedes") return data.sedes.length > 0;
   return data.asignacion !== null;
 }
 
 /** Carga bajo demanda y representa la asignación vigente del usuario seleccionado. */
 export function UsuarioAsignacionDialog({ open, usuario, onOpenChange }: UsuarioAsignacionDialogProps) {
+  const { role } = useAuth();
+  const toast = useToast();
   const [data, setData] = useState<UsuarioAdminAsignacion | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryVersion, setRetryVersion] = useState(0);
+  const [editingSedes, setEditingSedes] = useState(false);
+  const [sedeCandidates, setSedeCandidates] = useState<Sede[]>([]);
+  const [selectedSedes, setSelectedSedes] = useState<number[]>([]);
+  const [savingSedes, setSavingSedes] = useState(false);
+
+  useEffect(() => {
+    if (!editingSedes || !data || data.tipo !== "sedes") return;
+    setSelectedSedes(data.sedes.map((sede) => sede.id));
+    void listarSedes({ limit: 50000, activo: true, sortBy: "nombre", sortOrder: "asc" })
+      .then((result) => setSedeCandidates(result.items)).catch(() => setSedeCandidates([]));
+  }, [data, editingSedes]);
 
   useEffect(() => {
     if (!open || !usuario) return;
@@ -251,6 +338,14 @@ export function UsuarioAsignacionDialog({ open, usuario, onOpenChange }: Usuario
               </div>
             ) : null}
             <AssignmentDiagram data={data} />
+            {role === "super_admin" && data.tipo === "sedes" ? (
+              <div className="rounded-lg border p-4">
+                {!editingSedes ? <Button type="button" variant="outline" onClick={() => setEditingSedes(true)}>Administrar sedes</Button> : <div className="space-y-3">
+                  <div className="grid gap-2 sm:grid-cols-2">{sedeCandidates.map((sede) => { const selectedCompany = sedeCandidates.find((item) => selectedSedes.includes(item.id))?.empresaId; const disabled = selectedCompany !== undefined && selectedCompany !== sede.empresaId; return <label key={sede.id} className={cn("flex items-center gap-2 rounded border p-2 text-sm", disabled && "opacity-50")}><input type="checkbox" checked={selectedSedes.includes(sede.id)} disabled={disabled} onChange={(e) => setSelectedSedes((current) => e.target.checked ? [...current, sede.id] : current.filter((id) => id !== sede.id))}/><span>{sede.nombre} · {sede.empresaNombre}</span></label>; })}</div>
+                  <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setEditingSedes(false)}>Cancelar</Button><Button type="button" disabled={savingSedes} onClick={() => { if (!usuario) return; setSavingSedes(true); void reemplazarSedesUsuarioAdmin(usuario.id, selectedSedes).then(() => { toast.success("Sedes actualizadas."); setEditingSedes(false); setRetryVersion((v) => v + 1); }).catch((e: unknown) => toast.error(e instanceof ApiError ? e.message : "No se pudieron guardar las sedes.")).finally(() => setSavingSedes(false)); }}>{savingSedes ? "Guardando..." : "Guardar sedes"}</Button></div>
+                </div>}
+              </div>
+            ) : null}
             <p className="text-center text-xs text-muted-foreground">
               Se muestran únicamente asignaciones y entidades activas y vigentes.
             </p>

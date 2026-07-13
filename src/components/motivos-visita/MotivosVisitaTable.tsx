@@ -21,6 +21,7 @@ interface MotivosVisitaTableProps {
 
 const SORTABLE_COLUMNS: Array<{ id: MotivoVisitaSortColumn; label: string }> = [
   { id: "id", label: "ID" },
+  { id: "sedeNombre", label: "Sede" },
   { id: "nombre", label: "Nombre" },
 ];
 
@@ -113,6 +114,7 @@ export function MotivosVisitaTable({
             {rows.map((motivo) => (
               <tr key={motivo.id} className="hover:bg-muted/40">
                 <td className="px-4 py-3 tabular-nums">{motivo.id}</td>
+                <td className="px-4 py-3">{motivo.sedeNombre ?? "Sin asignar"}</td>
                 <td className="px-4 py-3 font-medium">{motivo.nombre}</td>
                 <td className="px-4 py-3">
                   <Badge variant={motivo.activo ? "success" : "danger"}>

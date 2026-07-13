@@ -5,6 +5,8 @@
 import { apiClient } from "./apiClient";
 
 export interface Proveedor {
+  sedeId: number | null;
+  sedeNombre: string | null;
   id: number;
   nombre: string;
   ruc: string;
@@ -20,7 +22,7 @@ export interface ProveedorListado {
   limit: number;
 }
 
-export type ProveedorSortColumn = "id" | "nombre" | "ruc" | "createdAt";
+export type ProveedorSortColumn = "id" | "sedeNombre" | "nombre" | "ruc" | "createdAt";
 export type ProveedorSortOrder = "asc" | "desc";
 
 export interface ListarProveedoresQuery {
@@ -29,12 +31,14 @@ export interface ListarProveedoresQuery {
   search?: string;
   nombre?: string;
   ruc?: string;
+  sedeId?: number;
   activo?: boolean;
   sortBy?: ProveedorSortColumn;
   sortOrder?: ProveedorSortOrder;
 }
 
 export interface CrearProveedorPayload {
+  sedeId: number;
   nombre: string;
   ruc: string;
   activo?: boolean;

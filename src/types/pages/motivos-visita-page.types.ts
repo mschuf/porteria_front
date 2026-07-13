@@ -8,6 +8,7 @@ import type { PorteriaPageSize } from "@/lib/porteria";
 export interface MotivosVisitaFilterState {
   search: string;
   nombre: string;
+  sedeId: string;
   activo: "" | "true" | "false";
 }
 

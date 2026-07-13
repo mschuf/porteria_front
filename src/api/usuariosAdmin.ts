@@ -43,9 +43,10 @@ export type UsuarioAdminAsignacion =
       usuario: UsuarioAsignacionUsuario;
     }
   | {
-      tipo: "empresa";
+      tipo: "sedes";
       usuario: UsuarioAsignacionUsuario;
-      empresas: UsuarioAsignacionEntidad[];
+      empresa: UsuarioAsignacionEntidad | null;
+      sedes: UsuarioAsignacionEntidad[];
     }
   | {
       tipo: "porteria";
@@ -80,6 +81,8 @@ export interface CrearUsuarioAdminPayload {
   rol: UsuarioAdminRol;
   password: string;
   activo?: boolean;
+  porteriaAssignment?: { empresaPorteriaId: number; sedeEmpresaPorteriaId: number };
+  sedeIds?: number[];
 }
 
 export type ActualizarUsuarioAdminPayload = Partial<Omit<CrearUsuarioAdminPayload, "password">>;
@@ -112,6 +115,14 @@ export async function obtenerAsignacionUsuarioAdmin(
     ...options,
     showBackdrop: false,
   });
+}
+
+export async function reemplazarSedesUsuarioAdmin(id: number, sedeIds: number[]): Promise<UsuarioAdminAsignacion> {
+  return apiClient.put<UsuarioAdminAsignacion>(`/usuarios-admin/${id}/sedes`, { sedeIds });
+}
+export interface PorteriaAssignmentCandidate { id:number; empresaPorteriaId:number; sedeId:number; label:string }
+export async function listarPorteriaAssignmentCandidates(): Promise<PorteriaAssignmentCandidate[]> {
+  return apiClient.get<PorteriaAssignmentCandidate[]>("/usuarios-admin/porteria-assignment-candidates", { showBackdrop:false });
 }
 
 /** Crea un usuario nuevo. */

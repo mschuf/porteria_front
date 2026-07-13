@@ -3,7 +3,7 @@
  * @description CRUD de usuarios del sistema para super_admin.
  */
 import { Eye, Plus } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   activarUsuarioAdmin,
   actualizarUsuarioAdmin,
@@ -14,8 +14,12 @@ import {
   type CrearUsuarioAdminPayload,
   type UsuarioAdmin,
   type UsuarioAdminRol,
+  listarPorteriaAssignmentCandidates,
+  obtenerAsignacionUsuarioAdmin,
+  type PorteriaAssignmentCandidate,
 } from "@/api/usuariosAdmin";
 import { ApiError } from "@/api/apiClient";
+import { listarSedes, type Sede } from "@/api/sedes";
 import { UsuariosAdminFilters } from "@/components/usuarios-admin/UsuariosAdminFilters";
 import { UsuariosAdminTable } from "@/components/usuarios-admin/UsuariosAdminTable";
 import { UsuarioAsignacionDialog } from "@/components/usuarios-admin/UsuarioAsignacionDialog";
@@ -26,6 +30,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { useUsuariosAdmin } from "@/hooks/useUsuariosAdmin";
 import {
   isPorteriaAllPageSize,
@@ -41,6 +46,9 @@ interface UsuarioFormState {
   rol: UsuarioAdminRol;
   password: string;
   activo: boolean;
+  porteriaAssignmentId: string;
+  adminEmpresaId: string;
+  adminSedeIds: number[];
 }
 
 const EMPTY_FORM: UsuarioFormState = {
@@ -50,6 +58,9 @@ const EMPTY_FORM: UsuarioFormState = {
   rol: "portero",
   password: "",
   activo: true,
+  porteriaAssignmentId: "",
+  adminEmpresaId: "",
+  adminSedeIds: [],
 };
 
 type RequiredUsuarioField = "usuario" | "nombre" | "password";
@@ -63,6 +74,10 @@ const REQUIRED_CREATE_FIELDS: Array<{ key: RequiredUsuarioField; label: string }
 /** CRUD de usuarios con filtros, orden y paginacion. */
 export default function UsuariosAdminPage() {
   const toast = useToast();
+  const { role } = useAuth();
+  const isCompanyAdmin = role === "admin_empresa";
+  const [assignmentCandidates, setAssignmentCandidates] = useState<PorteriaAssignmentCandidate[]>([]);
+  const [adminSedeCandidates, setAdminSedeCandidates] = useState<Sede[]>([]);
   const inputRefs = useRef<Record<RequiredUsuarioField, HTMLInputElement | null>>({
     usuario: null,
     nombre: null,
@@ -98,6 +113,14 @@ export default function UsuariosAdminPage() {
   const [form, setForm] = useState<UsuarioFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+
+  useEffect(() => { void listarPorteriaAssignmentCandidates().then(setAssignmentCandidates).catch(() => setAssignmentCandidates([])); }, []);
+  useEffect(() => {
+    if (isCompanyAdmin) return;
+    void listarSedes({ limit: 50000, activo: true, sortBy: "nombre", sortOrder: "asc" })
+      .then((result) => setAdminSedeCandidates(result.items))
+      .catch(() => setAdminSedeCandidates([]));
+  }, [isCompanyAdmin]);
   const [resetLoading, setResetLoading] = useState(false);
 
   const numericLimit =
@@ -112,7 +135,13 @@ export default function UsuariosAdminPage() {
     () => REQUIRED_CREATE_FIELDS.find((field) => !form[field.key].trim()) ?? null,
     [form],
   );
-  const isCreateFormComplete = !firstMissingCreateField;
+  const assignmentRequired = isCompanyAdmin && form.rol === "portero";
+  const adminSedesRequired = !isCompanyAdmin && !editing && form.rol === "admin_empresa";
+  const isCreateFormComplete = !firstMissingCreateField &&
+    (!assignmentRequired || Boolean(form.porteriaAssignmentId)) &&
+    (!adminSedesRequired || Boolean(form.adminEmpresaId) && form.adminSedeIds.length > 0);
+  const adminEmpresas = useMemo(() => Array.from(new Map(adminSedeCandidates.map((sede) => [sede.empresaId, sede.empresaNombre])).entries()), [adminSedeCandidates]);
+  const filteredAdminSedes = useMemo(() => adminSedeCandidates.filter((sede) => String(sede.empresaId) === form.adminEmpresaId), [adminSedeCandidates, form.adminEmpresaId]);
 
   const openCreateDialog = useCallback(() => {
     setEditing(null);
@@ -121,7 +150,25 @@ export default function UsuariosAdminPage() {
     setDialogOpen(true);
   }, []);
 
-  const openEditDialog = useCallback((usuario: UsuarioAdmin) => {
+  const openEditDialog = useCallback(async (usuario: UsuarioAdmin) => {
+    let porteriaAssignmentId = "";
+    if (usuario.rol === "portero") {
+      try {
+        const [assignment, candidates] = await Promise.all([
+          obtenerAsignacionUsuarioAdmin(usuario.id),
+          listarPorteriaAssignmentCandidates(),
+        ]);
+        setAssignmentCandidates(candidates);
+        if (assignment.tipo === "porteria" && assignment.asignacion) {
+          porteriaAssignmentId = String(candidates.find((candidate) =>
+            candidate.sedeId === assignment.asignacion?.sede.id &&
+            candidate.empresaPorteriaId === assignment.asignacion?.empresaPorteria.id,
+          )?.id ?? "");
+        }
+      } catch {
+        porteriaAssignmentId = "";
+      }
+    }
     setEditing(usuario);
     setForm({
       usuario: usuario.usuario,
@@ -130,6 +177,9 @@ export default function UsuariosAdminPage() {
       rol: usuario.rol,
       password: "",
       activo: usuario.activo,
+      porteriaAssignmentId,
+      adminEmpresaId: "",
+      adminSedeIds: [],
     });
     setDialogOpen(true);
   }, []);
@@ -153,19 +203,30 @@ export default function UsuariosAdminPage() {
       inputRefs.current[firstMissingCreateField.key]?.focus();
       return;
     }
+    if (assignmentRequired && !form.porteriaAssignmentId) {
+      toast.error("Seleccione una sede y empresa de portería.", "Usuarios");
+      return;
+    }
+    if (adminSedesRequired && (!form.adminEmpresaId || form.adminSedeIds.length === 0)) {
+      toast.error("Seleccione la empresa y al menos una sede que administrará.", "Usuarios");
+      return;
+    }
 
     setSaving(true);
     try {
       if (editing) {
+        const assignment = assignmentCandidates.find((candidate) => String(candidate.id) === form.porteriaAssignmentId);
         const payload: ActualizarUsuarioAdminPayload = {
           usuario: form.usuario.trim(),
           nombre: form.nombre.trim(),
           correo: form.correo.trim() || undefined,
           rol: form.rol,
           activo: form.activo,
+          ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, sedeEmpresaPorteriaId: assignment.id } } : {}),
         };
         await actualizarUsuarioAdmin(editing.id, payload);
       } else {
+        const assignment = assignmentCandidates.find((candidate) => String(candidate.id) === form.porteriaAssignmentId);
         const payload: CrearUsuarioAdminPayload = {
           usuario: form.usuario.trim(),
           nombre: form.nombre.trim(),
@@ -173,6 +234,8 @@ export default function UsuariosAdminPage() {
           rol: form.rol,
           password: form.password,
           activo: form.activo,
+          ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, sedeEmpresaPorteriaId: assignment.id } } : {}),
+          ...(form.rol === "admin_empresa" ? { sedeIds: form.adminSedeIds } : {}),
         };
         await crearUsuarioAdmin(payload);
       }
@@ -186,7 +249,7 @@ export default function UsuariosAdminPage() {
     } finally {
       setSaving(false);
     }
-  }, [editing, firstMissingCreateField, form, reload, toast]);
+  }, [adminSedesRequired, assignmentCandidates, assignmentRequired, editing, firstMissingCreateField, form, isCompanyAdmin, reload, toast]);
 
   const handleConfirm = useCallback(async () => {
     if (!confirmUsuario || !confirmAction) return;
@@ -393,13 +456,54 @@ export default function UsuariosAdminPage() {
             <Select
               id="usuario-rol"
               value={form.rol}
-              onChange={(e) => setForm({ ...form, rol: e.target.value as UsuarioAdminRol })}
+              onChange={(e) => setForm({ ...form, rol: e.target.value as UsuarioAdminRol, porteriaAssignmentId: "", adminEmpresaId: "", adminSedeIds: [] })}
             >
-              <option value="super_admin">Super admin</option>
-              <option value="admin_empresa">Admin empresa</option>
+              {!isCompanyAdmin ? <option value="super_admin">Super admin</option> : null}
+              {!isCompanyAdmin ? <option value="admin_empresa">Admin empresa</option> : null}
               <option value="portero">Portero</option>
             </Select>
           </Field>
+          {!editing && !isCompanyAdmin && form.rol === "admin_empresa" ? (
+            <div className="space-y-3 rounded-md border p-3">
+              <Field id="usuario-admin-empresa" label="Empresa que administrará" required>
+                <Select
+                  id="usuario-admin-empresa"
+                  value={form.adminEmpresaId}
+                  onChange={(event) => setForm({ ...form, adminEmpresaId: event.target.value, adminSedeIds: [] })}
+                >
+                  <option value="">Seleccione una empresa</option>
+                  {adminEmpresas.map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
+                </Select>
+              </Field>
+              <div>
+                <p className="mb-1 text-sm font-medium">Sedes que administrará <span className="text-destructive">*</span></p>
+                {!form.adminEmpresaId ? (
+                  <p className="text-sm text-muted-foreground">Seleccione primero una empresa.</p>
+                ) : filteredAdminSedes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">La empresa no tiene sedes activas.</p>
+                ) : (
+                  <div className="grid max-h-48 gap-2 overflow-y-auto sm:grid-cols-2">
+                    {filteredAdminSedes.map((sede) => (
+                      <label key={sede.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.adminSedeIds.includes(sede.id)}
+                          onChange={(event) => setForm({
+                            ...form,
+                            adminSedeIds: event.target.checked
+                              ? [...form.adminSedeIds, sede.id]
+                              : form.adminSedeIds.filter((id) => id !== sede.id),
+                          })}
+                        />
+                        <span>{sede.nombre}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+          {form.rol === "portero" ? <Field id="usuario-porteria" label="Sede y empresa de portería" required={isCompanyAdmin}><Select id="usuario-porteria" value={form.porteriaAssignmentId} onChange={(e) => setForm({ ...form, porteriaAssignmentId:e.target.value })}><option value="">{isCompanyAdmin ? "Seleccione una asignación" : "Sin cambiar/asignar"}</option>{assignmentCandidates.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</Select></Field> : null}
           {!editing ? (
             <Field id="usuario-password" label="Contraseña" required>
               <div className="relative">

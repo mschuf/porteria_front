@@ -10,6 +10,7 @@ export interface PersonasFilterState {
   nombre: string;
   documento: string;
   proveedor: string;
+  sedeId: string;
   activo: "" | "true" | "false";
 }
 

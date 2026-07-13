@@ -43,7 +43,7 @@ type ConfirmAction = "activate" | "deactivate" | "delete";
 const EMPTY: Form = {
   sedeId: "",
   numero: "",
-  color: "#3B82F6",
+  color: "#0000FF",
   icono: "IdCard",
   areaIds: [],
   activo: true,

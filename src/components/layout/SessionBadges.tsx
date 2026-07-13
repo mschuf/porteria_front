@@ -33,16 +33,23 @@ function SessionBadge({ label, value, variant }: SessionBadgeProps) {
  */
 export function SessionBadges({ user }: SessionBadgesProps) {
   const isSuperAdmin = user.role === "super_admin";
+  const isCompanyAdmin = user.role === "admin_empresa";
+  const administeredCompanyNames = [
+    ...new Set(user.sedes.map((sede) => sede.empresaNombre).filter(Boolean)),
+  ];
+  const administeredSedeNames = user.sedes.map((sede) => sede.nombre).filter(Boolean);
+  const companyValue = user.empresaName ?? (isCompanyAdmin ? administeredCompanyNames.join(", ") : "");
+  const sedeValue = user.sedeName ?? (isCompanyAdmin ? administeredSedeNames.join(", ") : "");
 
   return (
     <div className="flex min-w-0 max-w-full flex-wrap items-center gap-1.5" aria-label="Datos del usuario logueado">
-      {user.empresaName ? (
-        <SessionBadge label="Empresa" value={user.empresaName} variant="info" />
+      {companyValue ? (
+        <SessionBadge label="Empresa" value={companyValue} variant="info" />
       ) : isSuperAdmin ? (
         <SessionBadge label="Empresa" value="Todas" variant="info" />
       ) : null}
-      {user.sedeName ? (
-        <SessionBadge label="Sede" value={user.sedeName} variant="success" />
+      {sedeValue ? (
+        <SessionBadge label={isCompanyAdmin ? "Sedes" : "Sede"} value={sedeValue} variant="success" />
       ) : isSuperAdmin ? (
         <SessionBadge label="Sede" value="Todas" variant="success" />
       ) : null}

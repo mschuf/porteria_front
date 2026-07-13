@@ -25,6 +25,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { useProveedores } from "@/hooks/useProveedores";
 import {
   isPorteriaAllPageSize,
@@ -36,12 +37,14 @@ import { PORTERIA_TAB_PATHS, resolvePorteriaTab } from "@/lib/porteria-navigatio
 import type { PorteriaTab } from "@/types/pages/porteria-page.types";
 
 interface ProveedorFormState {
+  sedeId: string;
   nombre: string;
   ruc: string;
   activo: boolean;
 }
 
 const EMPTY_FORM: ProveedorFormState = {
+  sedeId: "",
   nombre: "",
   ruc: "",
   activo: true,
@@ -53,6 +56,7 @@ export default function ProveedoresPage() {
   const navigate = useNavigate();
   const tab = resolvePorteriaTab(location.pathname);
   const toast = useToast();
+  const { user } = useAuth();
   const {
     items,
     filters,
@@ -88,13 +92,14 @@ export default function ProveedoresPage() {
 
   const openCreateDialog = useCallback(() => {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, sedeId: user?.sedes.length === 1 ? String(user.sedes[0].id) : "" });
     setDialogOpen(true);
-  }, []);
+  }, [user]);
 
   const openEditDialog = useCallback((proveedor: Proveedor) => {
     setEditing(proveedor);
     setForm({
+      sedeId: proveedor.sedeId ? String(proveedor.sedeId) : "",
       nombre: proveedor.nombre,
       ruc: proveedor.ruc,
       activo: proveedor.activo,
@@ -122,9 +127,11 @@ export default function ProveedoresPage() {
       return;
     }
 
+    if (!editing && !form.sedeId) { toast.error("Seleccione una sede.", "Proveedores"); return; }
     setSaving(true);
     try {
       const payload: CrearProveedorPayload = {
+        sedeId: Number(form.sedeId),
         nombre: form.nombre.trim(),
         ruc: form.ruc.trim(),
         activo: form.activo,
@@ -301,6 +308,7 @@ export default function ProveedoresPage() {
             void handleSave();
           }}
         >
+          {!editing ? <Field id="proveedor-sede" label="Sede" required><Select id="proveedor-sede" value={form.sedeId} onChange={(e) => setForm({ ...form, sedeId: e.target.value })}><option value="">Seleccione una sede</option>{user?.sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}</Select></Field> : null}
           <Field id="proveedor-nombre" label="Nombre">
             <Input
               id="proveedor-nombre"

@@ -25,6 +25,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { useMotivosVisita } from "@/hooks/useMotivosVisita";
 import {
   isPorteriaAllPageSize,
@@ -36,11 +37,13 @@ import { PORTERIA_TAB_PATHS, resolvePorteriaTab } from "@/lib/porteria-navigatio
 import type { PorteriaTab } from "@/types/pages/porteria-page.types";
 
 interface MotivoVisitaFormState {
+  sedeId: string;
   nombre: string;
   activo: boolean;
 }
 
 const EMPTY_FORM: MotivoVisitaFormState = {
+  sedeId: "",
   nombre: "",
   activo: true,
 };
@@ -51,6 +54,7 @@ export default function MotivosVisitaPage() {
   const navigate = useNavigate();
   const tab = resolvePorteriaTab(location.pathname);
   const toast = useToast();
+  const { user } = useAuth();
   const {
     items,
     filters,
@@ -86,13 +90,14 @@ export default function MotivosVisitaPage() {
 
   const openCreateDialog = useCallback(() => {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, sedeId: user?.sedes.length === 1 ? String(user.sedes[0].id) : "" });
     setDialogOpen(true);
-  }, []);
+  }, [user]);
 
   const openEditDialog = useCallback((motivo: MotivoVisita) => {
     setEditing(motivo);
     setForm({
+      sedeId: motivo.sedeId ? String(motivo.sedeId) : "",
       nombre: motivo.nombre,
       activo: motivo.activo,
     });
@@ -114,9 +119,11 @@ export default function MotivosVisitaPage() {
       return;
     }
 
+    if (!editing && !form.sedeId) { toast.error("Seleccione una sede.", "Motivos de visita"); return; }
     setSaving(true);
     try {
       const payload: CrearMotivoVisitaPayload = {
+        sedeId: Number(form.sedeId),
         nombre: form.nombre.trim(),
         activo: form.activo,
       };
@@ -293,6 +300,7 @@ export default function MotivosVisitaPage() {
             void handleSave();
           }}
         >
+          {!editing ? <Field id="motivo-visita-sede" label="Sede" required><Select id="motivo-visita-sede" value={form.sedeId} onChange={(e) => setForm({ ...form, sedeId: e.target.value })}><option value="">Seleccione una sede</option>{user?.sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}</Select></Field> : null}
           <Field id="motivo-visita-nombre" label="Nombre">
             <Input
               id="motivo-visita-nombre"

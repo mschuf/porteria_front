@@ -5,6 +5,8 @@
 import { apiClient } from "./apiClient";
 
 export interface MotivoVisita {
+  sedeId: number | null;
+  sedeNombre: string | null;
   id: number;
   nombre: string;
   activo: boolean;
@@ -30,7 +32,7 @@ export interface MotivoVisitCandidateListado {
   total: number;
 }
 
-export type MotivoVisitaSortColumn = "id" | "nombre" | "createdAt";
+export type MotivoVisitaSortColumn = "id" | "sedeNombre" | "nombre" | "createdAt";
 export type MotivoVisitaSortOrder = "asc" | "desc";
 
 export interface ListarMotivosVisitaQuery {
@@ -38,12 +40,14 @@ export interface ListarMotivosVisitaQuery {
   limit?: number;
   search?: string;
   nombre?: string;
+  sedeId?: number;
   activo?: boolean;
   sortBy?: MotivoVisitaSortColumn;
   sortOrder?: MotivoVisitaSortOrder;
 }
 
 export interface CrearMotivoVisitaPayload {
+  sedeId: number;
   nombre: string;
   activo?: boolean;
 }

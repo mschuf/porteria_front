@@ -50,7 +50,6 @@ const EmpresasPage = lazy(() => import("./pages/EmpresasPage"));
 const EmpresaPorteriaPage = lazy(() => import("./pages/EmpresaPorteriaPage"));
 const SedesPage = lazy(() => import("./pages/SedesPage"));
 const SedeEmpresaPorteriaPage = lazy(() => import("./pages/SedeEmpresaPorteriaPage"));
-const UsuarioEmpresaPage = lazy(() => import("./pages/UsuarioEmpresaPage"));
 const UsuarioEmpresaPorteriaPage = lazy(() => import("./pages/UsuarioEmpresaPorteriaPage"));
 
 const UsuariosAdminPage = lazy(() => import("./pages/UsuariosAdminPage"));
@@ -213,15 +212,7 @@ export default function App() {
 
             path="admin/usuario-empresa"
 
-            element={
-
-              <StrictSuperAdminRoute>
-
-                <UsuarioEmpresaPage />
-
-              </StrictSuperAdminRoute>
-
-            }
+            element={<Navigate to="/admin/usuarios" replace />}
 
           />
 
@@ -247,11 +238,11 @@ export default function App() {
 
             element={
 
-              <StrictSuperAdminRoute>
+                <SuperAdminRoute>
 
-                <UsuariosAdminPage />
+                  <UsuariosAdminPage />
 
-              </StrictSuperAdminRoute>
+                </SuperAdminRoute>
 
             }
 
@@ -263,11 +254,11 @@ export default function App() {
 
             element={
 
-              <StrictSuperAdminRoute>
+                <SuperAdminRoute>
 
-                <AreasPage />
+                  <AreasPage />
 
-              </StrictSuperAdminRoute>
+                </SuperAdminRoute>
 
             }
 
@@ -279,11 +270,11 @@ export default function App() {
 
             element={
 
-              <StrictSuperAdminRoute>
+                <SuperAdminRoute>
 
-                <TarjetasPage />
+                  <TarjetasPage />
 
-              </StrictSuperAdminRoute>
+                </SuperAdminRoute>
 
             }
 

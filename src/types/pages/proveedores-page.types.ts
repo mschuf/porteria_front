@@ -9,6 +9,7 @@ export interface ProveedoresFilterState {
   search: string;
   nombre: string;
   ruc: string;
+  sedeId: string;
   activo: "" | "true" | "false";
 }
 

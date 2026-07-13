@@ -24,6 +24,7 @@ import {
   type ServerSearchableSelectHandle,
 } from "@/components/ui/server-searchable-select";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   loadProveedorSelectOptions,
   resolveProveedorSelectOption,
@@ -33,6 +34,7 @@ import { PersonaMrzScannerDialog } from "@/components/personas/PersonaMrzScanner
 import { PersonaPhotoField } from "./PersonaPhotoField";
 
 interface PersonaFormState {
+  sedeId: string;
   nombre: string;
   documento: string;
   proveedorId: string;
@@ -48,6 +50,7 @@ interface PersonaRequiredErrors {
 }
 
 const EMPTY_FORM: PersonaFormState = {
+  sedeId: "",
   nombre: "",
   documento: "",
   proveedorId: "",
@@ -98,6 +101,7 @@ export function PersonaFormDialog({
   initialCreateValues,
 }: PersonaFormDialogProps) {
   const toast = useToast();
+  const { user } = useAuth();
   const editing = persona;
   const [form, setForm] = useState<PersonaFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -143,6 +147,7 @@ export function PersonaFormDialog({
     if (!editing) {
       setForm({
         ...EMPTY_FORM,
+        sedeId: user?.sedes.length === 1 ? String(user.sedes[0].id) : "",
         ...(initialCreateValues?.nombre ? { nombre: initialCreateValues.nombre } : {}),
         ...(initialCreateValues?.documento ? { documento: initialCreateValues.documento } : {}),
       });
@@ -154,6 +159,7 @@ export function PersonaFormDialog({
     setMrzScannerOpen(false);
     resetPhotoState();
     setForm({
+      sedeId: editing.sedeId ? String(editing.sedeId) : "",
       nombre: editing.nombre,
       documento: editing.documento,
       proveedorId: String(editing.proveedorId),
@@ -276,6 +282,7 @@ export function PersonaFormDialog({
       proveedorRef.current?.focusAndOpen();
       return;
     }
+    if (!editing && !form.sedeId) { toast.error("Seleccione una sede.", toastScope); return; }
 
     if (photoError) {
       toast.error(photoError, toastScope);
@@ -285,6 +292,7 @@ export function PersonaFormDialog({
     setSaving(true);
     try {
       const payload: CrearPersonaPayload = {
+        sedeId: Number(form.sedeId),
         nombre,
         documento,
         proveedorId,
@@ -377,6 +385,7 @@ export function PersonaFormDialog({
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
+          {!editing ? <Field id="persona-sede" label="Sede" required><Select id="persona-sede" value={form.sedeId} onChange={(e) => setForm({ ...form, sedeId: e.target.value })}><option value="">Seleccione una sede</option>{user?.sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}</Select></Field> : null}
           <Field id="persona-nombre" label="Nombre" required>
             <Input
               ref={nombreRef}

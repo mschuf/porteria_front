@@ -7,6 +7,8 @@ import { ChevronDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { ServerSearchableSelect } from "@/components/ui/server-searchable-select";
+import { loadSedeSelectOptions, resolveSedeSelectOption } from "@/lib/porteria-sedes";
 import { cn } from "@/lib/utils";
 import type { MotivosVisitaFilterState } from "@/types/pages/motivos-visita-page.types";
 
@@ -56,7 +58,11 @@ export function MotivosVisitaFilters({ filters, onChange, onApply, actions }: Mo
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2 overflow-visible pb-1">
+        <div className="mt-3 grid grid-cols-[repeat(3,minmax(0,1fr))_auto] items-end gap-2 overflow-visible pb-1">
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Sede</span>
+            <ServerSearchableSelect value={filters.sedeId} onChange={(value) => update("sedeId", value)} onLoadOptions={loadSedeSelectOptions} resolveSelectedOption={resolveSedeSelectOption} placeholder="Todas" searchPlaceholder="Buscar sede..." emptyOption={{ value: "", label: "Todas" }} />
+          </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Nombre</span>
             <Input

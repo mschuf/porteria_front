@@ -21,6 +21,7 @@ interface ProveedoresTableProps {
 
 const SORTABLE_COLUMNS: Array<{ id: ProveedorSortColumn; label: string }> = [
   { id: "id", label: "ID" },
+  { id: "sedeNombre", label: "Sede" },
   { id: "nombre", label: "Nombre" },
   { id: "ruc", label: "RUC" },
 ];
@@ -114,6 +115,7 @@ export function ProveedoresTable({
             {rows.map((proveedor) => (
               <tr key={proveedor.id} className="hover:bg-muted/40">
                 <td className="px-4 py-3 tabular-nums">{proveedor.id}</td>
+                <td className="px-4 py-3">{proveedor.sedeNombre ?? "Sin asignar"}</td>
                 <td className="px-4 py-3 font-medium">{proveedor.nombre}</td>
                 <td className="px-4 py-3 tabular-nums">{proveedor.ruc}</td>
                 <td className="px-4 py-3">
