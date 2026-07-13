@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/api/apiClient";
 import { SedeEmpresaPorteriaFilters } from "@/components/sede-empresa-porteria/SedeEmpresaPorteriaFilters";
 import { SedeEmpresaPorteriaTable } from "@/components/sede-empresa-porteria/SedeEmpresaPorteriaTable";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
@@ -230,15 +231,11 @@ export default function SedeEmpresaPorteriaPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Administracion</p>
-          <h1 className="text-lg font-semibold">Asignaciones sede-porteria</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Empresas de porteria asignadas a cada sede.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Administracion"
+        title="Asignaciones sede-porteria"
+        description="Empresas de porteria asignadas a cada sede."
+      />
 
       <SedeEmpresaPorteriaFilters
         filters={filters}
@@ -397,6 +394,9 @@ export default function SedeEmpresaPorteriaPage() {
               value={form.asignadoHasta}
               onChange={(e) => setForm({ ...form, asignadoHasta: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              Si queda vacio, la asignacion no vence y sigue siendo valida mientras este activa.
+            </p>
           </Field>
           {editing ? (
             <Field id="sep-activo" label="Estado">

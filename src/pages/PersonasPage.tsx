@@ -13,6 +13,7 @@ import {
   type Persona,
 } from "@/api/personas";
 import { ApiError } from "@/api/apiClient";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { PersonaFormDialog } from "@/components/personas/PersonaFormDialog";
 import { PersonasFilters } from "@/components/personas/PersonasFilters";
 import { PersonasTable } from "@/components/personas/PersonasTable";
@@ -181,22 +182,17 @@ export default function PersonasPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Portería</p>
-          <h1 className="text-lg font-semibold">Personas</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Registro de visitantes y personal para el control de acceso.
-          </p>
-        </div>
-
-        <div className="flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
+      <PageHeader
+        eyebrow="Portería"
+        title="Personas"
+        description="Registro de visitantes y personal para el control de acceso."
+        actions={
           <PorteriaTabs
             value={tab}
             onChange={(nextTab: PorteriaTab) => navigate(PORTERIA_TAB_PATHS[nextTab])}
           />
-        </div>
-      </div>
+        }
+      />
 
       <PersonasFilters
         filters={filters}

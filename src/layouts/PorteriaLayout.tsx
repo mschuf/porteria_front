@@ -5,6 +5,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { MobileRefreshFab } from "@/components/layout/MobileRefreshFab";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { PorteriaTabs } from "@/components/porteria/PorteriaTabs";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,36 +47,33 @@ function PorteriaLayoutContent() {
   return (
     <div className="space-y-5">
       {!showPorteriaBranding ? null : (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">porterIA</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Seguimiento de visitas y control de ingresos.
-            </p>
-          </div>
+        <PageHeader
+          title="porterIA"
+          description="Seguimiento de visitas y control de ingresos."
+          actions={
+            <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+              {showRefresh ? (
+                <div className="hidden shrink-0 rounded-md border bg-card p-1 sm:flex">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2"
+                    disabled={loading}
+                    onClick={() => void handleRefresh()}
+                  >
+                    <RefreshCw
+                      className={cn("h-4 w-4", loading && "animate-spin")}
+                      aria-hidden="true"
+                    />
+                  </Button>
+                </div>
+              ) : null}
 
-          <div className="flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
-            {showRefresh ? (
-              <div className="hidden shrink-0 rounded-md border bg-card p-1 sm:flex">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2"
-                  disabled={loading}
-                  onClick={() => void handleRefresh()}
-                >
-                  <RefreshCw
-                    className={cn("h-4 w-4", loading && "animate-spin")}
-                    aria-hidden="true"
-                  />
-                </Button>
-              </div>
-            ) : null}
-
-            <PorteriaTabs value={tab} onChange={handleTabChange} />
-          </div>
-        </div>
+              <PorteriaTabs value={tab} onChange={handleTabChange} />
+            </div>
+          }
+        />
       )}
 
       <Outlet />

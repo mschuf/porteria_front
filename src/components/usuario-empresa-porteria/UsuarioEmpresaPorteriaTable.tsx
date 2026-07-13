@@ -27,6 +27,7 @@ const SORTABLE_COLUMNS: Array<{ id: UsuarioEmpresaPorteriaSortColumn; label: str
   { id: "id", label: "ID" },
   { id: "usuarioId", label: "Usuario" },
   { id: "empresaPorteriaId", label: "Empresa de porteria" },
+  { id: "sedeId", label: "Sede" },
   { id: "createdAt", label: "Creado" },
 ];
 
@@ -126,6 +127,7 @@ export function UsuarioEmpresaPorteriaTable({
                 <td className="px-4 py-3 tabular-nums">{asignacion.id}</td>
                 <td className="px-4 py-3 font-medium">{asignacion.usuarioNombre}</td>
                 <td className="px-4 py-3">{asignacion.empresaPorteriaNombre}</td>
+                <td className="px-4 py-3">{asignacion.sedeNombre}</td>
                 <td className="px-4 py-3 tabular-nums">{formatDate(asignacion.createdAt)}</td>
                 <td className="px-4 py-3">
                   <Badge variant={asignacion.activo ? "success" : "danger"}>

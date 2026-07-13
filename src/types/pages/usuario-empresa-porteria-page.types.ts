@@ -13,6 +13,7 @@ export interface UsuarioEmpresaPorteriaFilterState {
   search: string;
   usuarioId: string;
   empresaPorteriaId: string;
+  sedeId: string;
   activo: "" | "true" | "false";
 }
 

@@ -2,8 +2,8 @@
  * @file VisitasPage.tsx
  * @description CRUD de visitas del módulo Portería.
  */
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Camera, Plus } from "lucide-react";
 import {
   actualizarVisita,
   crearVisita,
@@ -12,15 +12,25 @@ import {
   listarVisitasActivas,
   requiereCancelacionAlEliminar,
   subirFotoVisita,
+  searchVisitaSedeCandidates,
+  searchVisitaTarjetaCandidates,
   type CrearVisitaPayload,
   type Visita,
   type VisitaEstado,
+  type VisitaTarjetaCandidate,
 } from "@/api/visitas";
 import { obtenerPersona, type Persona } from "@/api/personas";
 import { PersonaFormDialog } from "@/components/personas/PersonaFormDialog";
+import { PersonaMrzScannerDialog } from "@/components/personas/PersonaMrzScannerDialog";
+import type { ParsedMrz } from "@/lib/mrz";
 import { ApiError } from "@/api/apiClient";
 import { VisitasFilters } from "@/components/visitas/VisitasFilters";
 import { VisitasTable } from "@/components/visitas/VisitasTable";
+import { VisitaBarcodeScannerDialog } from "@/components/visitas/VisitaBarcodeScannerDialog";
+import {
+  VisitaTarjetaCombobox,
+  type VisitaTarjetaComboboxHandle,
+} from "@/components/visitas/VisitaTarjetaCombobox";
 import { VisitaTarjetaColorSelector } from "@/components/visitas/VisitaTarjetaColorSelector";
 import { VisitaWebcamCapture } from "@/components/visitas/VisitaWebcamCapture";
 import { Button } from "@/components/ui/button";
@@ -35,10 +45,12 @@ import {
 import type { SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { useRegisterPorteriaRefresh } from "@/context/PorteriaRefreshContext";
 import { useVisitas } from "@/hooks/useVisitas";
 import {
   buildPersonaLabel,
+  findPersonaByDocumento,
   loadVisitPersonCandidateOptions,
   parsePersonaSelectValue,
   resolveCandidateOption,
@@ -54,21 +66,16 @@ import {
   loadResponsableCandidateOptions,
   parseResponsableSelectValue,
   resolveResponsableCandidateOption,
-  resolveResponsableFullName,
   toResponsableSelectValue,
 } from "@/lib/visitas-responsables";
 import { personaTieneProveedorValido } from "@/lib/porteria-proveedores";
 import {
   isVisitaTarjetaColor,
+  resolveVisitaTarjetaColorFromCatalog,
   resolveZonasFromTarjetaColor,
   type VisitaTarjetaColor,
 } from "@/lib/visita-tarjeta-color";
-import {
-  credencialOcupadaMessage,
-  getCredencialesOcupadas,
-  isCredencialOcupada,
-  normalizeCredencialNumero,
-} from "@/lib/visita-credencial";
+import { normalizeCredencialNumero } from "@/lib/visita-credencial";
 import {
   findVisitaActivaDePersona,
   personaEnVisitaActivaMessage,
@@ -84,6 +91,7 @@ interface VisitaFormState {
   personaId: string;
   motivoVisitaId: string;
   responsableValue: string;
+  sedeId: string;
   estado: VisitaEstado;
   credencialNumero: string;
   tarjetaColor: VisitaTarjetaColor | "";
@@ -103,6 +111,7 @@ const EMPTY_FORM: VisitaFormState = {
   personaId: "",
   motivoVisitaId: "",
   responsableValue: "",
+  sedeId: "",
   estado: "activa",
   credencialNumero: "",
   tarjetaColor: "",
@@ -168,6 +177,7 @@ function defaultCreateDateTimes(): Pick<VisitaFormState, "entradaAt" | "salidaAt
 /** CRUD de visitas con filtros, orden y paginación. */
 export default function VisitasPage() {
   const toast = useToast();
+  const { user } = useAuth();
   const {
     items,
     filters,
@@ -186,6 +196,9 @@ export default function VisitasPage() {
   useRegisterPorteriaRefresh(reload, loading);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cedulaScanOpen, setCedulaScanOpen] = useState(false);
+  const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
+  const [pendingMrz, setPendingMrz] = useState<ParsedMrz | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
   const [personaCreateOpen, setPersonaCreateOpen] = useState(false);
@@ -200,11 +213,12 @@ export default function VisitasPage() {
   const [finalizeLoading, setFinalizeLoading] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<File | null>(null);
   const [personaSelectedOption, setPersonaSelectedOption] = useState<SearchableSelectOption | null>(null);
+  const [selectedTarjeta, setSelectedTarjeta] = useState<VisitaTarjetaCandidate | null>(null);
   const [requiredErrors, setRequiredErrors] = useState<VisitaRequiredErrors>(EMPTY_REQUIRED_ERRORS);
   const personaRef = useRef<ServerSearchableSelectHandle | null>(null);
   const motivoRef = useRef<ServerSearchableSelectHandle | null>(null);
   const responsableRef = useRef<ServerSearchableSelectHandle | null>(null);
-  const credencialRef = useRef<HTMLInputElement | null>(null);
+  const credencialRef = useRef<VisitaTarjetaComboboxHandle | null>(null);
 
   const numericLimit =
     typeof pagination.limit === "number" ? pagination.limit : PORTERIA_PAGE_SIZE_OPTIONS[0];
@@ -224,6 +238,22 @@ export default function VisitasPage() {
     (query: string, signal: AbortSignal) => loadResponsableCandidateOptions(query, signal),
     [],
   );
+
+  const loadSedeOptions = useCallback(async (query: string, signal: AbortSignal) => {
+    const items = await searchVisitaSedeCandidates(query, { signal });
+    return items.map((item) => ({
+      value: String(item.id),
+      label: `${item.name} — ${item.companyName}`,
+    }));
+  }, []);
+
+  const resolveSedeOption = useCallback(async (value: string, signal: AbortSignal) => {
+    const items = await searchVisitaSedeCandidates("", { signal });
+    const item = items.find((candidate) => String(candidate.id) === value);
+    return item
+      ? { value: String(item.id), label: `${item.name} — ${item.companyName}` }
+      : null;
+  }, []);
 
   const resolvePersonCandidateOption = useCallback(
     (value: string, signal: AbortSignal) => resolveCandidateOption(value, signal),
@@ -266,21 +296,28 @@ export default function VisitasPage() {
     }
   }, []);
 
-  const occupiedCredenciales = useMemo(
-    () => getCredencialesOcupadas(visitasActivas, editing?.id),
-    [visitasActivas, editing?.id],
-  );
-
-  const openCreateDialog = useCallback(() => {
+  /** Prepara el formulario de creación en blanco sin abrir aún ningún modal. */
+  const prepareCreateForm = useCallback(() => {
     setEditing(null);
     setCapturedPhoto(null);
     setPersonaCreateOpen(false);
     setPersonaSelectedOption(null);
+    setPendingMrz(null);
     setRequiredErrors(EMPTY_REQUIRED_ERRORS);
-    setForm({ ...EMPTY_FORM, ...defaultCreateDateTimes() });
-    setDialogOpen(true);
+    setSelectedTarjeta(null);
+    setForm({
+      ...EMPTY_FORM,
+      sedeId: user?.sedeId ? String(user.sedeId) : "",
+      ...defaultCreateDateTimes(),
+    });
+  }, [user?.sedeId]);
+
+  /** Paso 1: abre el escaneo de cédula antes del modal de visita. */
+  const openCreateDialog = useCallback(() => {
+    prepareCreateForm();
+    setCedulaScanOpen(true);
     void refreshVisitasActivas();
-  }, [refreshVisitasActivas]);
+  }, [prepareCreateForm, refreshVisitasActivas]);
 
   const openEditDialog = useCallback(
     (visita: Visita) => {
@@ -288,12 +325,14 @@ export default function VisitasPage() {
       setPersonaCreateOpen(false);
       setPersonaSelectedOption(null);
       setRequiredErrors(EMPTY_REQUIRED_ERRORS);
+      setSelectedTarjeta(null);
       setForm({
         personaId: toPersonaSelectValue(visita.personaId),
         motivoVisitaId: visita.motivoVisitaId
           ? toMotivoVisitaSelectValue(visita.motivoVisitaId)
           : visita.motivo,
-        responsableValue: visita.responsableNombre,
+        responsableValue: toResponsableSelectValue(visita.responsableId),
+        sedeId: String(visita.sedeId),
         estado: visita.estado,
         credencialNumero: visita.credencialNumero ?? "",
         tarjetaColor: isVisitaTarjetaColor(visita.tarjetaColor) ? visita.tarjetaColor : "",
@@ -307,12 +346,37 @@ export default function VisitasPage() {
     [refreshVisitasActivas],
   );
 
-  const handleTarjetaColorChange = useCallback((tarjetaColor: VisitaTarjetaColor) => {
-    setForm((current) => ({
-      ...current,
-      tarjetaColor,
-    }));
-  }, []);
+  useEffect(() => {
+    if (!dialogOpen || !form.sedeId || !form.credencialNumero) {
+      if (!form.credencialNumero) setSelectedTarjeta(null);
+      return;
+    }
+    const numero = Number(form.credencialNumero);
+    if (!Number.isSafeInteger(numero) || numero < 1) return;
+    const controller = new AbortController();
+    searchVisitaTarjetaCandidates(
+      {
+        numero,
+        visitaSedeId: Number(form.sedeId),
+        excludeVisitaId: editing?.id,
+        limit: 50,
+      },
+      { signal: controller.signal },
+    ).then((candidates) => {
+      if (controller.signal.aborted) return;
+      const tarjeta = candidates.find((candidate) => candidate.sedeId === Number(form.sedeId)) ?? null;
+      setSelectedTarjeta(tarjeta);
+      if (tarjeta) {
+        setForm((current) => ({
+          ...current,
+          tarjetaColor: resolveVisitaTarjetaColorFromCatalog(tarjeta),
+        }));
+      }
+    }).catch(() => {
+      if (!controller.signal.aborted) setSelectedTarjeta(null);
+    });
+    return () => controller.abort();
+  }, [dialogOpen, editing?.id, form.credencialNumero, form.sedeId]);
 
   const handlePersonaChange = useCallback(
     async (value: string) => {
@@ -378,6 +442,106 @@ export default function VisitasPage() {
     setPersonaCreateOpen(false);
   }, []);
 
+  /** Selecciona una persona existente encontrada por la cédula escaneada. */
+  const selectExistingPersona = useCallback(
+    (persona: Persona) => {
+      const value = toPersonaSelectValue(persona.id);
+      setPersonaSelectedOption({
+        value,
+        label: buildPersonaLabel(persona.nombre, persona.documento),
+        searchText: `${persona.nombre} ${persona.documento}`.toLowerCase(),
+      });
+      setRequiredErrors((current) => ({ ...current, personaId: false }));
+      // Precarga motivo/responsable a partir de los últimos datos de la persona.
+      void handlePersonaChange(value);
+    },
+    [handlePersonaChange],
+  );
+
+  /** Paso 1 → 2: procesa la MRZ leída y decide cargar o crear persona. */
+  const handleCedulaDetected = useCallback(
+    async (parsed: ParsedMrz) => {
+      setCedulaScanOpen(false);
+      try {
+        const persona = await findPersonaByDocumento(parsed.documentNumber);
+        if (persona) {
+          selectExistingPersona(persona);
+          setDialogOpen(true);
+          return;
+        }
+      } catch {
+        toast.error("No se pudo buscar la persona por documento.", "Visitas");
+      }
+      // No encontrada: abre el modal de visita y, encima, crear persona prellenado.
+      setPendingMrz(parsed);
+      setDialogOpen(true);
+      setPersonaCreateOpen(true);
+    },
+    [selectExistingPersona, toast],
+  );
+
+  /** Paso 1 omitido: continúa directo al modal de visita (flujo manual). */
+  const handleCedulaSkip = useCallback(() => {
+    setCedulaScanOpen(false);
+    setDialogOpen(true);
+  }, []);
+
+  /** Resuelve el código escaneado contra el catálogo antes de seleccionarlo. */
+  const handleBarcodeDetected = useCallback(async (code: string) => {
+    const normalized = normalizeCredencialNumero(code);
+    const numero = Number(normalized);
+    const visitaSedeId = form.sedeId ? Number(form.sedeId) : undefined;
+    if (!visitaSedeId) {
+      toast.error("Seleccione la sede de la visita antes de escanear una tarjeta.", "Visitas");
+      return;
+    }
+    if (!Number.isSafeInteger(numero) || numero < 1) {
+      toast.error("El código escaneado no corresponde a un número de tarjeta válido.", "Visitas");
+      return;
+    }
+
+    try {
+      const candidates = await searchVisitaTarjetaCandidates({
+        numero,
+        visitaSedeId,
+        excludeVisitaId: editing?.id,
+        limit: 50,
+      });
+      const candidate = candidates.find((item) => item.sedeId === visitaSedeId);
+      if (!candidate) {
+        const otherSede = candidates.find((item) => item.sedeId !== visitaSedeId);
+        toast.error(
+          otherSede
+            ? `La tarjeta Nº ${numero} pertenece a otra sede.`
+            : `La tarjeta Nº ${numero} no existe en la sede seleccionada.`,
+          "Visitas",
+        );
+        return;
+      }
+      if (!candidate.activo) {
+        toast.error(`La tarjeta Nº ${numero} está inactiva.`, "Visitas");
+        return;
+      }
+      if (candidate.enUso) {
+        toast.error(`La tarjeta Nº ${numero} ya está en uso.`, "Visitas");
+        return;
+      }
+
+      setSelectedTarjeta(candidate);
+      setForm((current) => ({
+        ...current,
+        credencialNumero: String(candidate.numero),
+        tarjetaColor: resolveVisitaTarjetaColorFromCatalog(candidate),
+      }));
+      setRequiredErrors((current) => ({ ...current, credencialNumero: false }));
+    } catch (scanError) {
+      const message = scanError instanceof ApiError
+        ? scanError.message
+        : "No se pudo validar la tarjeta escaneada.";
+      toast.error(message, "Visitas");
+    }
+  }, [editing?.id, form.sedeId, toast]);
+
   const handleSave = useCallback(async () => {
     const personaId = parsePersonaSelectValue(form.personaId);
     const motivoVisitaId = parseMotivoVisitaSelectValue(form.motivoVisitaId);
@@ -407,14 +571,18 @@ export default function VisitasPage() {
       responsableRef.current?.focusAndOpen();
       return;
     }
-    if (!editing && responsableId == null) {
-      toast.error("Seleccione un responsable de GLPI.", "Visitas");
+    if (responsableId == null) {
+      toast.error("Seleccione un responsable.", "Visitas");
       responsableRef.current?.focusAndOpen();
+      return;
+    }
+    if (user?.role !== "portero" && !form.sedeId) {
+      toast.error("Seleccione una sede.", "Visitas");
       return;
     }
     if (nextRequiredErrors.credencialNumero) {
       toast.error("El número de tarjeta es obligatorio.", "Visitas");
-      credencialRef.current?.focus();
+      credencialRef.current?.focusAndOpen();
       return;
     }
     if (!form.tarjetaColor) {
@@ -426,15 +594,6 @@ export default function VisitasPage() {
     if (personaId == null || motivoVisitaId == null) {
       return;
     }
-    if (
-      form.estado === "activa" &&
-      credencialNumero &&
-      isCredencialOcupada(credencialNumero, occupiedCredenciales)
-    ) {
-      toast.error(credencialOcupadaMessage(credencialNumero), "Visitas");
-      return;
-    }
-
     setSaving(true);
     try {
       const persona = await obtenerPersona(personaId);
@@ -455,18 +614,14 @@ export default function VisitasPage() {
         }
       }
 
-      const responsableNombre = editing
-        ? (await resolveResponsableFullName(form.responsableValue)) || form.responsableValue.trim()
-        : await resolveResponsableFullName(form.responsableValue);
-
       const isClosingVisit =
         editing != null && form.estado === "finalizada" && editing.estado !== "finalizada";
 
       const payload: CrearVisitaPayload = {
         personaId,
         motivoVisitaId,
-        responsableNombre,
-        responsableId: responsableId ?? undefined,
+        responsableId,
+        sedeId: form.sedeId ? Number(form.sedeId) : undefined,
         estado: form.estado,
         zonasPermitidas: resolveZonasFromTarjetaColor(form.tarjetaColor),
         credencialNumero: credencialNumero || undefined,
@@ -503,7 +658,7 @@ export default function VisitasPage() {
     } finally {
       setSaving(false);
     }
-  }, [capturedPhoto, editing, form, occupiedCredenciales, reload, toast, visitasActivas]);
+  }, [capturedPhoto, editing, form, reload, toast, user?.role, visitasActivas]);
 
   const handleDelete = useCallback(async () => {
     if (!confirmVisita) return;
@@ -544,7 +699,7 @@ export default function VisitasPage() {
   }, [finalizeObservaciones, finalizeVisitaTarget, reload, toast]);
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5 min-[1600px]:w-[80vw] min-[1600px]:ml-[calc(50%_-_40vw)] min-[1600px]:mr-0">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="w-full min-w-0 flex-1">
           <VisitasFilters
@@ -687,7 +842,10 @@ export default function VisitasPage() {
               {!editing ? (
                 <Button
                   type="button"
-                  onClick={() => setPersonaCreateOpen(true)}
+                  onClick={() => {
+                    setPendingMrz(null);
+                    setPersonaCreateOpen(true);
+                  }}
                   disabled={saving}
                 >
                   <Plus className="h-4 w-4" aria-hidden="true" />
@@ -697,9 +855,39 @@ export default function VisitasPage() {
             </div>
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="col-span-full grid gap-4 sm:grid-cols-5">
-              <Field id="visita-motivo" label="Motivo" className="sm:col-span-2" required>
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field id="visita-sede" label="Sede" required>
+                {user?.role === "portero" ? (
+                  <Input
+                    id="visita-sede"
+                    value={[user.sedeName, user.empresaName].filter(Boolean).join(" — ")}
+                    readOnly
+                    disabled
+                  />
+                ) : (
+                  <ServerSearchableSelect
+                    id="visita-sede"
+                    value={form.sedeId}
+                    onChange={(value) => {
+                      if (value !== form.sedeId) setSelectedTarjeta(null);
+                      setForm((current) => ({
+                        ...current,
+                        sedeId: value,
+                        credencialNumero: value === current.sedeId ? current.credencialNumero : "",
+                        tarjetaColor: value === current.sedeId ? current.tarjetaColor : "",
+                      }));
+                      setRequiredErrors((current) => ({ ...current, credencialNumero: false }));
+                    }}
+                    onLoadOptions={loadSedeOptions}
+                    resolveSelectedOption={resolveSedeOption}
+                    placeholder="Seleccionar sede"
+                    searchPlaceholder="Buscar sede..."
+                    disabled={saving}
+                  />
+                )}
+              </Field>
+              <Field id="visita-motivo" label="Motivo" required>
                 <ServerSearchableSelect
                   ref={motivoRef}
                   id="visita-motivo"
@@ -718,7 +906,7 @@ export default function VisitasPage() {
                   invalid={requiredErrors.motivoVisitaId}
                 />
               </Field>
-              <Field id="visita-responsable" label="Responsable" className="sm:col-span-3" required>
+              <Field id="visita-responsable" label="Responsable" required>
                 <ServerSearchableSelect
                   ref={responsableRef}
                   id="visita-responsable"
@@ -740,8 +928,15 @@ export default function VisitasPage() {
                 />
               </Field>
             </div>
-            {editing ? (
-              <Field id="visita-estado" label="Estado">
+            <div
+              className={
+                editing
+                  ? "grid gap-4 sm:grid-cols-4"
+                  : "grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]"
+              }
+            >
+              {editing ? (
+                <Field id="visita-estado" label="Estado">
                 <Select
                   id="visita-estado"
                   value={form.estado}
@@ -752,47 +947,65 @@ export default function VisitasPage() {
                   <option value="finalizada">Finalizada</option>
                   <option value="cancelada">Cancelada</option>
                 </Select>
+                </Field>
+              ) : null}
+              <Field id="visita-credencial" label="Número de Tarjeta" required>
+              <div className="flex items-center gap-2">
+                <VisitaTarjetaCombobox
+                  ref={credencialRef}
+                  id="visita-credencial"
+                  value={form.credencialNumero}
+                  visitaSedeId={form.sedeId ? Number(form.sedeId) : undefined}
+                  excludeVisitaId={editing?.id}
+                  onChange={(candidate) => {
+                    setSelectedTarjeta(candidate);
+                    setForm((current) => ({
+                      ...current,
+                      credencialNumero: candidate ? String(candidate.numero) : "",
+                      tarjetaColor: candidate
+                        ? resolveVisitaTarjetaColorFromCatalog(candidate)
+                        : "",
+                    }));
+                    setRequiredErrors((current) => ({ ...current, credencialNumero: false }));
+                  }}
+                  disabled={saving}
+                  invalid={requiredErrors.credencialNumero}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Escanear código de barras de la tarjeta"
+                  onClick={() => setBarcodeScannerOpen(true)}
+                  disabled={saving || !form.sedeId}
+                >
+                  <Camera className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </div>
               </Field>
-            ) : null}
-            <Field id="visita-credencial" label="Número de Tarjeta" required>
-              <Input
-                ref={credencialRef}
-                id="visita-credencial"
-                value={form.credencialNumero}
-                onChange={(e) => {
-                  setForm((current) => ({ ...current, credencialNumero: e.target.value }));
-                  setRequiredErrors((current) => ({ ...current, credencialNumero: false }));
-                }}
-                className={
-                  requiredErrors.credencialNumero
-                    ? "border-destructive focus-visible:ring-destructive"
-                    : undefined
-                }
-              />
-            </Field>
-            <Field id="visita-entrada" label="Entrada">
+              <Field id="visita-entrada" label="Entrada">
               <Input
                 id="visita-entrada"
                 type="time"
                 value={toTimeInput(form.entradaAt)}
                 onChange={(e) => setForm({ ...form, entradaAt: withTime(form.entradaAt, e.target.value) })}
               />
-            </Field>
-            <Field id="visita-salida" label="Salida">
+              </Field>
+              <Field id="visita-salida" label="Salida">
               <Input
                 id="visita-salida"
                 type="time"
                 value={toTimeInput(form.salidaAt)}
                 onChange={(e) => setForm({ ...form, salidaAt: withTime(form.salidaAt, e.target.value) })}
               />
-            </Field>
+              </Field>
+            </div>
           </div>
 
           <VisitaTarjetaColorSelector
             labelId={TARJETA_COLOR_LABEL_ID}
-            value={form.tarjetaColor}
-            onChange={handleTarjetaColorChange}
-            disabled={saving}
+            tarjeta={selectedTarjeta}
           />
 
           {!editing ? (
@@ -823,6 +1036,19 @@ export default function VisitasPage() {
         </form>
       </Dialog>
 
+      <PersonaMrzScannerDialog
+        open={cedulaScanOpen}
+        onOpenChange={setCedulaScanOpen}
+        onDetected={handleCedulaDetected}
+        onSkip={handleCedulaSkip}
+      />
+
+      <VisitaBarcodeScannerDialog
+        open={barcodeScannerOpen}
+        onOpenChange={setBarcodeScannerOpen}
+        onDetected={(code) => { void handleBarcodeDetected(code); }}
+      />
+
       <PersonaFormDialog
         open={personaCreateOpen}
         onOpenChange={setPersonaCreateOpen}
@@ -831,6 +1057,11 @@ export default function VisitasPage() {
             handlePersonaCreated(persona);
           }
         }}
+        initialCreateValues={
+          pendingMrz
+            ? { documento: pendingMrz.documentNumber, nombre: pendingMrz.fullName }
+            : undefined
+        }
         toastScope="Visitas"
         stacked
         captureEscape

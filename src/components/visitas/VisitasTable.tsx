@@ -29,8 +29,10 @@ const SORTABLE_COLUMNS: Array<{ id: VisitaSortColumn; label: string }> = [
   { id: "visitante", label: "Visitante" },
   { id: "documento", label: "Documento" },
   { id: "empresa", label: "Empresa" },
+  { id: "sede", label: "Sede" },
   { id: "motivo", label: "Motivo" },
   { id: "responsable", label: "Responsable" },
+  { id: "creador", label: "Creado por" },
   { id: "estado", label: "Estado" },
   { id: "entradaAt", label: "Entrada" },
   { id: "salidaAt", label: "Salida" },
@@ -139,9 +141,9 @@ export function VisitasTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border bg-card shadow-soft">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
+    <div className="w-full min-w-0 overflow-hidden rounded-md border bg-card shadow-soft">
+      <div className="w-full min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[80rem] border-collapse text-left text-sm">
           <thead className="bg-muted text-xs uppercase tracking-normal text-muted-foreground">
             <tr>
               {SORTABLE_COLUMNS.map(({ id, label }) => (
@@ -166,8 +168,10 @@ export function VisitasTable({
                 <td className="px-4 py-3 font-medium">{visita.visitante}</td>
                 <td className="px-4 py-3">{visita.documento}</td>
                 <td className="px-4 py-3">{visita.empresa ?? "—"}</td>
+                <td className="px-4 py-3">{visita.sedeNombre || "—"}</td>
                 <td className="px-4 py-3">{visita.motivo}</td>
                 <td className="px-4 py-3">{visita.responsableNombre}</td>
+                <td className="px-4 py-3">{visita.usuarioCreadorNombre || "—"}</td>
                 <td className="px-4 py-3">
                   <Badge variant={ESTADO_VARIANT[visita.estado]}>{VISITA_ESTADO_LABELS[visita.estado]}</Badge>
                 </td>

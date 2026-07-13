@@ -2,7 +2,7 @@
  * @file UsuariosAdminTable.tsx
  * @description Tabla de usuarios con orden por columnas.
  */
-import { ArrowDown, ArrowUp, ArrowUpDown, KeyRound, Pencil, Power } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, KeyRound, Network, Pencil, Power } from "lucide-react";
 import type { UsuarioAdmin, UsuarioAdminSortColumn, UsuarioAdminSortOrder } from "@/api/usuariosAdmin";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,6 +13,7 @@ interface UsuariosAdminTableProps {
   sortColumn?: UsuarioAdminSortColumn | null;
   sortOrder?: UsuarioAdminSortOrder | null;
   onSortColumnChange?: (column: UsuarioAdminSortColumn) => void;
+  onExplainAssignment: (usuario: UsuarioAdmin) => void;
   onEdit: (usuario: UsuarioAdmin) => void;
   onResetPassword: (usuario: UsuarioAdmin) => void;
   onActivate: (usuario: UsuarioAdmin) => void;
@@ -84,6 +85,7 @@ export function UsuariosAdminTable({
   sortColumn,
   sortOrder,
   onSortColumnChange,
+  onExplainAssignment,
   onEdit,
   onResetPassword,
   onActivate,
@@ -133,6 +135,15 @@ export function UsuariosAdminTable({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-nowrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      aria-label={`Explicar asignación de ${usuario.nombre}`}
+                      title="Explicar asignación"
+                      onClick={() => onExplainAssignment(usuario)}
+                      className={cn(actionIconButtonClass, "border-violet-300 text-violet-700 hover:bg-violet-50")}
+                    >
+                      <Network className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
                     <button
                       type="button"
                       aria-label="Editar"

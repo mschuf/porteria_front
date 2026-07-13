@@ -24,6 +24,39 @@ export interface UsuarioAdminListado {
   limit: number;
 }
 
+export interface UsuarioAsignacionUsuario {
+  id: number;
+  usuario: string;
+  nombre: string;
+  rol: UsuarioAdminRol;
+  activo: boolean;
+}
+
+export interface UsuarioAsignacionEntidad {
+  id: number;
+  nombre: string;
+}
+
+export type UsuarioAdminAsignacion =
+  | {
+      tipo: "global";
+      usuario: UsuarioAsignacionUsuario;
+    }
+  | {
+      tipo: "empresa";
+      usuario: UsuarioAsignacionUsuario;
+      empresas: UsuarioAsignacionEntidad[];
+    }
+  | {
+      tipo: "porteria";
+      usuario: UsuarioAsignacionUsuario;
+      asignacion: {
+        empresaPorteria: UsuarioAsignacionEntidad;
+        sede: UsuarioAsignacionEntidad;
+        empresa: UsuarioAsignacionEntidad;
+      } | null;
+    };
+
 export type UsuarioAdminSortColumn = "id" | "usuario" | "nombre" | "correo" | "rol" | "createdAt";
 export type UsuarioAdminSortOrder = "asc" | "desc";
 
@@ -68,6 +101,17 @@ export async function obtenerUsuarioAdmin(
   options?: { signal?: AbortSignal },
 ): Promise<UsuarioAdmin> {
   return apiClient.get<UsuarioAdmin>(`/usuarios-admin/${id}`, options);
+}
+
+/** Obtiene la explicación de las asignaciones vigentes de un usuario según su rol. */
+export async function obtenerAsignacionUsuarioAdmin(
+  id: number,
+  options?: { signal?: AbortSignal },
+): Promise<UsuarioAdminAsignacion> {
+  return apiClient.get<UsuarioAdminAsignacion>(`/usuarios-admin/${id}/asignacion`, {
+    ...options,
+    showBackdrop: false,
+  });
 }
 
 /** Crea un usuario nuevo. */

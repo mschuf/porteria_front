@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/api/apiClient";
 import { UsuarioEmpresaPorteriaFilters } from "@/components/usuario-empresa-porteria/UsuarioEmpresaPorteriaFilters";
 import { UsuarioEmpresaPorteriaTable } from "@/components/usuario-empresa-porteria/UsuarioEmpresaPorteriaTable";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
@@ -32,6 +33,10 @@ import {
 } from "@/lib/porteria-empresas-porteria";
 import { loadUsuarioSelectOptions, resolveUsuarioSelectOption } from "@/lib/porteria-usuarios";
 import {
+  loadSedeEmpresaPorteriaOptions,
+  resolveSedeEmpresaPorteriaOption,
+} from "@/lib/porteria-sedes-asignadas";
+import {
   isPorteriaAllPageSize,
   parsePorteriaPageSize,
   PORTERIA_PAGE_SIZE_ALL,
@@ -41,12 +46,14 @@ import {
 interface UsuarioEmpresaPorteriaFormState {
   usuarioId: string;
   empresaPorteriaId: string;
+  sedeEmpresaPorteriaId: string;
   activo: boolean;
 }
 
 const EMPTY_FORM: UsuarioEmpresaPorteriaFormState = {
   usuarioId: "",
   empresaPorteriaId: "",
+  sedeEmpresaPorteriaId: "",
   activo: true,
 };
 
@@ -55,6 +62,7 @@ export default function UsuarioEmpresaPorteriaPage() {
   const toast = useToast();
   const usuarioRef = useRef<ServerSearchableSelectHandle | null>(null);
   const empresaPorteriaRef = useRef<ServerSearchableSelectHandle | null>(null);
+  const sedeRef = useRef<ServerSearchableSelectHandle | null>(null);
   const {
     items,
     filters,
@@ -76,7 +84,11 @@ export default function UsuarioEmpresaPorteriaPage() {
   const [confirmAsignacion, setConfirmAsignacion] = useState<UsuarioEmpresaPorteria | null>(null);
   const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate" | "delete" | null>(null);
   const [form, setForm] = useState<UsuarioEmpresaPorteriaFormState>(EMPTY_FORM);
-  const [requiredErrors, setRequiredErrors] = useState({ usuarioId: false, empresaPorteriaId: false });
+  const [requiredErrors, setRequiredErrors] = useState({
+    usuarioId: false,
+    empresaPorteriaId: false,
+    sedeEmpresaPorteriaId: false,
+  });
   const [saving, setSaving] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -90,14 +102,20 @@ export default function UsuarioEmpresaPorteriaPage() {
     : Math.min(pagination.page * numericLimit, pagination.total);
 
   const isCreateFormComplete = useMemo(
-    () => Boolean(form.usuarioId) && Boolean(form.empresaPorteriaId),
+    () => Boolean(form.usuarioId) && Boolean(form.empresaPorteriaId) && Boolean(form.sedeEmpresaPorteriaId),
     [form],
+  );
+
+  const loadSedeAssignmentOptions = useCallback(
+    (query: string, signal: AbortSignal) =>
+      loadSedeEmpresaPorteriaOptions(form.empresaPorteriaId, query, signal),
+    [form.empresaPorteriaId],
   );
 
   const openCreateDialog = useCallback(() => {
     setEditing(null);
     setForm(EMPTY_FORM);
-    setRequiredErrors({ usuarioId: false, empresaPorteriaId: false });
+    setRequiredErrors({ usuarioId: false, empresaPorteriaId: false, sedeEmpresaPorteriaId: false });
     setDialogOpen(true);
   }, []);
 
@@ -106,9 +124,10 @@ export default function UsuarioEmpresaPorteriaPage() {
     setForm({
       usuarioId: String(asignacion.usuarioId),
       empresaPorteriaId: String(asignacion.empresaPorteriaId),
+      sedeEmpresaPorteriaId: String(asignacion.sedeEmpresaPorteriaId),
       activo: asignacion.activo,
     });
-    setRequiredErrors({ usuarioId: false, empresaPorteriaId: false });
+    setRequiredErrors({ usuarioId: false, empresaPorteriaId: false, sedeEmpresaPorteriaId: false });
     setDialogOpen(true);
   }, []);
 
@@ -122,19 +141,23 @@ export default function UsuarioEmpresaPorteriaPage() {
   );
 
   const handleSave = useCallback(async () => {
-    if (!editing) {
-      if (!form.usuarioId) {
+    if (!form.usuarioId) {
         toast.error("Seleccione un usuario.", "Asignaciones");
         setRequiredErrors((current) => ({ ...current, usuarioId: true }));
         usuarioRef.current?.focusAndOpen();
         return;
-      }
-      if (!form.empresaPorteriaId) {
+    }
+    if (!form.empresaPorteriaId) {
         toast.error("Seleccione una empresa de porteria.", "Asignaciones");
         setRequiredErrors((current) => ({ ...current, empresaPorteriaId: true }));
         empresaPorteriaRef.current?.focusAndOpen();
         return;
-      }
+    }
+    if (!form.sedeEmpresaPorteriaId) {
+      toast.error("Seleccione una sede.", "Asignaciones");
+      setRequiredErrors((current) => ({ ...current, sedeEmpresaPorteriaId: true }));
+      sedeRef.current?.focusAndOpen();
+      return;
     }
 
     setSaving(true);
@@ -142,6 +165,7 @@ export default function UsuarioEmpresaPorteriaPage() {
       const payload: CrearUsuarioEmpresaPorteriaPayload = {
         usuarioId: Number(form.usuarioId),
         empresaPorteriaId: Number(form.empresaPorteriaId),
+        sedeEmpresaPorteriaId: Number(form.sedeEmpresaPorteriaId),
         activo: form.activo,
       };
 
@@ -205,15 +229,11 @@ export default function UsuarioEmpresaPorteriaPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Administracion</p>
-          <h1 className="text-lg font-semibold">Usuarios por empresa de porteria</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Usuarios asignados a cada empresa de porteria.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Administracion"
+        title="Usuarios por empresa de porteria"
+        description="Usuarios asignados a cada empresa de porteria."
+      />
 
       <UsuarioEmpresaPorteriaFilters
         filters={filters}
@@ -340,8 +360,12 @@ export default function UsuarioEmpresaPorteriaPage() {
               id="uep-empresa-porteria"
               value={form.empresaPorteriaId}
               onChange={(value) => {
-                setForm({ ...form, empresaPorteriaId: value });
-                setRequiredErrors((current) => ({ ...current, empresaPorteriaId: false }));
+                setForm({ ...form, empresaPorteriaId: value, sedeEmpresaPorteriaId: "" });
+                setRequiredErrors((current) => ({
+                  ...current,
+                  empresaPorteriaId: false,
+                  sedeEmpresaPorteriaId: false,
+                }));
               }}
               onLoadOptions={loadEmpresaPorteriaSelectOptions}
               resolveSelectedOption={resolveEmpresaPorteriaSelectOption}
@@ -353,6 +377,28 @@ export default function UsuarioEmpresaPorteriaPage() {
               placeholder="Seleccione una empresa de porteria"
               searchPlaceholder="Buscar empresa de porteria..."
               invalid={requiredErrors.empresaPorteriaId}
+            />
+          </Field>
+          <Field id="uep-sede" label="Sede" required>
+            <ServerSearchableSelect
+              ref={sedeRef}
+              id="uep-sede"
+              value={form.sedeEmpresaPorteriaId}
+              onChange={(value) => {
+                setForm({ ...form, sedeEmpresaPorteriaId: value });
+                setRequiredErrors((current) => ({ ...current, sedeEmpresaPorteriaId: false }));
+              }}
+              onLoadOptions={loadSedeAssignmentOptions}
+              resolveSelectedOption={resolveSedeEmpresaPorteriaOption}
+              defaultSelectedOption={
+                editing
+                  ? { value: String(editing.sedeEmpresaPorteriaId), label: editing.sedeNombre }
+                  : null
+              }
+              placeholder={form.empresaPorteriaId ? "Seleccione una sede" : "Seleccione primero una empresa"}
+              searchPlaceholder="Buscar sede..."
+              disabled={!form.empresaPorteriaId}
+              invalid={requiredErrors.sedeEmpresaPorteriaId}
             />
           </Field>
           {editing ? (

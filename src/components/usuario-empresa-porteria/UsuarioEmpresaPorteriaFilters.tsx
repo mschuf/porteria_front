@@ -13,6 +13,7 @@ import {
   resolveEmpresaPorteriaSelectOption,
 } from "@/lib/porteria-empresas-porteria";
 import { loadUsuarioSelectOptions, resolveUsuarioSelectOption } from "@/lib/porteria-usuarios";
+import { loadSedeSelectOptions, resolveSedeSelectOption } from "@/lib/porteria-sedes";
 import { cn } from "@/lib/utils";
 import type { UsuarioEmpresaPorteriaFilterState } from "@/types/pages/usuario-empresa-porteria-page.types";
 
@@ -67,7 +68,7 @@ export function UsuarioEmpresaPorteriaFilters({
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-4 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Usuario</span>
             <ServerSearchableSelect
@@ -78,6 +79,18 @@ export function UsuarioEmpresaPorteriaFilters({
               placeholder="Todos"
               searchPlaceholder="Buscar usuario..."
               emptyOption={{ value: "", label: "Todos" }}
+            />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Sede</span>
+            <ServerSearchableSelect
+              value={filters.sedeId}
+              onChange={(value) => update("sedeId", value)}
+              onLoadOptions={loadSedeSelectOptions}
+              resolveSelectedOption={resolveSedeSelectOption}
+              placeholder="Todas"
+              searchPlaceholder="Buscar sede..."
+              emptyOption={{ value: "", label: "Todas" }}
             />
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">

@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/api/apiClient";
 import { UsuarioEmpresaFilters } from "@/components/usuario-empresa/UsuarioEmpresaFilters";
 import { UsuarioEmpresaTable } from "@/components/usuario-empresa/UsuarioEmpresaTable";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
@@ -202,15 +203,11 @@ export default function UsuarioEmpresaPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Administracion</p>
-          <h1 className="text-lg font-semibold">Usuarios por empresa</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Usuarios asignados a cada empresa.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Administracion"
+        title="Usuarios por empresa"
+        description="Usuarios asignados a cada empresa."
+      />
 
       <UsuarioEmpresaFilters
         filters={filters}

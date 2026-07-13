@@ -28,6 +28,7 @@ function createInitialFilters(): UsuarioEmpresaPorteriaFilterState {
     search: "",
     usuarioId: "",
     empresaPorteriaId: "",
+    sedeId: "",
     activo: "",
   };
 }
@@ -45,6 +46,7 @@ function toListParams(
     search: filters.search || undefined,
     usuarioId: filters.usuarioId ? Number(filters.usuarioId) : undefined,
     empresaPorteriaId: filters.empresaPorteriaId ? Number(filters.empresaPorteriaId) : undefined,
+    sedeId: filters.sedeId ? Number(filters.sedeId) : undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,

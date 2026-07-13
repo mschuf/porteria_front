@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/api/apiClient";
 import { EmpresasFilters } from "@/components/empresas/EmpresasFilters";
 import { EmpresasTable } from "@/components/empresas/EmpresasTable";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
@@ -208,15 +209,11 @@ export default function EmpresasPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Administracion</p>
-          <h1 className="text-lg font-semibold">Empresas</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Empresas receptoras que reciben visitas y agrupan sedes.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Administracion"
+        title="Empresas"
+        description="Empresas receptoras que reciben visitas y agrupan sedes."
+      />
 
       <EmpresasFilters
         filters={filters}

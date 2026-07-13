@@ -13,6 +13,10 @@ export interface AuthUser {
   name: string;
   email: string | null;
   role: PorteriaRole;
+  sedeId: number | null;
+  sedeName: string | null;
+  empresaName: string | null;
+  empresaPorteriaName: string | null;
 }
 
 /** Credenciales enviadas al endpoint de login. */

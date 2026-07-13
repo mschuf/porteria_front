@@ -80,6 +80,8 @@ interface PersonaFormDialogProps {
   toastScope?: string;
   stacked?: boolean;
   captureEscape?: boolean;
+  /** Valores iniciales al crear (p. ej. documento y nombre leídos de la MRZ). */
+  initialCreateValues?: { documento?: string; nombre?: string };
 }
 
 /**
@@ -93,6 +95,7 @@ export function PersonaFormDialog({
   toastScope = "Personas",
   stacked = false,
   captureEscape = false,
+  initialCreateValues,
 }: PersonaFormDialogProps) {
   const toast = useToast();
   const editing = persona;
@@ -138,7 +141,11 @@ export function PersonaFormDialog({
     setRequiredErrors(EMPTY_REQUIRED_ERRORS);
 
     if (!editing) {
-      setForm(EMPTY_FORM);
+      setForm({
+        ...EMPTY_FORM,
+        ...(initialCreateValues?.nombre ? { nombre: initialCreateValues.nombre } : {}),
+        ...(initialCreateValues?.documento ? { documento: initialCreateValues.documento } : {}),
+      });
       setMrzScannerOpen(false);
       resetPhotoState();
       return;
@@ -184,7 +191,17 @@ export function PersonaFormDialog({
     return () => {
       controller.abort();
     };
-  }, [editing, open, resetPhotoState, toast, toastScope]);
+    // Se depende de los valores primitivos (no del objeto) para no reejecutar
+    // el efecto en cada render y perder lo que el usuario haya tecleado.
+  }, [
+    editing,
+    open,
+    resetPhotoState,
+    toast,
+    toastScope,
+    initialCreateValues?.nombre,
+    initialCreateValues?.documento,
+  ]);
 
   useEffect(() => {
     if (!open || !captureEscape) return;

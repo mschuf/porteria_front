@@ -32,6 +32,10 @@ interface PersonaMrzScannerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDetected: (result: ParsedMrz) => void;
+  /** Acción opcional para continuar sin escanear (p. ej. registro manual). */
+  onSkip?: () => void;
+  /** Texto del botón de omitir. */
+  skipLabel?: string;
 }
 
 /** Cierra correctamente todos los tracks activos de la cámara. */
@@ -56,6 +60,8 @@ export function PersonaMrzScannerDialog({
   open,
   onOpenChange,
   onDetected,
+  onSkip,
+  skipLabel = "Registrar sin escanear",
 }: PersonaMrzScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -377,14 +383,21 @@ export function PersonaMrzScannerDialog({
           <p className="text-xs text-muted-foreground">
             Intentos OCR: {ocrAttempts}. Si no detecta, probá más luz, menos reflejos y acercar la cédula.
           </p>
-          <Button
-            type="button"
-            onClick={() => void handleCaptureAndScan()}
-            disabled={!isReadyToCapture}
-          >
-            <Camera className="h-4 w-4" aria-hidden="true" />
-            {scanningPhoto ? "Escaneando…" : "Capturar y escanear"}
-          </Button>
+          <div className="flex items-center gap-2">
+            {onSkip ? (
+              <Button type="button" variant="outline" onClick={onSkip} disabled={scanningPhoto}>
+                {skipLabel}
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              onClick={() => void handleCaptureAndScan()}
+              disabled={!isReadyToCapture}
+            >
+              <Camera className="h-4 w-4" aria-hidden="true" />
+              {scanningPhoto ? "Escaneando…" : "Capturar y escanear"}
+            </Button>
+          </div>
         </div>
       </div>
       <canvas ref={canvasRef} className="hidden" aria-hidden="true" />

@@ -22,6 +22,9 @@ import {
   ShieldCheck,
   Link2,
   UserCheck,
+  FolderCog,
+  CreditCard,
+  LayoutGrid,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -52,30 +55,43 @@ const superAdminNavItems: Array<{
     strictSuperAdminOnly: true,
   },
   { label: "Sedes", icon: Building, path: "/admin/sedes", strictSuperAdminOnly: true },
-  {
-    label: "Asignaciones sede-portería",
-    icon: Link2,
-    path: "/admin/sede-empresa-porteria",
-    strictSuperAdminOnly: true,
-  },
   { label: "Usuarios", icon: Users, path: "/admin/usuarios", strictSuperAdminOnly: true },
-  {
-    label: "Usuarios por empresa",
-    icon: UserCheck,
-    path: "/admin/usuario-empresa",
-    strictSuperAdminOnly: true,
-  },
-  {
-    label: "Usuarios por empresa de portería",
-    icon: Link2,
-    path: "/admin/usuario-empresa-porteria",
-    strictSuperAdminOnly: true,
-  },
+  { label: "Areas", icon: LayoutGrid, path: "/admin/areas", strictSuperAdminOnly: true },
+  { label: "Tarjetas", icon: CreditCard, path: "/admin/tarjetas", strictSuperAdminOnly: true },
+];
+
+const auditoriaNavItems: Array<{
+  label: string;
+  icon: typeof MapPin;
+  path: string;
+}> = [
   { label: "Reporte portería", icon: MapPin, path: "/admin/reporte-porteria" },
   {
     label: "Auditoría portería",
     icon: ClipboardList,
     path: "/admin/reporte-porteria-auditoria",
+  },
+];
+
+const asignacionesNavItems: Array<{
+  label: string;
+  icon: typeof MapPin;
+  path: string;
+}> = [
+  {
+    label: "Asignaciones sede-portería",
+    icon: Link2,
+    path: "/admin/sede-empresa-porteria",
+  },
+  {
+    label: "Usuarios por empresa",
+    icon: UserCheck,
+    path: "/admin/usuario-empresa",
+  },
+  {
+    label: "Usuarios por empresa de portería",
+    icon: Link2,
+    path: "/admin/usuario-empresa-porteria",
   },
 ];
 
@@ -126,6 +142,59 @@ function NavSection({ title, expanded, onToggle, showBorder = false, children }:
   );
 }
 
+interface NavItemButtonProps {
+  label: string;
+  icon: typeof MapPin;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function NavItemButton({ label, icon: Icon, isActive, onClick }: NavItemButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        isActive && "bg-muted text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      {label}
+    </button>
+  );
+}
+
+interface NavSubSectionProps {
+  title: string;
+  icon: typeof MapPin;
+  expanded: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}
+
+function NavSubSection({ title, icon: Icon, expanded, onToggle, children }: NavSubSectionProps) {
+  return (
+    <div className="space-y-1">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="flex-1">{title}</span>
+        <ChevronDown
+          className={cn("h-4 w-4 shrink-0 transition-transform duration-200", expanded && "rotate-180")}
+          aria-hidden="true"
+        />
+      </button>
+      {expanded ? <div className="ml-4 space-y-1 border-l pl-2">{children}</div> : null}
+    </div>
+  );
+}
+
 export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -134,9 +203,17 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   const navigate = useNavigate();
   const onPorteriaRoute = location.pathname.startsWith("/porteria");
   const onSuperAdminRoute = location.pathname.startsWith("/admin");
+  const onAsignacionesRoute = asignacionesNavItems.some((item) =>
+    isNavPathActive(location.pathname, item.path),
+  );
+  const onAuditoriaRoute = auditoriaNavItems.some((item) =>
+    isNavPathActive(location.pathname, item.path),
+  );
   const homePath = isPorteriaUser ? "/porteria" : "/admin/reporte-porteria";
   const [porteriaExpanded, setPorteriaExpanded] = useState(onPorteriaRoute);
   const [superAdminExpanded, setSuperAdminExpanded] = useState(onSuperAdminRoute);
+  const [asignacionesExpanded, setAsignacionesExpanded] = useState(onAsignacionesRoute);
+  const [auditoriaExpanded, setAuditoriaExpanded] = useState(onAuditoriaRoute);
 
   useEffect(() => {
     if (onPorteriaRoute) setPorteriaExpanded(true);
@@ -145,6 +222,14 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   useEffect(() => {
     if (onSuperAdminRoute) setSuperAdminExpanded(true);
   }, [onSuperAdminRoute]);
+
+  useEffect(() => {
+    if (onAsignacionesRoute) setAsignacionesExpanded(true);
+  }, [onAsignacionesRoute]);
+
+  useEffect(() => {
+    if (onAuditoriaRoute) setAuditoriaExpanded(true);
+  }, [onAuditoriaRoute]);
 
   function handleLogout() {
     setLoggingOut(true);
@@ -159,11 +244,54 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
     setOpen(false);
   }
 
+  type AdminLeaf = { label: string; icon: typeof MapPin; path: string };
+  type AdminEntry =
+    | ({ kind: "item" } & AdminLeaf)
+    | {
+        kind: "group";
+        label: string;
+        icon: typeof MapPin;
+        items: AdminLeaf[];
+        expanded: boolean;
+        onToggle: () => void;
+      };
+
+  const adminEntries: AdminEntry[] = [
+    ...superAdminNavItems
+      .filter((item) => !item.strictSuperAdminOnly || role === "super_admin")
+      .map((item) => ({
+        kind: "item" as const,
+        label: item.label,
+        icon: item.icon,
+        path: item.path,
+      })),
+    ...(role === "super_admin"
+      ? [
+          {
+            kind: "group" as const,
+            label: "Asignaciones",
+            icon: FolderCog,
+            items: asignacionesNavItems,
+            expanded: asignacionesExpanded,
+            onToggle: () => setAsignacionesExpanded((current) => !current),
+          },
+        ]
+      : []),
+    {
+      kind: "group" as const,
+      label: "Auditoría",
+      icon: ClipboardList,
+      items: auditoriaNavItems,
+      expanded: auditoriaExpanded,
+      onToggle: () => setAuditoriaExpanded((current) => !current),
+    },
+  ].sort((a, b) => a.label.localeCompare(b.label, "es"));
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="container flex min-h-16 items-center justify-between gap-3 py-2">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -173,13 +301,15 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
-            <Link
-              to={homePath}
-              className="min-w-0 rounded-sm text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label="Ir a Portería"
-            >
-              <p className="truncate text-base font-semibold leading-tight">Portería</p>
-            </Link>
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+              <Link
+                to={homePath}
+                className="min-w-0 rounded-sm text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label="Ir a Portería"
+              >
+                <p className="truncate text-base font-semibold leading-tight">Portería</p>
+              </Link>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -281,25 +411,38 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
               onToggle={() => setSuperAdminExpanded((current) => !current)}
               showBorder
             >
-              {superAdminNavItems
-                .filter((item) => !item.strictSuperAdminOnly || role === "super_admin")
-                .map((item) => {
-                const Icon = item.icon;
-                const isActive = isNavPathActive(location.pathname, item.path);
+              {adminEntries.map((entry) => {
+                if (entry.kind === "item") {
+                  return (
+                    <NavItemButton
+                      key={entry.label}
+                      label={entry.label}
+                      icon={entry.icon}
+                      isActive={isNavPathActive(location.pathname, entry.path)}
+                      onClick={() => goToPath(entry.path)}
+                    />
+                  );
+                }
                 return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => goToPath(item.path)}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                      isActive && "bg-muted text-foreground",
-                    )}
+                  <NavSubSection
+                    key={entry.label}
+                    title={entry.label}
+                    icon={entry.icon}
+                    expanded={entry.expanded}
+                    onToggle={entry.onToggle}
                   >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    {item.label}
-                  </button>
+                    {[...entry.items]
+                      .sort((a, b) => a.label.localeCompare(b.label, "es"))
+                      .map((item) => (
+                        <NavItemButton
+                          key={item.label}
+                          label={item.label}
+                          icon={item.icon}
+                          isActive={isNavPathActive(location.pathname, item.path)}
+                          onClick={() => goToPath(item.path)}
+                        />
+                      ))}
+                  </NavSubSection>
                 );
               })}
             </NavSection>
@@ -310,6 +453,9 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
             {user ? (
               <div className="mb-3 px-3">
                 <p className="truncate text-sm font-medium">{user.name}</p>
+                {user.sedeName ? (
+                  <p className="truncate text-xs text-muted-foreground">{user.sedeName}</p>
+                ) : null}
                 <p className="truncate text-xs text-muted-foreground">{user.login}</p>
                 <p className="mt-1 text-xs font-medium text-primary">{roleLabel(role)}</p>
               </div>
@@ -332,7 +478,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
         <p className="border-t px-4 py-3 text-center text-xs text-muted-foreground">
           Hecho con{" "}
           <span className="text-destructive/80" aria-hidden="true">
-            ♥
+            💡
           </span>{" "}
           por el equipo TI
         </p>

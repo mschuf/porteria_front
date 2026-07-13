@@ -15,6 +15,7 @@ import {
   type Proveedor,
 } from "@/api/proveedores";
 import { ApiError } from "@/api/apiClient";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { ProveedoresFilters } from "@/components/proveedores/ProveedoresFilters";
 import { ProveedoresTable } from "@/components/proveedores/ProveedoresTable";
 import { PorteriaTabs } from "@/components/porteria/PorteriaTabs";
@@ -188,22 +189,17 @@ export default function ProveedoresPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Portería</p>
-          <h1 className="text-lg font-semibold">Proveedores</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Empresas y contratistas a los que pertenecen las personas visitantes.
-          </p>
-        </div>
-
-        <div className="flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
+      <PageHeader
+        eyebrow="Portería"
+        title="Proveedores"
+        description="Empresas y contratistas a los que pertenecen las personas visitantes."
+        actions={
           <PorteriaTabs
             value={tab}
             onChange={(nextTab: PorteriaTab) => navigate(PORTERIA_TAB_PATHS[nextTab])}
           />
-        </div>
-      </div>
+        }
+      />
 
       <ProveedoresFilters
         filters={filters}

@@ -31,8 +31,10 @@ function createInitialFilters(): VisitasFilterState {
     visitante: "",
     documento: "",
     empresa: "",
+    sede: "",
     motivo: "",
     responsable: "",
+    creador: "",
     estado: "",
   };
 }
@@ -55,8 +57,10 @@ function toListParams(
     visitante: filters.visitante || undefined,
     documento: filters.documento || undefined,
     empresa: filters.empresa || undefined,
+    sede: filters.sede || undefined,
     motivo: filters.motivo || undefined,
     responsable: filters.responsable || undefined,
+    creador: filters.creador || undefined,
     estado: filters.estado || undefined,
     sortBy: sort?.column,
     sortOrder: sort?.order,
@@ -123,10 +127,10 @@ export function useVisitas(): UseVisitasResult {
   const setSortColumn = useCallback((column: VisitaSortColumn) => {
     setSortState((current) => {
       if (!current || current.column !== column) {
-        return { column, order: "asc" };
-      }
-      if (current.order === "asc") {
         return { column, order: "desc" };
+      }
+      if (current.order === "desc") {
+        return { column, order: "asc" };
       }
       return null;
     });

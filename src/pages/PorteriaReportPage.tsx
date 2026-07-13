@@ -3,6 +3,7 @@
  * @description Reporte superadmin de visitas de portería.
  */
 import { ClipboardList } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { PorteriaReportFilters } from "@/components/reports/PorteriaReportFilters";
 import { PorteriaReportTable } from "@/components/reports/PorteriaReportTable";
 import { Button } from "@/components/ui/button";
@@ -50,16 +51,16 @@ export default function PorteriaReportPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <p className="text-xs text-muted-foreground">Super-Admin</p>
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-          <h1 className="text-lg font-semibold">Visitas de portería</h1>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Reporte de ingresos y visitas registradas en portería.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Super-Admin"
+        title={
+          <span className="inline-flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <span>Visitas de portería</span>
+          </span>
+        }
+        description="Reporte de ingresos y visitas registradas en portería."
+      />
 
       <PorteriaReportFilters filters={filters} onChange={setFilters} onApply={applyFilters} />
 

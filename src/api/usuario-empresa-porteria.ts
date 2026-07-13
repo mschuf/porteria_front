@@ -10,6 +10,9 @@ export interface UsuarioEmpresaPorteria {
   usuarioNombre: string;
   empresaPorteriaId: number;
   empresaPorteriaNombre: string;
+  sedeEmpresaPorteriaId: number;
+  sedeId: number;
+  sedeNombre: string;
   activo: boolean;
   createdAt: string;
 }
@@ -21,7 +24,7 @@ export interface UsuarioEmpresaPorteriaListado {
   limit: number;
 }
 
-export type UsuarioEmpresaPorteriaSortColumn = "id" | "usuarioId" | "empresaPorteriaId" | "createdAt";
+export type UsuarioEmpresaPorteriaSortColumn = "id" | "usuarioId" | "empresaPorteriaId" | "sedeId" | "createdAt";
 export type UsuarioEmpresaPorteriaSortOrder = "asc" | "desc";
 
 export interface ListarUsuarioEmpresaPorteriaQuery {
@@ -30,6 +33,7 @@ export interface ListarUsuarioEmpresaPorteriaQuery {
   search?: string;
   usuarioId?: number;
   empresaPorteriaId?: number;
+  sedeId?: number;
   activo?: boolean;
   sortBy?: UsuarioEmpresaPorteriaSortColumn;
   sortOrder?: UsuarioEmpresaPorteriaSortOrder;
@@ -38,6 +42,7 @@ export interface ListarUsuarioEmpresaPorteriaQuery {
 export interface CrearUsuarioEmpresaPorteriaPayload {
   usuarioId: number;
   empresaPorteriaId: number;
+  sedeEmpresaPorteriaId: number;
   activo?: boolean;
 }
 

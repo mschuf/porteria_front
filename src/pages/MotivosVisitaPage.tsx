@@ -15,6 +15,7 @@ import {
   type MotivoVisita,
 } from "@/api/motivos-visita";
 import { ApiError } from "@/api/apiClient";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { MotivosVisitaFilters } from "@/components/motivos-visita/MotivosVisitaFilters";
 import { MotivosVisitaTable } from "@/components/motivos-visita/MotivosVisitaTable";
 import { PorteriaTabs } from "@/components/porteria/PorteriaTabs";
@@ -180,22 +181,17 @@ export default function MotivosVisitaPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Portería</p>
-          <h1 className="text-lg font-semibold">Motivos de visita</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Catálogo de motivos para registrar visitas de proveedores al frigorífico.
-          </p>
-        </div>
-
-        <div className="flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
+      <PageHeader
+        eyebrow="Portería"
+        title="Motivos de visita"
+        description="Catálogo de motivos para registrar visitas de proveedores al frigorífico."
+        actions={
           <PorteriaTabs
             value={tab}
             onChange={(nextTab: PorteriaTab) => navigate(PORTERIA_TAB_PATHS[nextTab])}
           />
-        </div>
-      </div>
+        }
+      />
 
       <MotivosVisitaFilters
         filters={filters}

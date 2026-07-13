@@ -2,8 +2,32 @@
  * @file porteria-personas.ts
  * @description Utilidades para el selector de persona en visitas (tabla persona).
  */
-import { obtenerPersona, searchVisitPersonCandidates, type VisitPersonCandidate } from "@/api/personas";
+import {
+  listarPersonas,
+  obtenerPersona,
+  searchVisitPersonCandidates,
+  type Persona,
+  type VisitPersonCandidate,
+} from "@/api/personas";
 import type { SearchableSelectOption } from "@/components/ui/searchable-select";
+
+/** Normaliza un documento a solo caracteres alfanuméricos en mayúscula. */
+function normalizeDocumento(value: string): string {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+/**
+ * Busca una persona activa por número de documento exacto.
+ * @param documento - Documento leído (p. ej. de la MRZ de la cédula).
+ * @returns La persona con documento coincidente exacto, o null.
+ */
+export async function findPersonaByDocumento(documento: string): Promise<Persona | null> {
+  const target = normalizeDocumento(documento);
+  if (!target) return null;
+
+  const { items } = await listarPersonas({ documento, activo: true, limit: 5 });
+  return items.find((persona) => normalizeDocumento(persona.documento) === target) ?? null;
+}
 
 /**
  * Construye el valor del selector a partir del ID de persona.

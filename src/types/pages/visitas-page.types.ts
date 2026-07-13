@@ -10,8 +10,10 @@ export interface VisitasFilterState {
   visitante: string;
   documento: string;
   empresa: string;
+  sede: string;
   motivo: string;
   responsable: string;
+  creador: string;
   estado: VisitaEstado | "";
 }
 

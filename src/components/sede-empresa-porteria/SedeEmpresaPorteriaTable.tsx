@@ -35,7 +35,7 @@ const actionIconButtonClass =
   "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40";
 
 function formatDate(value: string | null): string {
-  if (!value) return "-";
+  if (!value) return "Sin vencimiento";
   return new Date(value).toLocaleString();
 }
 

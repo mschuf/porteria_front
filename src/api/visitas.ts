@@ -18,7 +18,7 @@ export function isVisitaEliminable(_estado: VisitaEstado): boolean {
 
 /** Indica si eliminar cancelará la visita (activa/sin_salida) en lugar de borrarla. */
 export function requiereCancelacionAlEliminar(estado: VisitaEstado): boolean {
-  return estado === "activa" || estado === "sin_salida";
+  return Boolean(estado);
 }
 
 /** Etiquetas legibles de estado de visita para UI. */
@@ -48,9 +48,14 @@ export interface Visita {
   hasVisitaFoto: boolean;
   documento: string;
   empresa: string | null;
+  sedeId: number;
+  sedeNombre: string;
   motivo: string;
   motivoVisitaId: number | null;
+  responsableId: number;
   responsableNombre: string;
+  usuarioCreadorId: number;
+  usuarioCreadorNombre: string;
   estado: VisitaEstado;
   estadoSeguimiento: VisitaSeguimiento | null;
   zonasPermitidas: VisitaZona[];
@@ -75,8 +80,10 @@ export type VisitaSortColumn =
   | "visitante"
   | "documento"
   | "empresa"
+  | "sede"
   | "motivo"
   | "responsable"
+  | "creador"
   | "estado"
   | "entradaAt"
   | "salidaAt";
@@ -90,8 +97,10 @@ export interface ListarVisitasQuery {
   visitante?: string;
   documento?: string;
   empresa?: string;
+  sede?: string;
   motivo?: string;
   responsable?: string;
+  creador?: string;
   estado?: VisitaEstado;
   personaId?: number;
   entradaFrom?: string;
@@ -104,8 +113,8 @@ export interface ListarVisitasQuery {
 export interface CrearVisitaPayload {
   personaId: number;
   motivoVisitaId: number;
-  responsableNombre: string;
-  responsableId?: number;
+  responsableId: number;
+  sedeId?: number;
   estado?: VisitaEstado;
   estadoSeguimiento?: VisitaSeguimiento;
   zonasPermitidas?: VisitaZona[];
@@ -141,6 +150,62 @@ export interface ResponsableCandidate {
 export interface ResponsableCandidateListado {
   items: ResponsableCandidate[];
   total: number;
+}
+
+export interface VisitaSedeCandidate {
+  id: number;
+  name: string;
+  companyName: string;
+}
+
+export type TarjetaCandidateBlockReason = "in_use" | "different_sede" | "inactive";
+
+export interface VisitaTarjetaCandidate {
+  id: number;
+  numero: number;
+  sedeId: number;
+  sedeNombre: string;
+  color: string;
+  icono: string;
+  areas: Array<{ id: number; nombre: string }>;
+  activo: boolean;
+  enUso: boolean;
+  selectable: boolean;
+  blockedReason: TarjetaCandidateBlockReason | null;
+}
+
+export interface VisitaTarjetaCandidateQuery {
+  search?: string;
+  numero?: number;
+  visitaSedeId?: number;
+  excludeVisitaId?: number;
+  limit?: number;
+}
+
+/** Busca tarjetas autorizadas y calcula su disponibilidad para una visita. */
+export async function searchVisitaTarjetaCandidates(
+  query: VisitaTarjetaCandidateQuery,
+  options?: { signal?: AbortSignal },
+): Promise<VisitaTarjetaCandidate[]> {
+  const response = await apiClient.get<{ items: VisitaTarjetaCandidate[] }>(
+    "/visitas/tarjeta-candidates",
+    {
+      ...options,
+      showBackdrop: false,
+      query: query as Record<string, string | number | boolean | undefined>,
+    },
+  );
+  return response.items;
+}
+
+export async function searchVisitaSedeCandidates(
+  search: string,
+  options?: { signal?: AbortSignal },
+): Promise<VisitaSedeCandidate[]> {
+  return apiClient.get<VisitaSedeCandidate[]>("/visitas/sede-candidates", {
+    ...options,
+    query: { search: search.trim() || undefined },
+  });
 }
 
 /** Busca usuarios GLPI activos para el selector de responsable al crear visitas. */

@@ -3,6 +3,7 @@
  * @description Reporte superadmin de auditoría de visitas de portería.
  */
 import { ClipboardList } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { PorteriaAuditDetailModal } from "@/components/reports/PorteriaAuditDetailModal";
 import { PorteriaAuditReportFilters } from "@/components/reports/PorteriaAuditReportFilters";
 import { PorteriaAuditReportTable } from "@/components/reports/PorteriaAuditReportTable";
@@ -49,16 +50,16 @@ export default function PorteriaAuditReportPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <p className="text-xs text-muted-foreground">Super-Admin</p>
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-          <h1 className="text-lg font-semibold">Auditoría de portería</h1>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Trazabilidad completa de quién registró, editó, cerró o eliminó visitas.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Super-Admin"
+        title={
+          <span className="inline-flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <span>Auditoría de portería</span>
+          </span>
+        }
+        description="Trazabilidad completa de quién registró, editó, cerró o eliminó visitas."
+      />
 
       <PorteriaAuditReportFilters filters={filters} onChange={setFilters} onApply={applyFilters} />
 

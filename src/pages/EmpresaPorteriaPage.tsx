@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/api/apiClient";
 import { EmpresaPorteriaFilters } from "@/components/empresa-porteria/EmpresaPorteriaFilters";
 import { EmpresaPorteriaTable } from "@/components/empresa-porteria/EmpresaPorteriaTable";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
@@ -206,15 +207,11 @@ export default function EmpresaPorteriaPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Administracion</p>
-          <h1 className="text-lg font-semibold">Empresas de seguridad</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Empresas privadas de seguridad que operan la porteria.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Administracion"
+        title="Empresas de seguridad"
+        description="Empresas privadas de seguridad que operan la porteria."
+      />
 
       <EmpresaPorteriaFilters
         filters={filters}

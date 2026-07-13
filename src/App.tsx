@@ -54,6 +54,8 @@ const UsuarioEmpresaPage = lazy(() => import("./pages/UsuarioEmpresaPage"));
 const UsuarioEmpresaPorteriaPage = lazy(() => import("./pages/UsuarioEmpresaPorteriaPage"));
 
 const UsuariosAdminPage = lazy(() => import("./pages/UsuariosAdminPage"));
+const AreasPage = lazy(() => import("./pages/AreasPage"));
+const TarjetasPage = lazy(() => import("./pages/TarjetasPage"));
 
 
 
@@ -248,6 +250,38 @@ export default function App() {
               <StrictSuperAdminRoute>
 
                 <UsuariosAdminPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/areas"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <AreasPage />
+
+              </StrictSuperAdminRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="admin/tarjetas"
+
+            element={
+
+              <StrictSuperAdminRoute>
+
+                <TarjetasPage />
 
               </StrictSuperAdminRoute>
 

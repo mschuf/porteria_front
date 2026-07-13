@@ -34,8 +34,10 @@ interface VisitasFiltersProps {
   onCreateVisit?: () => void;
 }
 
-const TEXT_FIELDS: Array<{ key: "documento" | "responsable"; label: string }> = [
+const TEXT_FIELDS: Array<{ key: "documento" | "sede" | "creador"; label: string }> = [
   { key: "documento", label: "Documento" },
+  { key: "sede", label: "Sede" },
+  { key: "creador", label: "Creado por" },
 ];
 
 const VISITANTE_EMPTY_OPTION = { value: "", label: "Todos los visitantes" };
