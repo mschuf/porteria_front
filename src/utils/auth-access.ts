@@ -11,17 +11,17 @@ export interface AccessFlags {
 
 /** Indica si el rol tiene acceso administrativo. */
 export function isAdminRole(role: AuthUser["role"] | null): boolean {
-  return role === "super_admin" || role === "admin_empresa";
+  return role === "super_admin" || role === "admin_empresa" || role === "encargado_seguridad" || role === "encargado_porteria";
 }
 
 /** Indica si el rol tiene acceso al módulo Portería. */
 export function isPorteroRole(role: AuthUser["role"] | null): boolean {
-  return role === "portero";
+  return role === "portero" || role === "encargado_porteria";
 }
 
 /** Indica si el rol puede acceder al modulo Porteria. */
 export function isPorteriaRole(role: AuthUser["role"] | null): boolean {
-  return isPorteroRole(role) || isAdminRole(role);
+  return isPorteroRole(role) || role === "super_admin" || role === "admin_empresa";
 }
 
 /**

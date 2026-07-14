@@ -10,9 +10,9 @@ export interface UsuarioEmpresaPorteria {
   usuarioNombre: string;
   empresaPorteriaId: number;
   empresaPorteriaNombre: string;
-  sedeEmpresaPorteriaId: number;
-  sedeId: number;
-  sedeNombre: string;
+  sedeEmpresaPorteriaId: number | null;
+  sedeId: number | null;
+  sedeNombre: string | null;
   activo: boolean;
   createdAt: string;
 }

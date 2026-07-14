@@ -20,7 +20,7 @@ interface UsuarioEmpresaPorteriaTableProps {
   onEdit: (asignacion: UsuarioEmpresaPorteria) => void;
   onActivate: (asignacion: UsuarioEmpresaPorteria) => void;
   onDeactivate: (asignacion: UsuarioEmpresaPorteria) => void;
-  onDelete: (asignacion: UsuarioEmpresaPorteria) => void;
+  onDelete?: (asignacion: UsuarioEmpresaPorteria) => void;
 }
 
 const SORTABLE_COLUMNS: Array<{ id: UsuarioEmpresaPorteriaSortColumn; label: string }> = [
@@ -127,7 +127,7 @@ export function UsuarioEmpresaPorteriaTable({
                 <td className="px-4 py-3 tabular-nums">{asignacion.id}</td>
                 <td className="px-4 py-3 font-medium">{asignacion.usuarioNombre}</td>
                 <td className="px-4 py-3">{asignacion.empresaPorteriaNombre}</td>
-                <td className="px-4 py-3">{asignacion.sedeNombre}</td>
+                <td className="px-4 py-3">{asignacion.sedeNombre ?? "Todas las sedes"}</td>
                 <td className="px-4 py-3 tabular-nums">{formatDate(asignacion.createdAt)}</td>
                 <td className="px-4 py-3">
                   <Badge variant={asignacion.activo ? "success" : "danger"}>
@@ -136,15 +136,16 @@ export function UsuarioEmpresaPorteriaTable({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-nowrap items-center gap-1.5">
-                    <button
+                    {onDelete ? <button
                       type="button"
                       aria-label="Editar"
                       title="Editar"
-                      onClick={() => onEdit(asignacion)}
+                      disabled={asignacion.sedeEmpresaPorteriaId == null}
+                      onClick={() => asignacion.sedeEmpresaPorteriaId != null && onEdit(asignacion)}
                       className={cn(actionIconButtonClass, "border-border hover:bg-muted")}
                     >
                       <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>
+                    </button> : null}
                     {asignacion.activo ? (
                       <button
                         type="button"
@@ -170,7 +171,7 @@ export function UsuarioEmpresaPorteriaTable({
                       type="button"
                       aria-label="Eliminar"
                       title="Eliminar"
-                      onClick={() => onDelete(asignacion)}
+                      onClick={() => onDelete?.(asignacion)}
                       className={cn(actionIconButtonClass, "border-red-300 text-red-700 hover:bg-red-50")}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

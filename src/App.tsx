@@ -231,11 +231,11 @@ export default function App() {
 
             element={
 
-              <StrictSuperAdminRoute>
+              <SuperAdminRoute>
 
                 <UsuarioEmpresaPorteriaPage />
 
-              </StrictSuperAdminRoute>
+              </SuperAdminRoute>
 
             }
 

@@ -76,6 +76,8 @@ export default function UsuariosAdminPage() {
   const toast = useToast();
   const { role } = useAuth();
   const isCompanyAdmin = role === "admin_empresa";
+  const canCreateSecurityManager = role === "super_admin";
+  const canCreatePorteriaManager = role === "super_admin" || role === "admin_empresa" || role === "encargado_seguridad";
   const [assignmentCandidates, setAssignmentCandidates] = useState<PorteriaAssignmentCandidate[]>([]);
   const [adminSedeCandidates, setAdminSedeCandidates] = useState<Sede[]>([]);
   const inputRefs = useRef<Record<RequiredUsuarioField, HTMLInputElement | null>>({
@@ -135,13 +137,17 @@ export default function UsuariosAdminPage() {
     () => REQUIRED_CREATE_FIELDS.find((field) => !form[field.key].trim()) ?? null,
     [form],
   );
-  const assignmentRequired = isCompanyAdmin && form.rol === "portero";
+  const isSecurityRole = form.rol === "portero" || form.rol === "encargado_porteria" || form.rol === "encargado_seguridad";
+  const assignmentRequired = !editing && isSecurityRole;
   const adminSedesRequired = !isCompanyAdmin && !editing && form.rol === "admin_empresa";
   const isCreateFormComplete = !firstMissingCreateField &&
     (!assignmentRequired || Boolean(form.porteriaAssignmentId)) &&
     (!adminSedesRequired || Boolean(form.adminEmpresaId) && form.adminSedeIds.length > 0);
   const adminEmpresas = useMemo(() => Array.from(new Map(adminSedeCandidates.map((sede) => [sede.empresaId, sede.empresaNombre])).entries()), [adminSedeCandidates]);
   const filteredAdminSedes = useMemo(() => adminSedeCandidates.filter((sede) => String(sede.empresaId) === form.adminEmpresaId), [adminSedeCandidates, form.adminEmpresaId]);
+  const visibleAssignmentCandidates = useMemo(() => form.rol === "encargado_seguridad"
+    ? [...new Map(assignmentCandidates.map((candidate) => [candidate.empresaPorteriaId, candidate])).values()]
+    : assignmentCandidates, [assignmentCandidates, form.rol]);
 
   const openCreateDialog = useCallback(() => {
     setEditing(null);
@@ -152,7 +158,7 @@ export default function UsuariosAdminPage() {
 
   const openEditDialog = useCallback(async (usuario: UsuarioAdmin) => {
     let porteriaAssignmentId = "";
-    if (usuario.rol === "portero") {
+    if (usuario.rol === "portero" || usuario.rol === "encargado_porteria" || usuario.rol === "encargado_seguridad") {
       try {
         const [assignment, candidates] = await Promise.all([
           obtenerAsignacionUsuarioAdmin(usuario.id),
@@ -161,7 +167,7 @@ export default function UsuariosAdminPage() {
         setAssignmentCandidates(candidates);
         if (assignment.tipo === "porteria" && assignment.asignacion) {
           porteriaAssignmentId = String(candidates.find((candidate) =>
-            candidate.sedeId === assignment.asignacion?.sede.id &&
+            (assignment.asignacion?.sede == null || candidate.sedeId === assignment.asignacion.sede.id) &&
             candidate.empresaPorteriaId === assignment.asignacion?.empresaPorteria.id,
           )?.id ?? "");
         }
@@ -222,7 +228,7 @@ export default function UsuariosAdminPage() {
           correo: form.correo.trim() || undefined,
           rol: form.rol,
           activo: form.activo,
-          ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, sedeEmpresaPorteriaId: assignment.id } } : {}),
+          ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, ...(form.rol === "encargado_seguridad" ? {} : { sedeEmpresaPorteriaId: assignment.id }) } } : {}),
         };
         await actualizarUsuarioAdmin(editing.id, payload);
       } else {
@@ -234,7 +240,7 @@ export default function UsuariosAdminPage() {
           rol: form.rol,
           password: form.password,
           activo: form.activo,
-          ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, sedeEmpresaPorteriaId: assignment.id } } : {}),
+          ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, ...(form.rol === "encargado_seguridad" ? {} : { sedeEmpresaPorteriaId: assignment.id }) } } : {}),
           ...(form.rol === "admin_empresa" ? { sedeIds: form.adminSedeIds } : {}),
         };
         await crearUsuarioAdmin(payload);
@@ -458,8 +464,10 @@ export default function UsuariosAdminPage() {
               value={form.rol}
               onChange={(e) => setForm({ ...form, rol: e.target.value as UsuarioAdminRol, porteriaAssignmentId: "", adminEmpresaId: "", adminSedeIds: [] })}
             >
-              {!isCompanyAdmin ? <option value="super_admin">Super admin</option> : null}
-              {!isCompanyAdmin ? <option value="admin_empresa">Admin empresa</option> : null}
+              {role === "super_admin" ? <option value="super_admin">Super admin</option> : null}
+              {role === "super_admin" ? <option value="admin_empresa">Admin empresa</option> : null}
+              {canCreateSecurityManager ? <option value="encargado_seguridad">Encargado de seguridad</option> : null}
+              {canCreatePorteriaManager ? <option value="encargado_porteria">Encargado de portería</option> : null}
               <option value="portero">Portero</option>
             </Select>
           </Field>
@@ -503,7 +511,7 @@ export default function UsuariosAdminPage() {
               </div>
             </div>
           ) : null}
-          {form.rol === "portero" ? <Field id="usuario-porteria" label="Sede y empresa de portería" required={isCompanyAdmin}><Select id="usuario-porteria" value={form.porteriaAssignmentId} onChange={(e) => setForm({ ...form, porteriaAssignmentId:e.target.value })}><option value="">{isCompanyAdmin ? "Seleccione una asignación" : "Sin cambiar/asignar"}</option>{assignmentCandidates.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</Select></Field> : null}
+          {isSecurityRole ? <Field id="usuario-porteria" label={form.rol === "encargado_seguridad" ? "Empresa de seguridad" : "Sede y empresa de seguridad"} required={!editing}><Select id="usuario-porteria" value={form.porteriaAssignmentId} onChange={(e) => setForm({ ...form, porteriaAssignmentId:e.target.value })}><option value="">{editing ? "Sin cambiar asignación" : "Seleccione una asignación"}</option>{visibleAssignmentCandidates.map((c) => { const parts = c.label.split("—"); return <option key={c.id} value={c.id}>{form.rol === "encargado_seguridad" ? parts[parts.length - 1]?.trim() || c.label : c.label}</option>; })}</Select></Field> : null}
           {!editing ? (
             <Field id="usuario-password" label="Contraseña" required>
               <div className="relative">

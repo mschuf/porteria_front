@@ -41,6 +41,8 @@ interface UsuarioAsignacionDialogProps {
 const ROLE_LABEL: Record<UsuarioAdmin["rol"], string> = {
   super_admin: "Super admin",
   admin_empresa: "Admin empresa",
+  encargado_seguridad: "Encargado de seguridad",
+  encargado_porteria: "Encargado de portería",
   portero: "Portero",
 };
 
@@ -229,15 +231,17 @@ function AssignmentDiagram({ data }: { data: UsuarioAdminAsignacion }) {
         title={data.asignacion.empresaPorteria.nombre}
         tone="warning"
       />
-      <FlowConnector />
-      <AssignmentNode
-        icon={Warehouse}
-        eyebrow="Empresa receptora"
-        title={data.asignacion.empresa.nombre}
-        tone="info"
-      />
-      <FlowConnector />
-      <AssignmentNode icon={MapPin} eyebrow="Sede" title={data.asignacion.sede.nombre} tone="success" />
+      {data.asignacion.empresa && data.asignacion.sede ? <>
+        <FlowConnector />
+        <AssignmentNode
+          icon={Warehouse}
+          eyebrow="Empresa receptora"
+          title={data.asignacion.empresa.nombre}
+          tone="info"
+        />
+        <FlowConnector />
+        <AssignmentNode icon={MapPin} eyebrow="Sede" title={data.asignacion.sede.nombre} tone="success" />
+      </> : null}
     </div>
   );
 }

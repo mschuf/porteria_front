@@ -4,7 +4,7 @@
  */
 
 /** Rol de usuario en el sistema. */
-export type PorteriaRole = "super_admin" | "admin_empresa" | "portero";
+export type PorteriaRole = "super_admin" | "admin_empresa" | "encargado_seguridad" | "encargado_porteria" | "portero";
 
 /** Usuario autenticado con datos de sesión y permisos. */
 export interface AuthUser {
@@ -14,6 +14,7 @@ export interface AuthUser {
   email: string | null;
   role: PorteriaRole;
   sedeId: number | null;
+  empresaSeguridadId: number | null;
   sedeName: string | null;
   empresaName: string | null;
   empresaPorteriaName: string | null;

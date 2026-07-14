@@ -4,7 +4,7 @@
  */
 import { apiClient } from "./apiClient";
 
-export type UsuarioAdminRol = "super_admin" | "admin_empresa" | "portero";
+export type UsuarioAdminRol = "super_admin" | "admin_empresa" | "encargado_seguridad" | "encargado_porteria" | "portero";
 
 export interface UsuarioAdmin {
   id: number;
@@ -53,8 +53,8 @@ export type UsuarioAdminAsignacion =
       usuario: UsuarioAsignacionUsuario;
       asignacion: {
         empresaPorteria: UsuarioAsignacionEntidad;
-        sede: UsuarioAsignacionEntidad;
-        empresa: UsuarioAsignacionEntidad;
+        sede: UsuarioAsignacionEntidad | null;
+        empresa: UsuarioAsignacionEntidad | null;
       } | null;
     };
 
@@ -81,7 +81,7 @@ export interface CrearUsuarioAdminPayload {
   rol: UsuarioAdminRol;
   password: string;
   activo?: boolean;
-  porteriaAssignment?: { empresaPorteriaId: number; sedeEmpresaPorteriaId: number };
+  porteriaAssignment?: { empresaPorteriaId: number; sedeEmpresaPorteriaId?: number };
   sedeIds?: number[];
 }
 

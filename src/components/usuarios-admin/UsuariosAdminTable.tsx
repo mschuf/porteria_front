@@ -31,6 +31,8 @@ const SORTABLE_COLUMNS: Array<{ id: UsuarioAdminSortColumn; label: string }> = [
 const ROL_LABEL: Record<UsuarioAdmin["rol"], string> = {
   super_admin: "Super admin",
   admin_empresa: "Admin empresa",
+  encargado_seguridad: "Encargado de seguridad",
+  encargado_porteria: "Encargado de portería",
   portero: "Portero",
 };
 

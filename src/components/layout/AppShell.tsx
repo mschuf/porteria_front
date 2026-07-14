@@ -55,7 +55,7 @@ const superAdminNavItems: Array<{
   },
   { label: "Sedes", icon: Building, path: "/admin/sedes", strictSuperAdminOnly: true },
   { label: "Usuarios", icon: Users, path: "/admin/usuarios" },
-  { label: "Areas", icon: LayoutGrid, path: "/admin/areas" },
+  { label: "Areas", icon: LayoutGrid, path: "/admin/areas", strictSuperAdminOnly: true },
   { label: "Tarjetas", icon: CreditCard, path: "/admin/tarjetas" },
 ];
 
@@ -257,20 +257,22 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
 
   const adminEntries: AdminEntry[] = [
     ...superAdminNavItems
-      .filter((item) => !item.strictSuperAdminOnly || role === "super_admin")
+      .filter((item) => !item.strictSuperAdminOnly || role === "super_admin" || (item.path === "/admin/areas" && role === "admin_empresa"))
       .map((item) => ({
         kind: "item" as const,
         label: item.label,
         icon: item.icon,
         path: item.path,
       })),
-    ...(role === "super_admin"
+    ...(role && role !== "portero"
       ? [
           {
             kind: "group" as const,
             label: "Asignaciones",
             icon: FolderCog,
-            items: asignacionesNavItems,
+            items: role === "super_admin"
+              ? asignacionesNavItems
+              : asignacionesNavItems.filter((item) => item.path === "/admin/usuario-empresa-seguridad"),
             expanded: asignacionesExpanded,
             onToggle: () => setAsignacionesExpanded((current) => !current),
           },

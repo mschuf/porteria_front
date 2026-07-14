@@ -75,6 +75,8 @@ export function UsuariosAdminFilters({ filters, onChange, onApply, actions }: Us
               <option value="">Todos</option>
               <option value="super_admin">Super admin</option>
               <option value="admin_empresa">Admin empresa</option>
+              <option value="encargado_seguridad">Encargado de seguridad</option>
+              <option value="encargado_porteria">Encargado de portería</option>
               <option value="portero">Portero</option>
             </Select>
           </label>

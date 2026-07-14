@@ -26,6 +26,7 @@ import {
   type ServerSearchableSelectHandle,
 } from "@/components/ui/server-searchable-select";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { useUsuarioEmpresaPorteria } from "@/hooks/useUsuarioEmpresaPorteria";
 import {
   loadEmpresaPorteriaSelectOptions,
@@ -60,6 +61,8 @@ const EMPTY_FORM: UsuarioEmpresaPorteriaFormState = {
 /** CRUD de asignaciones usuario-empresa-porteria con filtros, orden y paginacion. */
 export default function UsuarioEmpresaPorteriaPage() {
   const toast = useToast();
+  const { role } = useAuth();
+  const isStrictSuperAdmin = role === "super_admin";
   const usuarioRef = useRef<ServerSearchableSelectHandle | null>(null);
   const empresaPorteriaRef = useRef<ServerSearchableSelectHandle | null>(null);
   const sedeRef = useRef<ServerSearchableSelectHandle | null>(null);
@@ -239,11 +242,11 @@ export default function UsuarioEmpresaPorteriaPage() {
         filters={filters}
         onChange={setFilters}
         onApply={applyFilters}
-        actions={
+        actions={isStrictSuperAdmin ?
           <Button type="button" className="w-full sm:w-auto" onClick={openCreateDialog}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Nueva asignacion
-          </Button>
+          </Button> : null
         }
       />
 
@@ -264,7 +267,7 @@ export default function UsuarioEmpresaPorteriaPage() {
           onEdit={openEditDialog}
           onActivate={(asignacion) => openConfirm(asignacion, "activate")}
           onDeactivate={(asignacion) => openConfirm(asignacion, "deactivate")}
-          onDelete={(asignacion) => openConfirm(asignacion, "delete")}
+          onDelete={isStrictSuperAdmin ? (asignacion) => openConfirm(asignacion, "delete") : undefined}
         />
       )}
 
@@ -392,7 +395,7 @@ export default function UsuarioEmpresaPorteriaPage() {
               resolveSelectedOption={resolveSedeEmpresaPorteriaOption}
               defaultSelectedOption={
                 editing
-                  ? { value: String(editing.sedeEmpresaPorteriaId), label: editing.sedeNombre }
+                  ? { value: String(editing.sedeEmpresaPorteriaId), label: editing.sedeNombre ?? "Sin sede" }
                   : null
               }
               placeholder={form.empresaPorteriaId ? "Seleccione una sede" : "Seleccione primero una empresa"}

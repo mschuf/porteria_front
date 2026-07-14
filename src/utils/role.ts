@@ -15,11 +15,13 @@ export function resolveRole(user: AuthUser | null): Role | null {
 export function roleLabel(role: Role | null): string {
   if (role === "super_admin") return "Super Admin";
   if (role === "admin_empresa") return "Admin Empresa";
+  if (role === "encargado_seguridad") return "Encargado de seguridad";
+  if (role === "encargado_porteria") return "Encargado de portería";
   if (role === "portero") return "Portero";
   return "Usuario";
 }
 
 /** Indica si el rol corresponde a acceso administrativo. */
 export function isTechnicianRole(role: Role | null): boolean {
-  return role === "super_admin" || role === "admin_empresa";
+  return role !== null && role !== "portero";
 }
