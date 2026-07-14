@@ -3,15 +3,14 @@
  * @description Service worker PWA: precache del shell, estrategia network-first en navegación y caché de assets estáticos.
  */
 /* Portería service worker — shell cache mínimo */
-const CACHE_VERSION = "porteria-v1";
+const CACHE_VERSION = "porteria-v2";
 const PRECACHE_URLS = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
-  "/icons/icon.svg",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-512-maskable.png",
+  "/icons/porteria-192.png",
+  "/icons/porteria-512.png",
+  "/icons/porteria-maskable-512.png",
   "/icons/apple-touch-icon.png",
 ];
 
@@ -40,7 +39,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-/** Elimina cachés obsoletas y reclama clientes al activarse. */
+/** Elimina cachés obsoletas, reclama clientes y recarga las aplicaciones abiertas. */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -52,7 +51,13 @@ self.addEventListener("activate", (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window" }))
+      .then((clients) =>
+        Promise.allSettled(
+          clients.map((client) => client.navigate(client.url)),
+        ),
+      ),
   );
 });
 

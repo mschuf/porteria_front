@@ -4,6 +4,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import type { AuthUser } from "@/types/porteria";
+import { roleLabel } from "@/utils/role";
 
 interface SessionBadgesProps {
   user: AuthUser;
@@ -12,15 +13,19 @@ interface SessionBadgesProps {
 interface SessionBadgeProps {
   label: string;
   value: string;
-  variant: "info" | "success" | "warning" | "accent";
+  variant: "default" | "info" | "success" | "warning" | "accent";
 }
 
 /** Badge compacto para identificar el contexto de la sesión. */
 function SessionBadge({ label, value, variant }: SessionBadgeProps) {
   return (
-    <Badge variant={variant} className="min-w-0 max-w-56 gap-1" title={`${label}: ${value}`}>
-      <span className="font-semibold">{label}:</span>
-      <span className="truncate">{value}</span>
+    <Badge
+      variant={variant}
+      className="min-w-0 max-w-full items-start gap-1 whitespace-normal text-left sm:max-w-md"
+      title={`${label}: ${value}`}
+    >
+      <span className="shrink-0 font-semibold">{label}:</span>
+      <span className="min-w-0 break-words">{value}</span>
     </Badge>
   );
 }
@@ -58,6 +63,7 @@ export function SessionBadges({ user }: SessionBadgesProps) {
       ) : isSuperAdmin ? (
         <SessionBadge label="Empresa seguridad" value="Todas" variant="warning" />
       ) : null}
+      <SessionBadge label="Rol" value={roleLabel(user.role)} variant="default" />
       <SessionBadge label="Nombre" value={user.name} variant="accent" />
     </div>
   );

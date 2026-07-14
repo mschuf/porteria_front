@@ -78,6 +78,11 @@ const asignacionesNavItems: Array<{
   path: string;
 }> = [
   {
+    label: "Usuarios por empresa",
+    icon: Link2,
+    path: "/admin/usuario-empresa",
+  },
+  {
     label: "Asignaciones sede-portería",
     icon: Link2,
     path: "/admin/sede-empresa-porteria",

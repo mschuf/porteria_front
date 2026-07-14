@@ -22,17 +22,18 @@ export function PageHeader({ eyebrow, title, description, actions }: PageHeaderP
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
+    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(16rem,1fr)_minmax(0,2fr)_auto] lg:items-start">
+      <div className="min-w-0">
         {eyebrow ? <p className="text-xs text-muted-foreground">{eyebrow}</p> : null}
         <h1 className="text-lg font-semibold">{title}</h1>
         {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
 
-      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
-        {user ? <SessionBadges user={user} /> : null}
-        {actions}
-      </div>
+      <div className="min-w-0 lg:pt-0.5">{user ? <SessionBadges user={user} /> : null}</div>
+
+      {actions ? (
+        <div className="flex w-full flex-wrap items-center lg:w-auto lg:justify-end">{actions}</div>
+      ) : null}
     </div>
   );
 }

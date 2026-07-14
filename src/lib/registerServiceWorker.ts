@@ -12,8 +12,11 @@ export function registerServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
 
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch((error) => {
-      console.warn("[Portería] No se pudo registrar el service worker", error);
-    });
+    navigator.serviceWorker
+      .register("/sw.js", { updateViaCache: "none" })
+      .then((registration) => registration.update())
+      .catch((error) => {
+        console.warn("[Portería] No se pudo registrar el service worker", error);
+      });
   });
 }

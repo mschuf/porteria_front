@@ -114,6 +114,7 @@ export async function obtenerAsignacionUsuarioAdmin(
   return apiClient.get<UsuarioAdminAsignacion>(`/usuarios-admin/${id}/asignacion`, {
     ...options,
     showBackdrop: false,
+    cache: "no-store",
   });
 }
 

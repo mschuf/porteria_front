@@ -42,6 +42,7 @@ interface RequestOptions {
   showBackdrop?: boolean;
   timeoutMs?: number;
   signal?: AbortSignal;
+  cache?: RequestCache;
   query?: Record<string, string | number | boolean | undefined | null>;
 }
 
@@ -145,6 +146,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     showBackdrop = true,
     timeoutMs,
     signal: externalSignal,
+    cache,
     query
   } = options;
   const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
@@ -174,6 +176,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         ...headers
       },
       signal: controller?.signal,
+      cache,
       body:
         data !== undefined ? (isFormData ? data : JSON.stringify(data)) : undefined
     });
