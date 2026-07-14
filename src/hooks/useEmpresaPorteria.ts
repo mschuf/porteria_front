@@ -30,6 +30,9 @@ function createInitialFilters(): EmpresaPorteriaFilterState {
     ruc: "",
     telefono: "",
     correo: "",
+    nombreContacto: "",
+    telefonoContacto: "",
+    correoContacto: "",
     activo: "",
   };
 }
@@ -49,6 +52,9 @@ function toListParams(
     ruc: filters.ruc || undefined,
     telefono: filters.telefono || undefined,
     correo: filters.correo || undefined,
+    nombreContacto: filters.nombreContacto || undefined,
+    telefonoContacto: filters.telefonoContacto || undefined,
+    correoContacto: filters.correoContacto || undefined,
     activo: filters.activo === "" ? undefined : filters.activo === "true",
     sortBy: sort?.column,
     sortOrder: sort?.order,

@@ -36,6 +36,8 @@ interface PersonaMrzScannerDialogProps {
   onSkip?: () => void;
   /** Texto del botón de omitir. */
   skipLabel?: string;
+  /** Mantiene la cámara apagada hasta que el usuario solicite activarla. */
+  activateCameraOnDemand?: boolean;
 }
 
 /** Cierra correctamente todos los tracks activos de la cámara. */
@@ -62,6 +64,7 @@ export function PersonaMrzScannerDialog({
   onDetected,
   onSkip,
   skipLabel = "Registrar sin escanear",
+  activateCameraOnDemand = false,
 }: PersonaMrzScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -72,6 +75,7 @@ export function PersonaMrzScannerDialog({
   const [devices, setDevices] = useState<MediaDeviceOption[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
   const [scannerStatus, setScannerStatus] = useState("Preparando cámara…");
   const [loadingCamera, setLoadingCamera] = useState(false);
   const [loadingOcr, setLoadingOcr] = useState(false);
@@ -86,7 +90,7 @@ export function PersonaMrzScannerDialog({
   }, [cameraError, loadingCamera, loadingOcr, scanningPhoto, scannerStatus]);
 
   const isReadyToCapture =
-    open && !loadingCamera && !loadingOcr && !scanningPhoto && !cameraError && Boolean(selectedDeviceId);
+    open && cameraActive && !loadingCamera && !loadingOcr && !scanningPhoto && !cameraError;
 
   /** Libera el worker OCR al cerrar el modal para evitar fugas de memoria. */
   const releaseWorker = useCallback(async () => {
@@ -121,6 +125,7 @@ export function PersonaMrzScannerDialog({
     }
 
     setLoadingCamera(true);
+    setCameraActive(false);
     setCameraError(null);
     releaseCamera();
     try {
@@ -138,8 +143,10 @@ export function PersonaMrzScannerDialog({
         video.srcObject = stream;
         await video.play();
       }
+      setCameraActive(true);
       setScannerStatus("Cámara lista. Tomá una foto para escanear.");
     } catch {
+      setCameraActive(false);
       setCameraError("No se pudo abrir la cámara seleccionada.");
     } finally {
       setLoadingCamera(false);
@@ -169,9 +176,17 @@ export function PersonaMrzScannerDialog({
         return pickPreferredDeviceId(videoInputs);
       });
     } catch {
+      setCameraActive(false);
       setCameraError("Permiso de cámara denegado o cámara no disponible.");
     }
   }, []);
+
+  /** Solicita acceso y enciende la cámara solamente por acción del usuario. */
+  const handleActivateCamera = useCallback(async () => {
+    setCameraError(null);
+    setScannerStatus("Preparando cámara…");
+    await bootstrapDevices();
+  }, [bootstrapDevices]);
 
   /** Inicializa Tesseract una sola vez por apertura del modal. */
   const initWorker = useCallback(async () => {
@@ -272,11 +287,18 @@ export function PersonaMrzScannerDialog({
     if (!open) return;
     // Estado fresco por apertura para evitar arrastrar errores/intentos previos.
     disposedRef.current = false;
+    setDevices([]);
+    setSelectedDeviceId("");
+    setCameraActive(false);
     setCameraError(null);
-    setScannerStatus("Preparando cámara…");
+    setScannerStatus(
+      activateCameraOnDemand
+        ? "Cámara desactivada. Presioná Activar cámara para comenzar."
+        : "Preparando cámara…",
+    );
     setOcrAttempts(0);
     setScanningPhoto(false);
-    void bootstrapDevices();
+    if (!activateCameraOnDemand) void bootstrapDevices();
     void initWorker();
 
     return () => {
@@ -285,11 +307,11 @@ export function PersonaMrzScannerDialog({
       releaseCamera();
       void releaseWorker();
     };
-  }, [bootstrapDevices, initWorker, open, releaseCamera, releaseWorker]);
+  }, [activateCameraOnDemand, bootstrapDevices, initWorker, open, releaseCamera, releaseWorker]);
 
   useEffect(() => {
     if (!open || !selectedDeviceId) return;
-    // Reabre cámara cuando cambia el dispositivo seleccionado.
+    // Abre la cámara luego de la activación o al cambiar el dispositivo.
     void startCamera();
   }, [open, selectedDeviceId, startCamera]);
 
@@ -323,6 +345,42 @@ export function PersonaMrzScannerDialog({
     };
   }, [handleCaptureAndScan, open]);
 
+  const actions = (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        {onSkip ? (
+          <Button type="button" variant="outline" onClick={onSkip} disabled={scanningPhoto}>
+            {skipLabel}
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          onClick={() =>
+            void (activateCameraOnDemand && !cameraActive
+              ? handleActivateCamera()
+              : handleCaptureAndScan())
+          }
+          disabled={
+            loadingCamera ||
+            scanningPhoto ||
+            (cameraActive && loadingOcr) ||
+            (!activateCameraOnDemand && !isReadyToCapture)
+          }
+        >
+          <Camera className="h-4 w-4" aria-hidden="true" />
+          {activateCameraOnDemand && !cameraActive
+            ? "Activar cámara"
+            : scanningPhoto
+              ? "Escaneando…"
+              : "Capturar y escanear"}
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Intentos OCR: {ocrAttempts}. Si no detecta, probá más luz, menos reflejos y acercar la cédula.
+      </p>
+    </div>
+  );
+
   return (
     <Dialog
       open={open}
@@ -331,6 +389,8 @@ export function PersonaMrzScannerDialog({
       className="max-w-3xl"
     >
       <div className="space-y-3">
+        {activateCameraOnDemand ? actions : null}
+
         {devices.length > 1 ? (
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted-foreground">Cámara</span>
@@ -379,26 +439,7 @@ export function PersonaMrzScannerDialog({
           <p>{helpMessage}</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            Intentos OCR: {ocrAttempts}. Si no detecta, probá más luz, menos reflejos y acercar la cédula.
-          </p>
-          <div className="flex items-center gap-2">
-            {onSkip ? (
-              <Button type="button" variant="outline" onClick={onSkip} disabled={scanningPhoto}>
-                {skipLabel}
-              </Button>
-            ) : null}
-            <Button
-              type="button"
-              onClick={() => void handleCaptureAndScan()}
-              disabled={!isReadyToCapture}
-            >
-              <Camera className="h-4 w-4" aria-hidden="true" />
-              {scanningPhoto ? "Escaneando…" : "Capturar y escanear"}
-            </Button>
-          </div>
-        </div>
+        {!activateCameraOnDemand ? actions : null}
       </div>
       <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
     </Dialog>

@@ -203,8 +203,6 @@ export interface PorteriaHistoryPagination {
 export interface UsePorteriaIndicadoresResult {
   metrics: PorteriaMetricCard[];
   trackingVisitors: PorteriaTrackingVisitor[];
-  metricsDateFilter: PorteriaMetricsDateFilterState;
-  setMetricsDateFilter: (filter: PorteriaMetricsDateFilterState) => void;
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -227,5 +225,4 @@ export interface UsePorteriaHistorialResult {
   clearSelectedRecord: () => void;
   refresh: () => Promise<void>;
 }
-
 

@@ -10,6 +10,9 @@ export interface EmpresaPorteria {
   ruc: string | null;
   telefono: string | null;
   correo: string | null;
+  nombreContacto: string | null;
+  telefonoContacto: string | null;
+  correoContacto: string | null;
   activo: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,7 +25,16 @@ export interface EmpresaPorteriaListado {
   limit: number;
 }
 
-export type EmpresaPorteriaSortColumn = "id" | "nombre" | "ruc" | "telefono" | "correo" | "createdAt";
+export type EmpresaPorteriaSortColumn =
+  | "id"
+  | "nombre"
+  | "ruc"
+  | "telefono"
+  | "correo"
+  | "nombreContacto"
+  | "telefonoContacto"
+  | "correoContacto"
+  | "createdAt";
 export type EmpresaPorteriaSortOrder = "asc" | "desc";
 
 export interface ListarEmpresaPorteriaQuery {
@@ -33,6 +45,9 @@ export interface ListarEmpresaPorteriaQuery {
   ruc?: string;
   telefono?: string;
   correo?: string;
+  nombreContacto?: string;
+  telefonoContacto?: string;
+  correoContacto?: string;
   activo?: boolean;
   sortBy?: EmpresaPorteriaSortColumn;
   sortOrder?: EmpresaPorteriaSortOrder;
@@ -43,6 +58,9 @@ export interface CrearEmpresaPorteriaPayload {
   ruc?: string;
   telefono?: string;
   correo?: string;
+  nombreContacto?: string;
+  telefonoContacto?: string;
+  correoContacto?: string;
   activo?: boolean;
 }
 

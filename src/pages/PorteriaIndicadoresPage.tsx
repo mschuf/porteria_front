@@ -12,8 +12,6 @@ export default function PorteriaIndicadoresPage() {
   const {
     metrics,
     trackingVisitors,
-    metricsDateFilter,
-    setMetricsDateFilter,
     loading,
     refresh,
   } = usePorteriaIndicadores();
@@ -22,11 +20,7 @@ export default function PorteriaIndicadoresPage() {
 
   return (
     <div className="space-y-6">
-      <PorteriaCards
-        metrics={metrics}
-        metricsDateFilter={metricsDateFilter}
-        onMetricsDateFilterChange={setMetricsDateFilter}
-      />
+      <PorteriaCards metrics={metrics} />
       <PorteriaSeguimientoCards visitors={trackingVisitors} />
     </div>
   );

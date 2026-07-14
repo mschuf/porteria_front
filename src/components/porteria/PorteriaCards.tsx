@@ -2,23 +2,17 @@
  * @file PorteriaCards.tsx
  * @description Grid de cards resumen para visitantes.
  */
-import { AlertTriangle, Building2, CalendarDays, Factory, Layers, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  PORTERIA_ADMINISTRACION_COLORS,
   PORTERIA_ALERT_COLORS,
   PORTERIA_AMBAS_ZONAS_COLORS,
-  PORTERIA_FABRICA_COLORS,
-  PORTERIA_SKY_METRIC_COLORS,
 } from "@/lib/porteria.constants";
-import type { PorteriaMetricCard, PorteriaMetricsDateFilterState } from "@/types/pages/porteria-page.types";
-import { PorteriaMetricsDateFilter } from "@/components/porteria/PorteriaMetricsDateFilter";
+import type { PorteriaMetricCard } from "@/types/pages/porteria-page.types";
 
 interface PorteriaCardsProps {
   metrics: PorteriaMetricCard[];
-  metricsDateFilter: PorteriaMetricsDateFilterState;
-  onMetricsDateFilterChange: (filter: PorteriaMetricsDateFilterState) => void;
 }
 
 const METRIC_STYLES: Record<
@@ -41,21 +35,6 @@ const METRIC_STYLES: Record<
     iconClassName:
       "bg-amber-100 text-amber-700 ring-1 ring-amber-200/50 dark:bg-amber-900/55 dark:text-amber-200 dark:ring-amber-700/45",
   },
-  adminOnly: {
-    icon: Building2,
-    cardClassName: PORTERIA_ADMINISTRACION_COLORS.metricCard,
-    iconClassName: PORTERIA_ADMINISTRACION_COLORS.metricIcon,
-  },
-  factoryOnly: {
-    icon: Factory,
-    cardClassName: PORTERIA_FABRICA_COLORS.metricCard,
-    iconClassName: PORTERIA_FABRICA_COLORS.metricIcon,
-  },
-  bothZones: {
-    icon: Layers,
-    cardClassName: PORTERIA_SKY_METRIC_COLORS.metricCard,
-    iconClassName: PORTERIA_SKY_METRIC_COLORS.metricIcon,
-  },
   staleCheckout: {
     icon: AlertTriangle,
     cardClassName: PORTERIA_ALERT_COLORS.metricCard,
@@ -70,11 +49,7 @@ const DEFAULT_STYLE = METRIC_STYLES.month;
  * @param props - Coleccion de metricas.
  * @returns Grid responsive de cards.
  */
-export function PorteriaCards({
-  metrics,
-  metricsDateFilter,
-  onMetricsDateFilterChange,
-}: PorteriaCardsProps) {
+export function PorteriaCards({ metrics }: PorteriaCardsProps) {
   return (
     <section className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -114,12 +89,6 @@ export function PorteriaCards({
         })}
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        
-        <div className="w-full sm:ml-auto sm:w-auto">
-          <PorteriaMetricsDateFilter value={metricsDateFilter} onChange={onMetricsDateFilterChange} />
-        </div>
-      </div>
     </section>
   );
 }

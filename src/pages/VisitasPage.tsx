@@ -1041,6 +1041,7 @@ export default function VisitasPage() {
         onOpenChange={setCedulaScanOpen}
         onDetected={handleCedulaDetected}
         onSkip={handleCedulaSkip}
+        activateCameraOnDemand
       />
 
       <VisitaBarcodeScannerDialog

@@ -36,6 +36,9 @@ interface EmpresaPorteriaFormState {
   ruc: string;
   telefono: string;
   correo: string;
+  nombreContacto: string;
+  telefonoContacto: string;
+  correoContacto: string;
   activo: boolean;
 }
 
@@ -44,6 +47,9 @@ const EMPTY_FORM: EmpresaPorteriaFormState = {
   ruc: "",
   telefono: "",
   correo: "",
+  nombreContacto: "",
+  telefonoContacto: "",
+  correoContacto: "",
   activo: true,
 };
 
@@ -116,6 +122,9 @@ export default function EmpresaPorteriaPage() {
       ruc: empresaPorteria.ruc ?? "",
       telefono: empresaPorteria.telefono ?? "",
       correo: empresaPorteria.correo ?? "",
+      nombreContacto: empresaPorteria.nombreContacto ?? "",
+      telefonoContacto: empresaPorteria.telefonoContacto ?? "",
+      correoContacto: empresaPorteria.correoContacto ?? "",
       activo: empresaPorteria.activo,
     });
     setDialogOpen(true);
@@ -144,6 +153,9 @@ export default function EmpresaPorteriaPage() {
         ruc: form.ruc.trim(),
         telefono: form.telefono.trim(),
         correo: form.correo.trim(),
+        nombreContacto: form.nombreContacto.trim(),
+        telefonoContacto: form.telefonoContacto.trim(),
+        correoContacto: form.correoContacto.trim(),
         activo: form.activo,
       };
 
@@ -206,7 +218,7 @@ export default function EmpresaPorteriaPage() {
         : `¿Eliminar permanentemente a ${confirmEmpresaPorteria?.nombre}? Solo es posible si no tiene sedes ni usuarios asociados.`;
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5 min-[1600px]:ml-[calc(50%_-_40vw)] min-[1600px]:mr-0 min-[1600px]:w-[80vw]">
       <PageHeader
         eyebrow="Administracion"
         title="Empresas de seguridad"
@@ -359,6 +371,30 @@ export default function EmpresaPorteriaPage() {
               onChange={(e) => setForm({ ...form, correo: e.target.value })}
               placeholder="Ej: contacto@seguridadtotal.com.py"
               aria-required={!editing}
+            />
+          </Field>
+          <Field id="empresa-porteria-nombre-contacto" label="Nombre de contacto">
+            <Input
+              id="empresa-porteria-nombre-contacto"
+              value={form.nombreContacto}
+              onChange={(e) => setForm({ ...form, nombreContacto: e.target.value })}
+              placeholder="Ej: María González"
+            />
+          </Field>
+          <Field id="empresa-porteria-telefono-contacto" label="Teléfono de contacto">
+            <Input
+              id="empresa-porteria-telefono-contacto"
+              value={form.telefonoContacto}
+              onChange={(e) => setForm({ ...form, telefonoContacto: e.target.value })}
+              placeholder="Ej: 0981555123"
+            />
+          </Field>
+          <Field id="empresa-porteria-correo-contacto" label="Correo de contacto">
+            <Input
+              id="empresa-porteria-correo-contacto"
+              value={form.correoContacto}
+              onChange={(e) => setForm({ ...form, correoContacto: e.target.value })}
+              placeholder="Ej: maria.gonzalez@seguridadtotal.com.py"
             />
           </Field>
           {editing ? (

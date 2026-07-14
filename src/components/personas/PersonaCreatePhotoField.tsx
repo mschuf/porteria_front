@@ -49,6 +49,7 @@ export function PersonaCreatePhotoField({
           }}
           disabled={disabled}
           fileNamePrefix="persona"
+          activateCameraOnDemand
           actionSlot={
             <>
               <input

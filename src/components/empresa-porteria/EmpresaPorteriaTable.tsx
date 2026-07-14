@@ -29,6 +29,9 @@ const SORTABLE_COLUMNS: Array<{ id: EmpresaPorteriaSortColumn; label: string }> 
   { id: "ruc", label: "RUC" },
   { id: "telefono", label: "Telefono" },
   { id: "correo", label: "Correo" },
+  { id: "nombreContacto", label: "Nombre de contacto" },
+  { id: "telefonoContacto", label: "Teléfono de contacto" },
+  { id: "correoContacto", label: "Correo de contacto" },
 ];
 
 const actionIconButtonClass =
@@ -97,9 +100,9 @@ export function EmpresaPorteriaTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border bg-card shadow-soft">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px] border-collapse text-left text-sm">
+    <div className="w-full min-w-0 overflow-hidden rounded-md border bg-card shadow-soft">
+      <div className="w-full min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[1440px] border-collapse text-left text-sm">
           <thead className="bg-muted text-xs uppercase tracking-normal text-muted-foreground">
             <tr>
               {SORTABLE_COLUMNS.map(({ id, label }) => (
@@ -124,6 +127,9 @@ export function EmpresaPorteriaTable({
                 <td className="px-4 py-3 tabular-nums">{empresaPorteria.ruc ?? "-"}</td>
                 <td className="px-4 py-3 tabular-nums">{empresaPorteria.telefono ?? "-"}</td>
                 <td className="px-4 py-3">{empresaPorteria.correo ?? "-"}</td>
+                <td className="px-4 py-3">{empresaPorteria.nombreContacto ?? "-"}</td>
+                <td className="px-4 py-3 tabular-nums">{empresaPorteria.telefonoContacto ?? "-"}</td>
+                <td className="px-4 py-3">{empresaPorteria.correoContacto ?? "-"}</td>
                 <td className="px-4 py-3">
                   <Badge variant={empresaPorteria.activo ? "success" : "danger"}>
                     {empresaPorteria.activo ? "Activo" : "Inactivo"}

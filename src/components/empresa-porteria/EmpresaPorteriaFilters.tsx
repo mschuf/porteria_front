@@ -56,7 +56,7 @@ export function EmpresaPorteriaFilters({ filters, onChange, onApply, actions }: 
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-3 xl:grid-cols-[repeat(5,minmax(0,1fr))_auto]">
+        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 md:grid-cols-3 xl:grid-cols-4">
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Nombre</span>
             <Input value={filters.nombre} onChange={(event) => update("nombre", event.target.value)} />
@@ -74,6 +74,27 @@ export function EmpresaPorteriaFilters({ filters, onChange, onApply, actions }: 
             <Input value={filters.correo} onChange={(event) => update("correo", event.target.value)} />
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Nombre de contacto</span>
+            <Input
+              value={filters.nombreContacto}
+              onChange={(event) => update("nombreContacto", event.target.value)}
+            />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Teléfono de contacto</span>
+            <Input
+              value={filters.telefonoContacto}
+              onChange={(event) => update("telefonoContacto", event.target.value)}
+            />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Correo de contacto</span>
+            <Input
+              value={filters.correoContacto}
+              onChange={(event) => update("correoContacto", event.target.value)}
+            />
+          </label>
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
             <span className="text-muted-foreground">Estado</span>
             <Select value={filters.activo} onChange={(event) => update("activo", event.target.value)}>
               <option value="">Todos</option>
@@ -81,7 +102,7 @@ export function EmpresaPorteriaFilters({ filters, onChange, onApply, actions }: 
               <option value="false">Inactivos</option>
             </Select>
           </label>
-          <Button type="button" className="mb-0.5 shrink-0" onClick={() => onApply()}>
+          <Button type="button" className="mb-0.5 shrink-0 xl:justify-self-end" onClick={() => onApply()}>
             Buscar
           </Button>
         </div>

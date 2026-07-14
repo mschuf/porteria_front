@@ -23,6 +23,8 @@ interface WebcamCaptureProps {
   disabled?: boolean;
   fileNamePrefix?: string;
   previewUrl?: string | null;
+  /** Mantiene la cámara apagada hasta que el usuario solicite activarla. */
+  activateCameraOnDemand?: boolean;
   /** Botones extra en la misma fila que Capturar (p. ej. selector de archivo). */
   actionSlot?: ReactNode;
 }
@@ -47,6 +49,7 @@ export function WebcamCapture({
   disabled = false,
   fileNamePrefix = "captura",
   previewUrl = null,
+  activateCameraOnDemand = false,
   actionSlot = null,
 }: WebcamCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,6 +61,7 @@ export function WebcamCapture({
   const [internalPreviewUrl, setInternalPreviewUrl] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [loadingCamera, setLoadingCamera] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
 
   const activePreviewUrl = previewUrl ?? internalPreviewUrl;
 
@@ -100,6 +104,7 @@ export function WebcamCapture({
     }
 
     setLoadingCamera(true);
+    setCameraActive(false);
     setCameraError(null);
     stopStream(streamRef.current);
     streamRef.current = null;
@@ -120,46 +125,72 @@ export function WebcamCapture({
         video.srcObject = stream;
         await video.play();
       }
+      setCameraActive(true);
     } catch {
+      setCameraActive(false);
       setCameraError("No se pudo abrir la cámara. Verifique permisos y que no esté en uso.");
     } finally {
       setLoadingCamera(false);
     }
   }, [activePreviewUrl, disabled, selectedDeviceId]);
 
+  const activateCamera = useCallback(async () => {
+    setCameraError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("El acceso a la cámara requiere HTTPS o localhost.");
+      return;
+    }
+
+    setLoadingCamera(true);
+    try {
+      const bootstrap = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      stopStream(bootstrap);
+      await loadDevices();
+    } catch {
+      setCameraActive(false);
+      setCameraError("Permiso de cámara denegado o cámara no disponible.");
+    } finally {
+      setLoadingCamera(false);
+    }
+  }, [loadDevices]);
+
   useEffect(() => {
     let cancelled = false;
 
-    void (async () => {
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          setCameraError("El acceso a la cámara requiere HTTPS o localhost.");
-          return;
-        }
+    if (!activateCameraOnDemand) {
+      void (async () => {
+        try {
+          if (!navigator.mediaDevices?.getUserMedia) {
+            setCameraError("El acceso a la cámara requiere HTTPS o localhost.");
+            return;
+          }
 
-        const bootstrap = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        stopStream(bootstrap);
-        if (cancelled) return;
-        await loadDevices();
-      } catch {
-        if (!cancelled) {
-          setCameraError("Permiso de cámara denegado o cámara no disponible.");
+          const bootstrap = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          stopStream(bootstrap);
+          if (cancelled) return;
+          await loadDevices();
+        } catch {
+          if (!cancelled) {
+            setCameraError("Permiso de cámara denegado o cámara no disponible.");
+          }
         }
-      }
-    })();
+      })();
+    }
 
     return () => {
       cancelled = true;
       stopStream(streamRef.current);
       streamRef.current = null;
+      setCameraActive(false);
       revokeInternalPreview();
     };
-  }, [loadDevices, revokeInternalPreview]);
+  }, [activateCameraOnDemand, loadDevices, revokeInternalPreview]);
 
   useEffect(() => {
     if (activePreviewUrl) {
       stopStream(streamRef.current);
       streamRef.current = null;
+      setCameraActive(false);
       return;
     }
     void startCamera();
@@ -190,6 +221,7 @@ export function WebcamCapture({
         }
         stopStream(streamRef.current);
         streamRef.current = null;
+        setCameraActive(false);
         onCapture(file);
       },
       "image/jpeg",
@@ -251,11 +283,11 @@ export function WebcamCapture({
               type="button"
               variant="outline"
               size="sm"
-              disabled={disabled || loadingCamera || Boolean(cameraError)}
-              onClick={handleCapture}
+              disabled={disabled || loadingCamera || (!activateCameraOnDemand && Boolean(cameraError))}
+              onClick={cameraActive ? handleCapture : () => void activateCamera()}
             >
               <Camera className="h-4 w-4" aria-hidden="true" />
-              Capturar
+              {activateCameraOnDemand && !cameraActive ? "Activar cámara" : "Capturar"}
             </Button>
             {actionSlot}
           </div>

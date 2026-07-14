@@ -524,6 +524,7 @@ export function PersonaFormDialog({
             open={mrzScannerOpen}
             onOpenChange={setMrzScannerOpen}
             onDetected={handleMrzDetected}
+            activateCameraOnDemand
           />
         ) : null}
       </>
@@ -538,6 +539,7 @@ export function PersonaFormDialog({
           open={mrzScannerOpen}
           onOpenChange={setMrzScannerOpen}
           onDetected={handleMrzDetected}
+          activateCameraOnDemand
         />
       ) : null}
     </div>

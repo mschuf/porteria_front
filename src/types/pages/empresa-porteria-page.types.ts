@@ -15,6 +15,9 @@ export interface EmpresaPorteriaFilterState {
   ruc: string;
   telefono: string;
   correo: string;
+  nombreContacto: string;
+  telefonoContacto: string;
+  correoContacto: string;
   activo: "" | "true" | "false";
 }
 
