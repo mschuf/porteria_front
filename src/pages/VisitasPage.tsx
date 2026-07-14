@@ -4,6 +4,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Plus } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   actualizarVisita,
   crearVisita,
@@ -178,6 +179,8 @@ function defaultCreateDateTimes(): Pick<VisitaFormState, "entradaAt" | "salidaAt
 export default function VisitasPage() {
   const toast = useToast();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     items,
     filters,
@@ -219,6 +222,8 @@ export default function VisitasPage() {
   const motivoRef = useRef<ServerSearchableSelectHandle | null>(null);
   const responsableRef = useRef<ServerSearchableSelectHandle | null>(null);
   const credencialRef = useRef<VisitaTarjetaComboboxHandle | null>(null);
+  const createVisitNavigationHandledRef = useRef(false);
+  const returnToMetricsAfterCreateRef = useRef(false);
 
   const numericLimit =
     typeof pagination.limit === "number" ? pagination.limit : PORTERIA_PAGE_SIZE_OPTIONS[0];
@@ -313,14 +318,29 @@ export default function VisitasPage() {
   }, [user?.sedeId]);
 
   /** Paso 1: abre el escaneo de cédula antes del modal de visita. */
-  const openCreateDialog = useCallback(() => {
+  const startCreateFlow = useCallback((returnToMetrics: boolean) => {
+    returnToMetricsAfterCreateRef.current = returnToMetrics;
     prepareCreateForm();
     setCedulaScanOpen(true);
     void refreshVisitasActivas();
   }, [prepareCreateForm, refreshVisitasActivas]);
 
+  const openCreateDialog = useCallback(() => {
+    startCreateFlow(false);
+  }, [startCreateFlow]);
+
+  useEffect(() => {
+    const navigationState = location.state as { openCreateVisit?: boolean } | null;
+    if (!navigationState?.openCreateVisit || createVisitNavigationHandledRef.current) return;
+
+    createVisitNavigationHandledRef.current = true;
+    startCreateFlow(true);
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [location.pathname, location.search, location.state, navigate, startCreateFlow]);
+
   const openEditDialog = useCallback(
     (visita: Visita) => {
+      returnToMetricsAfterCreateRef.current = false;
       setEditing(visita);
       setPersonaCreateOpen(false);
       setPersonaSelectedOption(null);
@@ -650,7 +670,15 @@ export default function VisitasPage() {
         toast.success("Visita creada.", "Visitas");
       }
 
+      const shouldReturnToMetrics = !editing && returnToMetricsAfterCreateRef.current;
       setDialogOpen(false);
+      returnToMetricsAfterCreateRef.current = false;
+
+      if (shouldReturnToMetrics) {
+        navigate("/porteria");
+        return;
+      }
+
       await reload();
     } catch (saveError) {
       const message = saveError instanceof ApiError ? saveError.message : "No se pudo guardar la visita.";
@@ -658,7 +686,7 @@ export default function VisitasPage() {
     } finally {
       setSaving(false);
     }
-  }, [capturedPhoto, editing, form, reload, toast, user?.role, visitasActivas]);
+  }, [capturedPhoto, editing, form, navigate, reload, toast, user?.role, visitasActivas]);
 
   const handleDelete = useCallback(async () => {
     if (!confirmVisita) return;
@@ -797,6 +825,7 @@ export default function VisitasPage() {
         onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) {
+            returnToMetricsAfterCreateRef.current = false;
             setCapturedPhoto(null);
             setPersonaCreateOpen(false);
             setRequiredErrors(EMPTY_REQUIRED_ERRORS);
@@ -1026,7 +1055,15 @@ export default function VisitasPage() {
           </Field>
 
           <div className="flex justify-end gap-2 border-t pt-4">
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                returnToMetricsAfterCreateRef.current = false;
+                setDialogOpen(false);
+              }}
+              disabled={saving}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={saving}>

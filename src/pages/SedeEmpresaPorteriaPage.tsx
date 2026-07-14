@@ -233,8 +233,8 @@ export default function SedeEmpresaPorteriaPage() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Administracion"
-        title="Asignaciones sede-porteria"
-        description="Empresas de porteria asignadas a cada sede."
+        title="Asignaciones sede-seguridad"
+        description="Empresas de seguridad asignadas a cada sede."
       />
 
       <SedeEmpresaPorteriaFilters

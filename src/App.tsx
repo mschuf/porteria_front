@@ -195,7 +195,7 @@ export default function App() {
 
           <Route
 
-            path="admin/sede-empresa-porteria"
+            path="admin/sede-empresa-seguridad"
 
             element={
 
@@ -227,7 +227,7 @@ export default function App() {
 
           <Route
 
-            path="admin/usuario-empresa-porteria"
+            path="admin/usuario-empresa-seguridad"
 
             element={
 

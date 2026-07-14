@@ -83,14 +83,14 @@ const asignacionesNavItems: Array<{
     path: "/admin/usuario-empresa",
   },
   {
-    label: "Asignaciones sede-portería",
+    label: "Asignaciones sede-seguridad",
     icon: Link2,
-    path: "/admin/sede-empresa-porteria",
+    path: "/admin/sede-empresa-seguridad",
   },
   {
-    label: "Usuarios por empresa de portería",
+    label: "Usuarios por empresa de seguridad",
     icon: Link2,
-    path: "/admin/usuario-empresa-porteria",
+    path: "/admin/usuario-empresa-seguridad",
   },
 ];
 

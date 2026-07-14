@@ -13,6 +13,7 @@ import type { PorteriaMetricCard } from "@/types/pages/porteria-page.types";
 
 interface PorteriaCardsProps {
   metrics: PorteriaMetricCard[];
+  onIngresosHoyClick?: () => void;
 }
 
 const METRIC_STYLES: Record<
@@ -49,7 +50,7 @@ const DEFAULT_STYLE = METRIC_STYLES.month;
  * @param props - Coleccion de metricas.
  * @returns Grid responsive de cards.
  */
-export function PorteriaCards({ metrics }: PorteriaCardsProps) {
+export function PorteriaCards({ metrics, onIngresosHoyClick }: PorteriaCardsProps) {
   return (
     <section className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -57,33 +58,48 @@ export function PorteriaCards({ metrics }: PorteriaCardsProps) {
           const style = METRIC_STYLES[metric.id] ?? DEFAULT_STYLE;
           const Icon = style.icon;
           const isAlert = metric.id === "staleCheckout" && Number(metric.value) > 0;
+          const isIngresosHoy = metric.id === "day" && Boolean(onIngresosHoyClick);
+          const className = cn(
+            "relative overflow-hidden rounded-xl border p-4 text-left shadow-soft transition-shadow hover:shadow-md",
+            style.cardClassName,
+            isAlert && "porteria-blink-peligro",
+            isIngresosHoy &&
+              "w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          );
+          const content = (
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-inherit/80">{metric.title}</p>
+                {metric.subtitle ? (
+                  <p className="mt-0.5 text-xs text-inherit/60">{metric.subtitle}</p>
+                ) : null}
+                <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight">{metric.value}</p>
+              </div>
+              <span
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10",
+                  style.iconClassName,
+                )}
+              >
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+            </div>
+          );
+
+          if (isIngresosHoy) {
+            return (
+              <button key={metric.id} type="button" className={className} onClick={onIngresosHoyClick}>
+                {content}
+              </button>
+            );
+          }
 
           return (
             <article
               key={metric.id}
-              className={cn(
-                "relative overflow-hidden rounded-xl border p-4 shadow-soft transition-shadow hover:shadow-md",
-                style.cardClassName,
-                isAlert && "porteria-blink-peligro",
-              )}
+              className={className}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-inherit/80">{metric.title}</p>
-                  {metric.subtitle ? (
-                    <p className="mt-0.5 text-xs text-inherit/60">{metric.subtitle}</p>
-                  ) : null}
-                  <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight">{metric.value}</p>
-                </div>
-                <span
-                  className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10",
-                    style.iconClassName,
-                  )}
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-              </div>
+              {content}
             </article>
           );
         })}
