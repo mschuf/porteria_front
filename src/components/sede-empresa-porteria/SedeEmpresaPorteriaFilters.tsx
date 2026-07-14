@@ -1,6 +1,6 @@
 /**
  * @file SedeEmpresaPorteriaFilters.tsx
- * @description Barra de busqueda y filtros avanzados del CRUD de asignaciones sede-empresa de porteria.
+ * @description Barra de busqueda y filtros avanzados del CRUD de asignaciones sede-empresa de seguridad.
  */
 import { useCallback, useState, type ReactNode } from "react";
 import { ChevronDown, Search } from "lucide-react";
@@ -23,7 +23,7 @@ interface SedeEmpresaPorteriaFiltersProps {
   actions?: ReactNode;
 }
 
-/** Filtros de asignaciones sede-empresa de porteria con busqueda rapida y panel avanzado. */
+/** Filtros de asignaciones sede-empresa de seguridad con busqueda rapida y panel avanzado. */
 export function SedeEmpresaPorteriaFilters({
   filters,
   onChange,
@@ -81,14 +81,14 @@ export function SedeEmpresaPorteriaFilters({
             />
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
-            <span className="text-muted-foreground">Empresa de porteria</span>
+            <span className="text-muted-foreground">Empresa de seguridad</span>
             <ServerSearchableSelect
               value={filters.empresaPorteriaId}
               onChange={(value) => update("empresaPorteriaId", value)}
               onLoadOptions={loadEmpresaPorteriaSelectOptions}
               resolveSelectedOption={resolveEmpresaPorteriaSelectOption}
               placeholder="Todas"
-              searchPlaceholder="Buscar empresa de porteria..."
+              searchPlaceholder="Buscar empresa de seguridad..."
               emptyOption={{ value: "", label: "Todas" }}
             />
           </label>

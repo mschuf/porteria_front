@@ -190,7 +190,7 @@ export function PorteriaHistoryFilters({
                 resolveResponsableCandidateOption(value, signal, { allowLegacyText: true })
               }
               placeholder="Todos los responsables"
-              searchPlaceholder="Buscar usuario GLPI…"
+              searchPlaceholder="Buscar usuario..."
               noResultsText="Sin resultados"
               loadingText="Buscando…"
               emptyOption={RESPONSABLE_EMPTY_OPTION}

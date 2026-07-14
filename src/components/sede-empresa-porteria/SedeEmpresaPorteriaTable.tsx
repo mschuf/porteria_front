@@ -1,6 +1,6 @@
 /**
  * @file SedeEmpresaPorteriaTable.tsx
- * @description Tabla de asignaciones sede-empresa de porteria con orden por columnas.
+ * @description Tabla de asignaciones sede-empresa de seguridad con orden por columnas.
  */
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Power, Trash2 } from "lucide-react";
 import type {
@@ -26,7 +26,7 @@ interface SedeEmpresaPorteriaTableProps {
 const SORTABLE_COLUMNS: Array<{ id: SedeEmpresaPorteriaSortColumn; label: string }> = [
   { id: "id", label: "ID" },
   { id: "sedeId", label: "Sede" },
-  { id: "empresaPorteriaId", label: "Empresa de porteria" },
+  { id: "empresaPorteriaId", label: "Empresa de seguridad" },
   { id: "asignadoDesde", label: "Asignado desde" },
   { id: "asignadoHasta", label: "Asignado hasta" },
 ];
@@ -81,7 +81,7 @@ function SortableHeader({
   );
 }
 
-/** Tabla ordenable de asignaciones sede-empresa de porteria con acciones CRUD. */
+/** Tabla ordenable de asignaciones sede-empresa de seguridad con acciones CRUD. */
 export function SedeEmpresaPorteriaTable({
   rows,
   sortColumn,
@@ -96,7 +96,7 @@ export function SedeEmpresaPorteriaTable({
     return (
       <EmptyState
         title="Sin asignaciones"
-        description="No hay asignaciones sede-empresa de porteria registradas o no coinciden con los filtros aplicados."
+        description="No hay asignaciones sede-empresa de seguridad registradas o no coinciden con los filtros aplicados."
       />
     );
   }

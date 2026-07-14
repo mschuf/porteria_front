@@ -59,7 +59,7 @@ export async function listarEmpresasPorteria(
   });
 }
 
-/** Obtiene una empresa de porteria por ID. */
+/** Obtiene una empresa de seguridad por ID. */
 export async function obtenerEmpresaPorteria(
   id: number,
   options?: { signal?: AbortSignal },
@@ -67,14 +67,14 @@ export async function obtenerEmpresaPorteria(
   return apiClient.get<EmpresaPorteria>(`/empresa-porteria/${id}`, options);
 }
 
-/** Crea una empresa de porteria nueva. */
+/** Crea una empresa de seguridad nueva. */
 export async function crearEmpresaPorteria(
   payload: CrearEmpresaPorteriaPayload,
 ): Promise<EmpresaPorteria> {
   return apiClient.post<EmpresaPorteria>("/empresa-porteria", payload);
 }
 
-/** Actualiza una empresa de porteria existente. */
+/** Actualiza una empresa de seguridad existente. */
 export async function actualizarEmpresaPorteria(
   id: number,
   payload: ActualizarEmpresaPorteriaPayload,
@@ -82,17 +82,17 @@ export async function actualizarEmpresaPorteria(
   return apiClient.patch<EmpresaPorteria>(`/empresa-porteria/${id}`, payload);
 }
 
-/** Desactiva una empresa de porteria. */
+/** Desactiva una empresa de seguridad. */
 export async function desactivarEmpresaPorteria(id: number): Promise<EmpresaPorteria> {
   return apiClient.patch<EmpresaPorteria>(`/empresa-porteria/${id}/deactivate`);
 }
 
-/** Reactiva una empresa de porteria previamente desactivada. */
+/** Reactiva una empresa de seguridad previamente desactivada. */
 export async function activarEmpresaPorteria(id: number): Promise<EmpresaPorteria> {
   return apiClient.patch<EmpresaPorteria>(`/empresa-porteria/${id}/activate`);
 }
 
-/** Elimina definitivamente una empresa de porteria sin relaciones. */
+/** Elimina definitivamente una empresa de seguridad sin relaciones. */
 export async function eliminarEmpresaPorteria(id: number): Promise<{ id: number; deleted: true }> {
   return apiClient.delete<{ id: number; deleted: true }>(`/empresa-porteria/${id}`);
 }

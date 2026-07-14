@@ -26,7 +26,7 @@ interface UsuarioEmpresaPorteriaTableProps {
 const SORTABLE_COLUMNS: Array<{ id: UsuarioEmpresaPorteriaSortColumn; label: string }> = [
   { id: "id", label: "ID" },
   { id: "usuarioId", label: "Usuario" },
-  { id: "empresaPorteriaId", label: "Empresa de porteria" },
+  { id: "empresaPorteriaId", label: "Empresa de seguridad" },
   { id: "sedeId", label: "Sede" },
   { id: "createdAt", label: "Creado" },
 ];

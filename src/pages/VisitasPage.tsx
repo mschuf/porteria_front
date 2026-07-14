@@ -920,7 +920,7 @@ export default function VisitasPage() {
                     editing ? resolveEditResponsableOption : resolveCreateResponsableOption
                   }
                   placeholder="Seleccionar responsable"
-                  searchPlaceholder="Buscar usuario GLPI…"
+                  searchPlaceholder="Buscar usuario…"
                   noResultsText="Sin resultados"
                   loadingText="Buscando…"
                   disabled={saving}

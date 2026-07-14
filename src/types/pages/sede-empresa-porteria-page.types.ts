@@ -1,6 +1,6 @@
 /**
  * @file sede-empresa-porteria-page.types.ts
- * @description Tipos para la pagina CRUD de asignaciones sede-empresa de porteria.
+ * @description Tipos para la pagina CRUD de asignaciones sede-empresa de seguridad.
  */
 import type {
   SedeEmpresaPorteria,

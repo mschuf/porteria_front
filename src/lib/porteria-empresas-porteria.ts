@@ -1,6 +1,6 @@
 /**
  * @file porteria-empresas-porteria.ts
- * @description Utilidades para el selector de empresa de porteria en formularios de asignaciones sede-empresa de porteria.
+ * @description Utilidades para el selector de empresa de seguridad en formularios de asignaciones sede-empresa de seguridad.
  */
 import { listarEmpresasPorteria, obtenerEmpresaPorteria } from "@/api/empresa-porteria";
 import type { SearchableSelectOption } from "@/components/ui/searchable-select";
@@ -33,7 +33,7 @@ export async function loadEmpresaPorteriaSelectOptions(
 }
 
 /**
- * Resuelve la opción seleccionada de empresa de porteria por ID.
+ * Resuelve la opción seleccionada de empresa de seguridad por ID.
  * @param value - ID serializado.
  * @param signal - Señal de aborto.
  * @returns Opción resuelta o null.

@@ -94,14 +94,14 @@ export function UsuarioEmpresaPorteriaFilters({
             />
           </label>
           <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
-            <span className="text-muted-foreground">Empresa de porteria</span>
+            <span className="text-muted-foreground">Empresa de seguridad</span>
             <ServerSearchableSelect
               value={filters.empresaPorteriaId}
               onChange={(value) => update("empresaPorteriaId", value)}
               onLoadOptions={loadEmpresaPorteriaSelectOptions}
               resolveSelectedOption={resolveEmpresaPorteriaSelectOption}
               placeholder="Todas"
-              searchPlaceholder="Buscar empresa de porteria..."
+              searchPlaceholder="Buscar empresa de seguridad..."
               emptyOption={{ value: "", label: "Todas" }}
             />
           </label>

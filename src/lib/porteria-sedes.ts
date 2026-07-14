@@ -1,6 +1,6 @@
 /**
  * @file porteria-sedes.ts
- * @description Utilidades para el selector de sede en formularios de asignaciones sede-empresa de porteria.
+ * @description Utilidades para el selector de sede en formularios de asignaciones sede-empresa de seguridad.
  */
 import { listarSedes, obtenerSede } from "@/api/sedes";
 import type { SearchableSelectOption } from "@/components/ui/searchable-select";

@@ -1,6 +1,6 @@
 /**
  * @file SedeEmpresaPorteriaPage.tsx
- * @description CRUD de asignaciones sede-empresa de porteria para super_admin.
+ * @description CRUD de asignaciones sede-empresa de seguridad para super_admin.
  */
 import { Plus } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -72,7 +72,7 @@ function toDatetimeLocalValue(isoValue: string | null): string {
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 }
 
-/** CRUD de asignaciones sede-empresa de porteria con filtros, orden y paginacion. */
+/** CRUD de asignaciones sede-empresa de seguridad con filtros, orden y paginacion. */
 export default function SedeEmpresaPorteriaPage() {
   const toast = useToast();
   const sedeRef = useRef<ServerSearchableSelectHandle | null>(null);
@@ -154,7 +154,7 @@ export default function SedeEmpresaPorteriaPage() {
         return;
       }
       if (!form.empresaPorteriaId) {
-        toast.error("Seleccione una empresa de porteria.", "Asignaciones");
+        toast.error("Seleccione una empresa de seguridad.", "Asignaciones");
         setRequiredErrors((current) => ({ ...current, empresaPorteriaId: true }));
         empresaPorteriaRef.current?.focusAndOpen();
         return;
@@ -328,7 +328,7 @@ export default function SedeEmpresaPorteriaPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={editing ? "Editar asignacion" : "Nueva asignacion"}
-        description="Registre la asignacion entre sede y empresa de porteria."
+        description="Registre la asignacion entre sede y empresa de seguridad."
       >
         <form
           className="space-y-4"
@@ -358,7 +358,7 @@ export default function SedeEmpresaPorteriaPage() {
               invalid={requiredErrors.sedeId}
             />
           </Field>
-          <Field id="sep-empresa-porteria" label="Empresa de porteria" required={!editing}>
+          <Field id="sep-empresa-porteria" label="Empresa de seguridad" required={!editing}>
             <ServerSearchableSelect
               ref={empresaPorteriaRef}
               id="sep-empresa-porteria"
@@ -374,8 +374,8 @@ export default function SedeEmpresaPorteriaPage() {
                   ? { value: String(editing.empresaPorteriaId), label: editing.empresaPorteriaNombre }
                   : null
               }
-              placeholder="Seleccione una empresa de porteria"
-              searchPlaceholder="Buscar empresa de porteria..."
+              placeholder="Seleccione una empresa de seguridad"
+              searchPlaceholder="Buscar empresa de seguridad..."
               invalid={requiredErrors.empresaPorteriaId}
             />
           </Field>

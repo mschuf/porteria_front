@@ -148,7 +148,7 @@ export default function UsuarioEmpresaPorteriaPage() {
         return;
     }
     if (!form.empresaPorteriaId) {
-        toast.error("Seleccione una empresa de porteria.", "Asignaciones");
+        toast.error("Seleccione una empresa de seguridad.", "Asignaciones");
         setRequiredErrors((current) => ({ ...current, empresaPorteriaId: true }));
         empresaPorteriaRef.current?.focusAndOpen();
         return;
@@ -231,8 +231,8 @@ export default function UsuarioEmpresaPorteriaPage() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Administracion"
-        title="Usuarios por empresa de porteria"
-        description="Usuarios asignados a cada empresa de porteria."
+        title="Usuarios por empresa de seguridad"
+        description="Usuarios asignados a cada empresa de seguridad."
       />
 
       <UsuarioEmpresaPorteriaFilters
@@ -326,7 +326,7 @@ export default function UsuarioEmpresaPorteriaPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={editing ? "Editar asignacion" : "Nueva asignacion"}
-        description="Registre la asignacion entre usuario y empresa de porteria."
+        description="Registre la asignacion entre usuario y empresa de seguridad."
       >
         <form
           className="space-y-4"
@@ -354,7 +354,7 @@ export default function UsuarioEmpresaPorteriaPage() {
               invalid={requiredErrors.usuarioId}
             />
           </Field>
-          <Field id="uep-empresa-porteria" label="Empresa de porteria" required={!editing}>
+          <Field id="uep-empresa-porteria" label="Empresa de seguridad" required={!editing}>
             <ServerSearchableSelect
               ref={empresaPorteriaRef}
               id="uep-empresa-porteria"
@@ -374,8 +374,8 @@ export default function UsuarioEmpresaPorteriaPage() {
                   ? { value: String(editing.empresaPorteriaId), label: editing.empresaPorteriaNombre }
                   : null
               }
-              placeholder="Seleccione una empresa de porteria"
-              searchPlaceholder="Buscar empresa de porteria..."
+              placeholder="Seleccione una empresa de seguridad"
+              searchPlaceholder="Buscar empresa de seguridad..."
               invalid={requiredErrors.empresaPorteriaId}
             />
           </Field>

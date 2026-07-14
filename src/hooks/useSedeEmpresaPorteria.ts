@@ -1,6 +1,6 @@
 /**
  * @file useSedeEmpresaPorteria.ts
- * @description Hook del listado CRUD de asignaciones sede-empresa de porteria con filtros, orden y paginacion.
+ * @description Hook del listado CRUD de asignaciones sede-empresa de seguridad con filtros, orden y paginacion.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/api/apiClient";
@@ -22,7 +22,7 @@ import type {
   UseSedeEmpresaPorteriaResult,
 } from "@/types/pages/sede-empresa-porteria-page.types";
 
-/** @returns Estado inicial de filtros de asignaciones sede-empresa de porteria. */
+/** @returns Estado inicial de filtros de asignaciones sede-empresa de seguridad. */
 function createInitialFilters(): SedeEmpresaPorteriaFilterState {
   return {
     search: "",
@@ -51,7 +51,7 @@ function toListParams(
   };
 }
 
-/** Orquesta estado, listado y paginacion de asignaciones sede-empresa de porteria. */
+/** Orquesta estado, listado y paginacion de asignaciones sede-empresa de seguridad. */
 export function useSedeEmpresaPorteria(): UseSedeEmpresaPorteriaResult {
   const [items, setItems] = useState<UseSedeEmpresaPorteriaResult["items"]>([]);
   const [filters, setFiltersState] = useState<SedeEmpresaPorteriaFilterState>(createInitialFilters);

@@ -1,6 +1,6 @@
 /**
  * @file sede-empresa-porteria.ts
- * @description Cliente HTTP CRUD de asignaciones sede-empresa de porteria.
+ * @description Cliente HTTP CRUD de asignaciones sede-empresa de seguridad.
  */
 import { apiClient } from "./apiClient";
 
@@ -54,7 +54,7 @@ export interface CrearSedeEmpresaPorteriaPayload {
 
 export type ActualizarSedeEmpresaPorteriaPayload = Partial<CrearSedeEmpresaPorteriaPayload>;
 
-/** Lista asignaciones sede-empresa de porteria con paginacion, filtros y orden. */
+/** Lista asignaciones sede-empresa de seguridad con paginacion, filtros y orden. */
 export async function listarSedeEmpresaPorteria(
   query: ListarSedeEmpresaPorteriaQuery = {},
   options?: { signal?: AbortSignal },
@@ -65,7 +65,7 @@ export async function listarSedeEmpresaPorteria(
   });
 }
 
-/** Obtiene una asignacion sede-empresa de porteria por ID. */
+/** Obtiene una asignacion sede-empresa de seguridad por ID. */
 export async function obtenerSedeEmpresaPorteria(
   id: number,
   options?: { signal?: AbortSignal },
@@ -73,14 +73,14 @@ export async function obtenerSedeEmpresaPorteria(
   return apiClient.get<SedeEmpresaPorteria>(`/sede-empresa-porteria/${id}`, options);
 }
 
-/** Crea una asignacion sede-empresa de porteria nueva. */
+/** Crea una asignacion sede-empresa de seguridad nueva. */
 export async function crearSedeEmpresaPorteria(
   payload: CrearSedeEmpresaPorteriaPayload,
 ): Promise<SedeEmpresaPorteria> {
   return apiClient.post<SedeEmpresaPorteria>("/sede-empresa-porteria", payload);
 }
 
-/** Actualiza una asignacion sede-empresa de porteria existente. */
+/** Actualiza una asignacion sede-empresa de seguridad existente. */
 export async function actualizarSedeEmpresaPorteria(
   id: number,
   payload: ActualizarSedeEmpresaPorteriaPayload,
@@ -88,17 +88,17 @@ export async function actualizarSedeEmpresaPorteria(
   return apiClient.patch<SedeEmpresaPorteria>(`/sede-empresa-porteria/${id}`, payload);
 }
 
-/** Desactiva una asignacion sede-empresa de porteria. */
+/** Desactiva una asignacion sede-empresa de seguridad. */
 export async function desactivarSedeEmpresaPorteria(id: number): Promise<SedeEmpresaPorteria> {
   return apiClient.patch<SedeEmpresaPorteria>(`/sede-empresa-porteria/${id}/deactivate`);
 }
 
-/** Reactiva una asignacion sede-empresa de porteria previamente desactivada. */
+/** Reactiva una asignacion sede-empresa de seguridad previamente desactivada. */
 export async function activarSedeEmpresaPorteria(id: number): Promise<SedeEmpresaPorteria> {
   return apiClient.patch<SedeEmpresaPorteria>(`/sede-empresa-porteria/${id}/activate`);
 }
 
-/** Elimina definitivamente una asignacion sede-empresa de porteria. */
+/** Elimina definitivamente una asignacion sede-empresa de seguridad. */
 export async function eliminarSedeEmpresaPorteria(id: number): Promise<{ id: number; deleted: true }> {
   return apiClient.delete<{ id: number; deleted: true }>(`/sede-empresa-porteria/${id}`);
 }
