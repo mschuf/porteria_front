@@ -5,7 +5,7 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -77,7 +77,7 @@ export default function LoginPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
               required
               autoComplete="username"
-              placeholder="nombre.apellido"
+              placeholder="usuario"
             />
           </Field>
 
@@ -114,6 +114,15 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Ingresando…" : "Ingresar"}
           </Button>
+
+          <div className="text-center text-sm">
+            <Link
+              to="/recuperar-contrasena"
+              className="text-muted-foreground underline-offset-4 hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
         </form>
       </div>
     </div>

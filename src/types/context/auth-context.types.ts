@@ -23,6 +23,8 @@ export interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   logout: (options?: LogoutOptions) => Promise<void>;
   clearSession: () => void;
+  /** Recarga la sesión actual desde `/auth/me` (p. ej. tras cambiar la contraseña). */
+  refreshSession: () => Promise<void>;
 }
 
 /** Props del componente AuthProvider. */

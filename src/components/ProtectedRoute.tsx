@@ -30,6 +30,10 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  if (user?.requiereCambioContrasena && location.pathname !== "/cambiar-contrasena") {
+    return <Navigate to="/cambiar-contrasena" replace />;
+  }
+
   if (Array.isArray(roles) && roles.length > 0 && (!role || !roles.includes(role))) {
     return <Navigate to={defaultPath} replace />;
   }

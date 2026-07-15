@@ -15,6 +15,7 @@ export interface AuthUser {
   role: PorteriaRole;
   sedeId: number | null;
   empresaSeguridadId: number | null;
+  requiereCambioContrasena: boolean;
   sedeName: string | null;
   empresaName: string | null;
   empresaPorteriaName: string | null;

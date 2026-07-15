@@ -36,6 +36,14 @@ const PorteriaHistorialPage = lazy(() => import("./pages/PorteriaHistorialPage")
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 
+const RecuperarContrasenaPage = lazy(() => import("./pages/RecuperarContrasenaPage"));
+
+const RestablecerContrasenaPage = lazy(() => import("./pages/RestablecerContrasenaPage"));
+
+const RestablecerSubordinadoPage = lazy(() => import("./pages/RestablecerSubordinadoPage"));
+
+const CambiarContrasenaPage = lazy(() => import("./pages/CambiarContrasenaPage"));
+
 const PersonasPage = lazy(() => import("./pages/PersonasPage"));
 
 const ProveedoresPage = lazy(() => import("./pages/ProveedoresPage"));
@@ -92,6 +100,56 @@ export default function App() {
               <LoginPage />
 
             </PublicOnlyRoute>
+
+          }
+
+        />
+
+        <Route
+
+          path="/recuperar-contrasena"
+
+          element={
+
+            <PublicOnlyRoute>
+
+              <RecuperarContrasenaPage />
+
+            </PublicOnlyRoute>
+
+          }
+
+        />
+
+        <Route
+
+          path="/restablecer-contrasena"
+
+          element={
+
+            <PublicOnlyRoute>
+
+              <RestablecerContrasenaPage />
+
+            </PublicOnlyRoute>
+
+          }
+
+        />
+
+        <Route path="/restablecer-subordinado" element={<RestablecerSubordinadoPage />} />
+
+        <Route
+
+          path="/cambiar-contrasena"
+
+          element={
+
+            <ProtectedRoute>
+
+              <CambiarContrasenaPage />
+
+            </ProtectedRoute>
 
           }
 

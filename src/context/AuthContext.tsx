@@ -60,6 +60,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setExpiresAt(sessionExpiresAt);
   }, []);
 
+  const refreshSession = useCallback(async () => {
+    const session = await apiClient.get<SessionResponse>("/auth/me", {
+      showBackdrop: false,
+      timeoutMs: 10000,
+    });
+    applySession(session.user, session.expiresAt);
+  }, [applySession]);
+
   const handleSessionExpired = useCallback(() => {
     if (!user) return;
     clearSession();
@@ -181,9 +189,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isPorteriaUser,
       login,
       logout,
-      clearSession
+      clearSession,
+      refreshSession
     }),
-    [user, role, isBootstrapping, isSuperAdmin, isPorteriaUser, login, logout, clearSession]
+    [user, role, isBootstrapping, isSuperAdmin, isPorteriaUser, login, logout, clearSession, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
