@@ -11,6 +11,12 @@ export interface NotificacionAprobacion {
   createdAt:string;
 }
 
+export interface NotificacionCorreoFallido {
+  visitaId:number;
+  mensaje:string;
+  createdAt:string;
+}
+
 export const listarNotificacionesAprobacionPendientes=()=>apiClient.get<NotificacionAprobacion[]>("/porteria/notificaciones-aprobacion/pendientes",{showBackdrop:false});
 export const confirmarNotificacionAprobacion=(id:number)=>apiClient.patch<{id:number;confirmed:true}>(`/porteria/notificaciones-aprobacion/${id}/confirmacion`,undefined,{showBackdrop:false});
 export const notificacionesAprobacionStreamUrl=()=>buildApiUrl("/porteria/notificaciones-aprobacion/stream");

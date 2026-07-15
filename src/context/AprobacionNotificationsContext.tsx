@@ -1,9 +1,10 @@
 import { useCallback,useEffect,useState,type ReactNode } from "react";
 import { CheckCircle2,XCircle } from "lucide-react";
-import { confirmarNotificacionAprobacion,listarNotificacionesAprobacionPendientes,notificacionesAprobacionStreamUrl,type NotificacionAprobacion } from "@/api/notificacionesAprobacion";
+import { confirmarNotificacionAprobacion,listarNotificacionesAprobacionPendientes,notificacionesAprobacionStreamUrl,type NotificacionAprobacion,type NotificacionCorreoFallido } from "@/api/notificacionesAprobacion";
 import { Button } from "@/components/ui/button";
 import { notifyVisitaAprobacionShown } from "@/lib/visita-aprobacion-events";
 import { useAuth } from "./AuthContext";
+import { useToast } from "./ToastContext";
 
 function mergeQueue(current:NotificacionAprobacion[],incoming:NotificacionAprobacion[]){
  const map=new Map(current.map(item=>[item.id,item]));for(const item of incoming)map.set(item.id,item);
@@ -12,16 +13,19 @@ function mergeQueue(current:NotificacionAprobacion[],incoming:NotificacionAproba
 
 export function AprobacionNotificationsProvider({children}:{children:ReactNode}){
  const {user}=useAuth(),[queue,setQueue]=useState<NotificacionAprobacion[]>([]),[confirming,setConfirming]=useState(false),[error,setError]=useState("");
- const enabled=user?.role==="portero"||user?.role==="encargado_porteria";
+ const toast=useToast();
+ const enabled=Boolean(user);
  const add=useCallback((items:NotificacionAprobacion[])=>setQueue(current=>mergeQueue(current,items)),[]);
  useEffect(()=>{
   if(!enabled){setQueue([]);return;}
   let cancelled=false;const source=new EventSource(notificacionesAprobacionStreamUrl(),{withCredentials:true});
   void listarNotificacionesAprobacionPendientes().then(items=>{if(!cancelled)add(items);}).catch(()=>undefined);
   const receive=(event:Event)=>{try{const item=JSON.parse((event as MessageEvent<string>).data) as NotificacionAprobacion;add([item]);}catch{/* Ignorar eventos inválidos. */}};
+  const receiveMailFailure=(event:Event)=>{try{const item=JSON.parse((event as MessageEvent<string>).data) as NotificacionCorreoFallido;toast.error(item.mensaje,"Notificación por correo");}catch{/* Ignorar eventos inválidos. */}};
   source.addEventListener("visita.aprobacion",receive);
-  return()=>{cancelled=true;source.removeEventListener("visita.aprobacion",receive);source.close();};
- },[add,enabled,user?.id]);
+  source.addEventListener("visita.correo-fallido",receiveMailFailure);
+  return()=>{cancelled=true;source.removeEventListener("visita.aprobacion",receive);source.removeEventListener("visita.correo-fallido",receiveMailFailure);source.close();};
+ },[add,enabled,toast,user?.id]);
  const current=queue[0];
  useEffect(()=>{
   if(current)notifyVisitaAprobacionShown(current);

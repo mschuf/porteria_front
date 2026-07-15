@@ -690,6 +690,9 @@ export default function VisitasPage() {
           }
         }
         toast.success("Visita creada.", "Visitas");
+        if (visita.notificacionCorreo.advertencia) {
+          toast.info(visita.notificacionCorreo.advertencia, "Notificación por correo");
+        }
       }
 
       const shouldReturnToMetrics = !editing && returnToMetricsAfterCreateRef.current;

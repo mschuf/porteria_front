@@ -24,6 +24,7 @@ import { Loading } from "@/components/ui/loading";
 
 import { useAuth } from "./context/AuthContext";
 import { accessFlagsFromUser, resolveDefaultAuthenticatedPath } from "./utils/auth-access";
+import { PorteriaRefreshProvider } from "./context/PorteriaRefreshContext";
 
 
 
@@ -192,7 +193,7 @@ export default function App() {
 
           >
 
-            <Route index element={user?.role === "encargado_visita" ? <EncargadoVisitaPage /> : <PorteriaIndicadoresPage />} />
+            <Route index element={user?.role === "encargado_visita" ? <Navigate to="/aprobacion-visitas" replace /> : <PorteriaIndicadoresPage />} />
 
             <Route path="historial" element={user?.role === "encargado_visita" ? <EncargadoVisitaHistorialPage /> : <PorteriaHistorialPage />} />
 
@@ -205,6 +206,17 @@ export default function App() {
             <Route path="proveedores" element={<NonEncargadoVisitaRoute><ProveedoresPage /></NonEncargadoVisitaRoute>} />
 
           </Route>
+
+          <Route
+            path="aprobacion-visitas"
+            element={
+              <ProtectedRoute roles={["super_admin", "admin_empresa", "encargado_seguridad", "encargado_porteria", "encargado_visita"]}>
+                <PorteriaRefreshProvider>
+                  <EncargadoVisitaPage />
+                </PorteriaRefreshProvider>
+              </ProtectedRoute>
+            }
+          />
 
           <Route
 

@@ -208,7 +208,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   const onAuditoriaRoute = auditoriaNavItems.some((item) =>
     isNavPathActive(location.pathname, item.path),
   );
-  const homePath = isPorteriaUser ? "/porteria" : "/admin/reporte-porteria";
+  const homePath = role === "encargado_visita" ? "/aprobacion-visitas" : isPorteriaUser ? "/porteria" : "/admin/reporte-porteria";
   const [porteriaExpanded, setPorteriaExpanded] = useState(onPorteriaRoute);
   const [superAdminExpanded, setSuperAdminExpanded] = useState(onSuperAdminRoute);
   const [asignacionesExpanded, setAsignacionesExpanded] = useState(onAsignacionesRoute);
@@ -358,6 +358,14 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
           </Button>
         </div>
         <nav className="flex-1 space-y-1 p-3">
+          {role && role !== "portero" ? (
+            <NavItemButton
+              label="Aprobación de visitas"
+              icon={ShieldCheck}
+              isActive={isNavPathActive(location.pathname, "/aprobacion-visitas")}
+              onClick={() => goToPath("/aprobacion-visitas")}
+            />
+          ) : null}
           {isPorteriaUser ? (
             <NavSection
               title="Portería"
@@ -365,7 +373,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
               onToggle={() => setPorteriaExpanded((current) => !current)}
               showBorder
             >
-              {(role === "encargado_visita" ? [{ label: "Vista rápida", icon: Shield, path: "/porteria", tab: "indicadores" as PorteriaTab }] : porteriaNavItems).map((item) => {
+              {(role === "encargado_visita" ? [] : porteriaNavItems).map((item) => {
                 const Icon = item.icon;
                 const isActive = resolvePorteriaTab(location.pathname) === item.tab;
                 return (

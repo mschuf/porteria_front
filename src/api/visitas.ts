@@ -71,6 +71,15 @@ export interface Visita {
   updatedAt: string;
 }
 
+export interface CrearVisitaResponse extends Visita {
+  notificacionCorreo: {
+    requerida: boolean;
+    programada: boolean;
+    enviada: boolean;
+    advertencia: string | null;
+  };
+}
+
 export interface VisitaListado {
   items: Visita[];
   total: number;
@@ -272,8 +281,8 @@ export async function obtenerVisita(id: number): Promise<Visita> {
 }
 
 /** Crea una visita nueva. */
-export async function crearVisita(payload: CrearVisitaPayload): Promise<Visita> {
-  return apiClient.post<Visita>("/visitas", payload);
+export async function crearVisita(payload: CrearVisitaPayload): Promise<CrearVisitaResponse> {
+  return apiClient.post<CrearVisitaResponse>("/visitas", payload);
 }
 
 /** Actualiza una visita existente. */

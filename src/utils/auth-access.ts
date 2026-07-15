@@ -29,8 +29,9 @@ export function isPorteriaRole(role: AuthUser["role"] | null): boolean {
  * @param flags - Flags de sesión del usuario.
  * @returns Ruta por defecto para usuarios autenticados.
  */
-export function resolveDefaultAuthenticatedPath(flags: AccessFlags): "/porteria" | "/admin/reporte-porteria" {
-  return isPorteroRole(flags.role) || flags.role === "encargado_visita" ? "/porteria" : "/admin/reporte-porteria";
+export function resolveDefaultAuthenticatedPath(flags: AccessFlags): "/porteria" | "/aprobacion-visitas" | "/admin/reporte-porteria" {
+  if (flags.role === "encargado_visita") return "/aprobacion-visitas";
+  return isPorteroRole(flags.role) ? "/porteria" : "/admin/reporte-porteria";
 }
 
 /**
