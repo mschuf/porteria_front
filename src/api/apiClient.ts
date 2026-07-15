@@ -107,6 +107,11 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
   return url.toString();
 }
 
+/** Construye una URL autenticada para APIs nativas del navegador como EventSource. */
+export function buildApiUrl(path: string): string {
+  return buildUrl(path);
+}
+
 /**
  * Extrae un mensaje legible del payload de error de la API.
  * @param payload - Cuerpo parseado de la respuesta.

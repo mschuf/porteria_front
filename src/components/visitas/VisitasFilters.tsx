@@ -71,11 +71,6 @@ export function VisitasFilters({ filters, onChange, onApply, onCreateVisit }: Vi
           <Input
             value={filters.search}
             onChange={(event) => update("search", event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key !== "Enter") return;
-              event.preventDefault();
-              handleApply();
-            }}
             placeholder="Buscar visita por visitante, documento, empresa, motivo..."
             className="pl-9 pr-10"
           />
@@ -125,11 +120,6 @@ export function VisitasFilters({ filters, onChange, onApply, onCreateVisit }: Vi
               <Input
                 value={filters[key]}
                 onChange={(event) => update(key, event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter") return;
-                  event.preventDefault();
-                  handleApply();
-                }}
               />
             </label>
           ))}
@@ -197,8 +187,19 @@ export function VisitasFilters({ filters, onChange, onApply, onCreateVisit }: Vi
             </Select>
           </label>
 
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Aprobación</span>
+            <Select value={filters.estadoAprobacion} onChange={(event) => update("estadoAprobacion", event.target.value)}>
+              <option value="">Todas</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobado</option>
+              <option value="rechazada">Rechazado</option>
+            </Select>
+          </label>
+
           <Button type="button" className="mb-0.5 shrink-0 justify-self-start" onClick={() => handleApply()}>
-            Aplicar filtros
+            <Search className="h-4 w-4" aria-hidden="true" />
+            Buscar
           </Button>
         </div>
       ) : null}

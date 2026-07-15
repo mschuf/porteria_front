@@ -12,6 +12,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { VISITA_APROBACION_NOTIFICADA_EVENT } from "@/lib/visita-aprobacion-events";
 
 interface PorteriaRefreshContextValue {
   registerRefresh: (refresh: () => void | Promise<void>, loading: boolean) => void;
@@ -43,6 +44,14 @@ export function PorteriaRefreshProvider({ children }: { children: ReactNode }) {
 
   const handleRefresh = useCallback(async () => {
     await refreshRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    const refreshCurrentView = () => {
+      void refreshRef.current?.();
+    };
+    window.addEventListener(VISITA_APROBACION_NOTIFICADA_EVENT, refreshCurrentView);
+    return () => window.removeEventListener(VISITA_APROBACION_NOTIFICADA_EVENT, refreshCurrentView);
   }, []);
 
   const value = useMemo(

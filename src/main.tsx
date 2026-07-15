@@ -12,6 +12,7 @@ import { LoadingProvider } from "./context/LoadingContext";
 import { ToastProvider } from "./context/ToastContext";
 import "./index.css";
 import { initTheme } from "./hooks/useTheme";
+import { AprobacionNotificationsProvider } from "./context/AprobacionNotificationsContext";
 
 initTheme();
 
@@ -21,7 +22,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ToastProvider>
         <LoadingProvider>
           <AuthProvider>
-            <App />
+            <AprobacionNotificationsProvider>
+              <App />
+            </AprobacionNotificationsProvider>
           </AuthProvider>
         </LoadingProvider>
       </ToastProvider>

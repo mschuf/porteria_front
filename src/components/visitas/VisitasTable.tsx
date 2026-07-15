@@ -13,6 +13,7 @@ import {
   type VisitaTarjetaColor,
 } from "@/lib/visita-tarjeta-color";
 import { cn } from "@/lib/utils";
+import { AprobacionBadge } from "./AprobacionBadge";
 
 interface VisitasTableProps {
   rows: Visita[];
@@ -34,6 +35,7 @@ const SORTABLE_COLUMNS: Array<{ id: VisitaSortColumn; label: string }> = [
   { id: "responsable", label: "Responsable" },
   { id: "creador", label: "Creado por" },
   { id: "estado", label: "Estado" },
+  { id: "estadoAprobacion", label: "Aprobación" },
   { id: "entradaAt", label: "Entrada" },
   { id: "salidaAt", label: "Salida" },
 ];
@@ -175,6 +177,7 @@ export function VisitasTable({
                 <td className="px-4 py-3">
                   <Badge variant={ESTADO_VARIANT[visita.estado]}>{VISITA_ESTADO_LABELS[visita.estado]}</Badge>
                 </td>
+                <td className="px-4 py-3"><AprobacionBadge estado={visita.estadoAprobacion} motivoRechazo={visita.motivoRechazo}/></td>
                 <td className="px-4 py-3 whitespace-nowrap tabular-nums">{formatTime(visita.entradaAt)}</td>
                 <td className="px-4 py-3 whitespace-nowrap tabular-nums">
                   {visita.estado === "activa" ? (

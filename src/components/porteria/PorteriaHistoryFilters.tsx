@@ -25,6 +25,7 @@ import {
   resolveResponsableCandidateOption,
 } from "@/lib/visitas-responsables";
 import type { PorteriaHistoryFilterState } from "@/types/pages/porteria-page.types";
+import { Select } from "@/components/ui/select";
 
 interface PorteriaHistoryFiltersProps {
   filters: PorteriaHistoryFilterState;
@@ -70,11 +71,6 @@ export function PorteriaHistoryFilters({
         <Input
           value={filters.search}
           onChange={(event) => update("search", event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter") return;
-            event.preventDefault();
-            handleApply();
-          }}
           placeholder="Buscar visita por visitante, documento, empresa... Para mas opciones, usa los filtros avanzados."
           className="pl-9 pr-10"
         />
@@ -138,11 +134,6 @@ export function PorteriaHistoryFilters({
             <Input
               value={filters.documento}
               onChange={(event) => update("documento", event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter") return;
-                event.preventDefault();
-                handleApply();
-              }}
             />
           </label>
 
@@ -161,6 +152,14 @@ export function PorteriaHistoryFilters({
               loadingText="Buscando…"
               emptyOption={EMPRESA_EMPTY_OPTION}
             />
+          </label>
+
+          <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm">
+            <span className="text-muted-foreground">Aprobación</span>
+            <Select value={filters.estadoAprobacion} onChange={(event)=>update("estadoAprobacion",event.target.value)}>
+              <option value="">Todas</option><option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobado</option><option value="rechazada">Rechazado</option>
+            </Select>
           </label>
 
           <label className="relative z-10 flex min-w-0 flex-col gap-1 pb-0.5 text-sm">

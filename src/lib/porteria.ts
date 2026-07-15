@@ -304,6 +304,8 @@ export function mapVisitaToHistoryRecord(visita: Visita): PorteriaHistoryRecord 
     entradaAt: visita.entradaAt,
     salidaAt: visita.salidaAt,
     estado: visita.estado,
+    estadoAprobacion: visita.estadoAprobacion,
+    motivoRechazo: visita.motivoRechazo,
   };
 }
 
@@ -392,6 +394,7 @@ export function createInitialPorteriaHistoryFilters(): PorteriaHistoryFilterStat
     empresa: "",
     motivo: "",
     responsable: "",
+    estadoAprobacion: "",
     entradaFrom: "",
     entradaTo: "",
   };
@@ -404,6 +407,7 @@ const SORT_COLUMN_KEYS: Record<PorteriaHistorySortColumn, keyof PorteriaHistoryR
   empresa: "empresa",
   motivo: "motivo",
   responsable: "responsable",
+  estadoAprobacion: "estadoAprobacion",
 };
 
 /** @param value - Texto a normalizar. @returns Texto en minusculas sin espacios extremos. */
@@ -419,6 +423,8 @@ function matchesSearch(row: PorteriaHistoryRecord, query: string): boolean {
     row.empresa,
     row.motivo,
     row.responsable,
+    row.estadoAprobacion,
+    row.motivoRechazo ?? "",
     String(row.id),
   ]
     .join(" ")
@@ -450,6 +456,7 @@ export function filterPorteriaHistoryRows(
     if (empresa && !normalizeText(row.empresa).includes(empresa)) return false;
     if (motivo && !normalizeText(row.motivo).includes(motivo)) return false;
     if (responsable && !normalizeText(row.responsable).includes(responsable)) return false;
+    if (filters.estadoAprobacion && row.estadoAprobacion !== filters.estadoAprobacion) return false;
     return true;
   });
 }

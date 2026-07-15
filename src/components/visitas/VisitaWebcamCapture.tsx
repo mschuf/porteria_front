@@ -16,7 +16,12 @@ interface VisitaWebcamCaptureProps {
 export function VisitaWebcamCapture({ onCapture, disabled = false }: VisitaWebcamCaptureProps) {
   return (
     <Field id="visita-foto-captura" label="Foto de ingreso (opcional)">
-      <WebcamCapture onCapture={onCapture} disabled={disabled} fileNamePrefix="visita" />
+      <WebcamCapture
+        onCapture={onCapture}
+        disabled={disabled}
+        fileNamePrefix="visita"
+        activateCameraOnDemand
+      />
     </Field>
   );
 }

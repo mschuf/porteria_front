@@ -8,6 +8,7 @@ import type { VisitaTarjetaColor } from "@/lib/visita-tarjeta-color";
 const VISITA_PHOTO_UPLOAD_TIMEOUT_MS = 180_000;
 
 export type VisitaEstado = "programada" | "activa" | "sin_salida" | "finalizada" | "cancelada";
+export type EstadoAprobacion = "pendiente" | "aprobada" | "rechazada";
 
 export type EliminarVisitaResult = { id: number; deleted: true } | { id: number; cancelled: true };
 
@@ -57,6 +58,8 @@ export interface Visita {
   usuarioCreadorId: number;
   usuarioCreadorNombre: string;
   estado: VisitaEstado;
+  estadoAprobacion: EstadoAprobacion;
+  motivoRechazo: string | null;
   estadoSeguimiento: VisitaSeguimiento | null;
   zonasPermitidas: VisitaZona[];
   credencialNumero: string | null;
@@ -85,6 +88,7 @@ export type VisitaSortColumn =
   | "responsable"
   | "creador"
   | "estado"
+  | "estadoAprobacion"
   | "entradaAt"
   | "salidaAt";
 
@@ -102,6 +106,7 @@ export interface ListarVisitasQuery {
   responsable?: string;
   creador?: string;
   estado?: VisitaEstado;
+  estadoAprobacion?: EstadoAprobacion;
   personaId?: number;
   entradaFrom?: string;
   entradaTo?: string;

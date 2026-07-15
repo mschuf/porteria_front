@@ -11,6 +11,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { cn } from "@/lib/utils";
+import { AprobacionBadge } from "@/components/visitas/AprobacionBadge";
 
 import type {
 
@@ -55,6 +56,7 @@ const SORTABLE_COLUMNS: Array<{ id: PorteriaHistorySortColumn; label: string }> 
   { id: "motivo", label: "Motivo" },
 
   { id: "responsable", label: "Responsable" },
+  { id: "estadoAprobacion", label: "Aprobación" },
 
 ];
 
@@ -278,7 +280,9 @@ export function PorteriaHistoryTable({
 
                     >
 
-                      {id === "id" ? `#${row.id}` : row[id]}
+                      {id === "id" ? `#${row.id}` : id === "estadoAprobacion"
+                        ? <AprobacionBadge estado={row.estadoAprobacion} motivoRechazo={row.motivoRechazo}/>
+                        : row[id]}
 
                     </td>
 

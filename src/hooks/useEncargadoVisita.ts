@@ -5,7 +5,7 @@ import { decideEncargadoVisita,getEncargadoVisitaHistory,getEncargadoVisitaSumma
 export function useEncargadoVisitaSummary(){
  const [data,setData]=useState<EncargadoVisitaSummary>({metrics:{today:0,approved:0,pending:0},visits:[]});const [loading,setLoading]=useState(true);const [error,setError]=useState("");
  const refresh=useCallback(async()=>{setLoading(true);setError("");try{setData(await getEncargadoVisitaSummary());}catch(e){setError(e instanceof ApiError?e.message:"No se pudo cargar la vista rápida");}finally{setLoading(false);}},[]);
- const decide=useCallback(async(id:number,status:"aprobada"|"rechazada")=>{await decideEncargadoVisita(id,status);await refresh();},[refresh]);
+ const decide=useCallback(async(id:number,status:"aprobada"|"rechazada",motivoRechazo?:string)=>{await decideEncargadoVisita(id,status,motivoRechazo);await refresh();},[refresh]);
  useEffect(()=>{void refresh();},[refresh]); return {data,loading,error,refresh,decide};
 }
 export function useEncargadoVisitaHistory(){

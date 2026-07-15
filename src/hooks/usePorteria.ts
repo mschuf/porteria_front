@@ -100,6 +100,7 @@ function toHistoryListParams(
     empresa: filters.empresa || undefined,
     motivo: filters.motivo || undefined,
     responsable: filters.responsable || undefined,
+    estadoAprobacion: filters.estadoAprobacion || undefined,
     entradaFrom: toApiDateFrom(filters.entradaFrom),
     entradaTo: toApiDateTo(filters.entradaTo),
     sortBy: sort?.column as ListarVisitasQuery["sortBy"],
@@ -262,10 +263,10 @@ export function usePorteriaHistorial(): UsePorteriaHistorialResult {
   const setSortColumn = useCallback((column: PorteriaHistorySortColumn) => {
     setSortState((current) => {
       if (!current || current.column !== column) {
-        return { column, order: "asc" };
-      }
-      if (current.order === "asc") {
         return { column, order: "desc" };
+      }
+      if (current.order === "desc") {
+        return { column, order: "asc" };
       }
       return null;
     });

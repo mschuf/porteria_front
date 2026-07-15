@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { PorteriaHistoryRecord } from "@/types/pages/porteria-page.types";
 import { TrackingVisitorPhoto } from "@/components/porteria/TrackingVisitorPhoto";
+import { AprobacionBadge } from "@/components/visitas/AprobacionBadge";
 
 interface PorteriaVisitDetailModalProps {
   record: PorteriaHistoryRecord | null;
@@ -100,7 +101,7 @@ export function PorteriaVisitDetailModal({ record, open, onOpenChange }: Porteri
       className="max-h-[min(92vh,880px)] max-w-4xl"
       contentClassName="space-y-6 pb-6"
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-lg border bg-gradient-to-br from-primary/5 to-transparent p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fecha visita</p>
           <p className="mt-2 text-lg font-semibold">{formatHistoryVisitDate(record.entradaAt)}</p>
@@ -121,6 +122,10 @@ export function PorteriaVisitDetailModal({ record, open, onOpenChange }: Porteri
               {getHistoryEstadoLabel(record.estado)}
             </Badge>
           </div>
+        </article>
+        <article className="rounded-lg border bg-gradient-to-br from-amber-500/5 to-transparent p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Aprobación</p>
+          <div className="mt-2"><AprobacionBadge estado={record.estadoAprobacion} motivoRechazo={record.motivoRechazo}/></div>
         </article>
       </div>
 
@@ -145,6 +150,7 @@ export function PorteriaVisitDetailModal({ record, open, onOpenChange }: Porteri
                   {record[key]}
                 </DetailRow>
               ))}
+              {record.estadoAprobacion==="rechazada" ? <DetailRow label="Motivo del rechazo">{record.motivoRechazo ?? "—"}</DetailRow> : null}
             </dl>
           </div>
         </section>

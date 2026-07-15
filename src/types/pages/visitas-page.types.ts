@@ -2,7 +2,7 @@
  * @file visitas-page.types.ts
  * @description Tipos para la página CRUD de visitas.
  */
-import type { Visita, VisitaEstado, VisitaSortColumn, VisitaSortOrder } from "@/api/visitas";
+import type { EstadoAprobacion, Visita, VisitaEstado, VisitaSortColumn, VisitaSortOrder } from "@/api/visitas";
 import type { PorteriaPageSize } from "@/lib/porteria";
 
 export interface VisitasFilterState {
@@ -15,6 +15,7 @@ export interface VisitasFilterState {
   responsable: string;
   creador: string;
   estado: VisitaEstado | "";
+  estadoAprobacion: EstadoAprobacion | "";
 }
 
 export interface VisitasSortState {

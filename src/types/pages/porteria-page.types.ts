@@ -6,7 +6,7 @@
 
  */
 
-import type { VisitaEstado } from "@/api/visitas";
+import type { EstadoAprobacion, VisitaEstado } from "@/api/visitas";
 import type { PorteriaPageSize } from "@/lib/porteria";
 
 
@@ -44,6 +44,8 @@ export interface PorteriaHistoryRecord {
   salidaAt: string | null;
 
   estado: VisitaEstado;
+  estadoAprobacion: EstadoAprobacion;
+  motivoRechazo: string | null;
 
 }
 
@@ -64,6 +66,7 @@ export interface PorteriaHistoryFilterState {
   motivo: string;
 
   responsable: string;
+  estadoAprobacion: EstadoAprobacion | "";
 
   entradaFrom: string;
 
@@ -87,7 +90,8 @@ export type PorteriaHistorySortColumn =
 
   | "motivo"
 
-  | "responsable";
+  | "responsable"
+  | "estadoAprobacion";
 
 
 
@@ -225,4 +229,3 @@ export interface UsePorteriaHistorialResult {
   clearSelectedRecord: () => void;
   refresh: () => Promise<void>;
 }
-

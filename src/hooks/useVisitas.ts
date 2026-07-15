@@ -36,6 +36,7 @@ function createInitialFilters(): VisitasFilterState {
     responsable: "",
     creador: "",
     estado: "",
+    estadoAprobacion: "",
   };
 }
 
@@ -62,6 +63,7 @@ function toListParams(
     responsable: filters.responsable || undefined,
     creador: filters.creador || undefined,
     estado: filters.estado || undefined,
+    estadoAprobacion: filters.estadoAprobacion || undefined,
     sortBy: sort?.column,
     sortOrder: sort?.order,
   };
