@@ -145,6 +145,7 @@ export interface ResponsableCandidate {
   id: number;
   fullName: string;
   subtitle: string;
+  requiereAprobacion: boolean;
 }
 
 export interface ResponsableCandidateListado {

@@ -15,6 +15,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 
 import PorteriaRoute from "@/components/PorteriaRoute";
+import NonEncargadoVisitaRoute from "@/components/NonEncargadoVisitaRoute";
 
 import SuperAdminRoute from "@/components/SuperAdminRoute";
 import StrictSuperAdminRoute from "@/components/StrictSuperAdminRoute";
@@ -33,6 +34,8 @@ const PorteriaLayout = lazy(() => import("./layouts/PorteriaLayout"));
 const PorteriaIndicadoresPage = lazy(() => import("./pages/PorteriaIndicadoresPage"));
 
 const PorteriaHistorialPage = lazy(() => import("./pages/PorteriaHistorialPage"));
+const EncargadoVisitaPage = lazy(() => import("./pages/EncargadoVisitaPage"));
+const EncargadoVisitaHistorialPage = lazy(() => import("./pages/EncargadoVisitaHistorialPage"));
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 
@@ -189,17 +192,17 @@ export default function App() {
 
           >
 
-            <Route index element={<PorteriaIndicadoresPage />} />
+            <Route index element={user?.role === "encargado_visita" ? <EncargadoVisitaPage /> : <PorteriaIndicadoresPage />} />
 
-            <Route path="historial" element={<PorteriaHistorialPage />} />
+            <Route path="historial" element={user?.role === "encargado_visita" ? <EncargadoVisitaHistorialPage /> : <PorteriaHistorialPage />} />
 
-            <Route path="visitas" element={<VisitasPage />} />
+            <Route path="visitas" element={<NonEncargadoVisitaRoute><VisitasPage /></NonEncargadoVisitaRoute>} />
 
-            <Route path="personas" element={<PersonasPage />} />
+            <Route path="personas" element={<NonEncargadoVisitaRoute><PersonasPage /></NonEncargadoVisitaRoute>} />
 
-            <Route path="motivos-visita" element={<MotivosVisitaPage />} />
+            <Route path="motivos-visita" element={<NonEncargadoVisitaRoute><MotivosVisitaPage /></NonEncargadoVisitaRoute>} />
 
-            <Route path="proveedores" element={<ProveedoresPage />} />
+            <Route path="proveedores" element={<NonEncargadoVisitaRoute><ProveedoresPage /></NonEncargadoVisitaRoute>} />
 
           </Route>
 

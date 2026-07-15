@@ -4,7 +4,7 @@
  */
 import { apiClient } from "./apiClient";
 
-export type UsuarioAdminRol = "super_admin" | "admin_empresa" | "encargado_seguridad" | "encargado_porteria" | "portero";
+export type UsuarioAdminRol = "super_admin" | "admin_empresa" | "encargado_seguridad" | "encargado_porteria" | "encargado_visita" | "portero";
 
 export interface UsuarioAdmin {
   id: number;

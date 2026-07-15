@@ -365,7 +365,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
               onToggle={() => setPorteriaExpanded((current) => !current)}
               showBorder
             >
-              {porteriaNavItems.map((item) => {
+              {(role === "encargado_visita" ? [{ label: "Vista rápida", icon: Shield, path: "/porteria", tab: "indicadores" as PorteriaTab }] : porteriaNavItems).map((item) => {
                 const Icon = item.icon;
                 const isActive = resolvePorteriaTab(location.pathname) === item.tab;
                 return (
@@ -384,7 +384,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
                   </button>
                 );
               })}
-              {porteriaCrudItems.map((item) => {
+              {(role === "encargado_visita" ? [{ label: "Historial", icon: History, path: "/porteria/historial" }] : porteriaCrudItems).map((item) => {
                 const Icon = item.icon;
                 const isActive = isNavPathActive(location.pathname, item.path);
                 return (

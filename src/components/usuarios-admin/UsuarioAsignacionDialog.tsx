@@ -43,6 +43,7 @@ const ROLE_LABEL: Record<UsuarioAdmin["rol"], string> = {
   admin_empresa: "Admin empresa",
   encargado_seguridad: "Encargado de seguridad",
   encargado_porteria: "Encargado de portería",
+  encargado_visita: "Encargado de visita",
   portero: "Portero",
 };
 

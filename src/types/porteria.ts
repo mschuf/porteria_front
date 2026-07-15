@@ -4,7 +4,7 @@
  */
 
 /** Rol de usuario en el sistema. */
-export type PorteriaRole = "super_admin" | "admin_empresa" | "encargado_seguridad" | "encargado_porteria" | "portero";
+export type PorteriaRole = "super_admin" | "admin_empresa" | "encargado_seguridad" | "encargado_porteria" | "encargado_visita" | "portero";
 
 /** Usuario autenticado con datos de sesión y permisos. */
 export interface AuthUser {

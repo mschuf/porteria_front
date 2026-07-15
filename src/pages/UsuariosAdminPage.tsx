@@ -17,6 +17,7 @@ import {
   listarPorteriaAssignmentCandidates,
   obtenerAsignacionUsuarioAdmin,
   type PorteriaAssignmentCandidate,
+  reemplazarSedesUsuarioAdmin,
 } from "@/api/usuariosAdmin";
 import { ApiError } from "@/api/apiClient";
 import { listarSedes, type Sede } from "@/api/sedes";
@@ -118,11 +119,10 @@ export default function UsuariosAdminPage() {
 
   useEffect(() => { void listarPorteriaAssignmentCandidates().then(setAssignmentCandidates).catch(() => setAssignmentCandidates([])); }, []);
   useEffect(() => {
-    if (isCompanyAdmin) return;
     void listarSedes({ limit: 50000, activo: true, sortBy: "nombre", sortOrder: "asc" })
       .then((result) => setAdminSedeCandidates(result.items))
       .catch(() => setAdminSedeCandidates([]));
-  }, [isCompanyAdmin]);
+  }, []);
   const [resetLoading, setResetLoading] = useState(false);
 
   const numericLimit =
@@ -139,7 +139,7 @@ export default function UsuariosAdminPage() {
   );
   const isSecurityRole = form.rol === "portero" || form.rol === "encargado_porteria" || form.rol === "encargado_seguridad";
   const assignmentRequired = !editing && isSecurityRole;
-  const adminSedesRequired = !isCompanyAdmin && !editing && form.rol === "admin_empresa";
+  const adminSedesRequired = !editing && (form.rol === "admin_empresa" || form.rol === "encargado_visita");
   const isCreateFormComplete = !firstMissingCreateField &&
     (!assignmentRequired || Boolean(form.porteriaAssignmentId)) &&
     (!adminSedesRequired || Boolean(form.adminEmpresaId) && form.adminSedeIds.length > 0);
@@ -158,6 +158,8 @@ export default function UsuariosAdminPage() {
 
   const openEditDialog = useCallback(async (usuario: UsuarioAdmin) => {
     let porteriaAssignmentId = "";
+    let adminEmpresaId = "";
+    let adminSedeIds: number[] = [];
     if (usuario.rol === "portero" || usuario.rol === "encargado_porteria" || usuario.rol === "encargado_seguridad") {
       try {
         const [assignment, candidates] = await Promise.all([
@@ -175,6 +177,18 @@ export default function UsuariosAdminPage() {
         porteriaAssignmentId = "";
       }
     }
+    if (usuario.rol === "encargado_visita") {
+      try {
+        const assignment = await obtenerAsignacionUsuarioAdmin(usuario.id);
+        if (assignment.tipo === "sedes") {
+          adminEmpresaId = assignment.empresa ? String(assignment.empresa.id) : "";
+          adminSedeIds = assignment.sedes.map((sede) => sede.id);
+        }
+      } catch {
+        adminEmpresaId = "";
+        adminSedeIds = [];
+      }
+    }
     setEditing(usuario);
     setForm({
       usuario: usuario.usuario,
@@ -184,8 +198,8 @@ export default function UsuariosAdminPage() {
       password: "",
       activo: usuario.activo,
       porteriaAssignmentId,
-      adminEmpresaId: "",
-      adminSedeIds: [],
+      adminEmpresaId,
+      adminSedeIds,
     });
     setDialogOpen(true);
   }, []);
@@ -231,6 +245,9 @@ export default function UsuariosAdminPage() {
           ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, ...(form.rol === "encargado_seguridad" ? {} : { sedeEmpresaPorteriaId: assignment.id }) } } : {}),
         };
         await actualizarUsuarioAdmin(editing.id, payload);
+        if (form.rol === "encargado_visita") {
+          await reemplazarSedesUsuarioAdmin(editing.id, form.adminSedeIds);
+        }
       } else {
         const assignment = assignmentCandidates.find((candidate) => String(candidate.id) === form.porteriaAssignmentId);
         const payload: CrearUsuarioAdminPayload = {
@@ -241,7 +258,7 @@ export default function UsuariosAdminPage() {
           password: form.password,
           activo: form.activo,
           ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, ...(form.rol === "encargado_seguridad" ? {} : { sedeEmpresaPorteriaId: assignment.id }) } } : {}),
-          ...(form.rol === "admin_empresa" ? { sedeIds: form.adminSedeIds } : {}),
+          ...(form.rol === "admin_empresa" || form.rol === "encargado_visita" ? { sedeIds: form.adminSedeIds } : {}),
         };
         await crearUsuarioAdmin(payload);
       }
@@ -468,12 +485,13 @@ export default function UsuariosAdminPage() {
               {role === "super_admin" ? <option value="admin_empresa">Admin empresa</option> : null}
               {canCreateSecurityManager ? <option value="encargado_seguridad">Encargado de seguridad</option> : null}
               {canCreatePorteriaManager ? <option value="encargado_porteria">Encargado de portería</option> : null}
+              {role === "super_admin" || role === "admin_empresa" ? <option value="encargado_visita">Encargado de visita</option> : null}
               <option value="portero">Portero</option>
             </Select>
           </Field>
-          {!editing && !isCompanyAdmin && form.rol === "admin_empresa" ? (
+          {(!editing && form.rol === "admin_empresa") || form.rol === "encargado_visita" ? (
             <div className="space-y-3 rounded-md border p-3">
-              <Field id="usuario-admin-empresa" label="Empresa que administrará" required>
+              <Field id="usuario-admin-empresa" label={form.rol === "encargado_visita" ? "Empresa de sus visitas" : "Empresa que administrará"} required>
                 <Select
                   id="usuario-admin-empresa"
                   value={form.adminEmpresaId}

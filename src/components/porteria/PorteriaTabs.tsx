@@ -5,6 +5,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PorteriaTab } from "@/types/pages/porteria-page.types";
+import { useAuth } from "@/context/AuthContext";
 
 interface PorteriaTabsProps {
   value: PorteriaTab | null;
@@ -23,9 +24,13 @@ const PORTERIA_TABS: Array<{ value: PorteriaTab; label: string }> = [
  * @returns Botonera de tabs.
  */
 export function PorteriaTabs({ value, onChange }: PorteriaTabsProps) {
+  const { role } = useAuth();
+  const tabs = role === "encargado_visita"
+    ? PORTERIA_TABS.filter((tab) => tab.value !== "visita").map((tab) => tab.value === "indicadores" ? { ...tab, label: "Vista rápida" } : tab)
+    : PORTERIA_TABS;
   return (
     <div className="flex w-full shrink-0 rounded-md border bg-card p-1 sm:w-auto">
-      {PORTERIA_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <Button
           key={tab.value}
           type="button"

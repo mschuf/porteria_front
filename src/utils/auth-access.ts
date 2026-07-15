@@ -21,7 +21,7 @@ export function isPorteroRole(role: AuthUser["role"] | null): boolean {
 
 /** Indica si el rol puede acceder al modulo Porteria. */
 export function isPorteriaRole(role: AuthUser["role"] | null): boolean {
-  return isPorteroRole(role) || role === "super_admin" || role === "admin_empresa";
+  return isPorteroRole(role) || role === "encargado_visita" || role === "super_admin" || role === "admin_empresa";
 }
 
 /**
@@ -30,7 +30,7 @@ export function isPorteriaRole(role: AuthUser["role"] | null): boolean {
  * @returns Ruta por defecto para usuarios autenticados.
  */
 export function resolveDefaultAuthenticatedPath(flags: AccessFlags): "/porteria" | "/admin/reporte-porteria" {
-  return isPorteroRole(flags.role) ? "/porteria" : "/admin/reporte-porteria";
+  return isPorteroRole(flags.role) || flags.role === "encargado_visita" ? "/porteria" : "/admin/reporte-porteria";
 }
 
 /**

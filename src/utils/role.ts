@@ -17,6 +17,7 @@ export function roleLabel(role: Role | null): string {
   if (role === "admin_empresa") return "Admin Empresa";
   if (role === "encargado_seguridad") return "Encargado de seguridad";
   if (role === "encargado_porteria") return "Encargado de portería";
+  if (role === "encargado_visita") return "Encargado de visita";
   if (role === "portero") return "Portero";
   return "Usuario";
 }

@@ -42,10 +42,11 @@ export function parseResponsableSelectValue(value: string): number | null {
  * @returns Nombre completo con ubicación GLPI.
  */
 export function buildResponsableCandidateLabel(
-  candidate: Pick<ResponsableCandidate, "fullName" | "subtitle">,
+  candidate: Pick<ResponsableCandidate, "fullName" | "subtitle" | "requiereAprobacion">,
 ): string {
   const subtitle = candidate.subtitle.trim();
-  return subtitle ? `${candidate.fullName} — ${subtitle}` : candidate.fullName;
+  const base = subtitle ? `${candidate.fullName} — ${subtitle}` : candidate.fullName;
+  return candidate.requiereAprobacion ? `${base} · requiere aprobación` : base;
 }
 
 /**

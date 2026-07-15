@@ -276,9 +276,17 @@ export default function VisitasPage() {
     [],
   );
 
+  const motivoSedeId =
+    user?.role === "portero"
+      ? user.sedeId ?? undefined
+      : form.sedeId
+        ? Number(form.sedeId)
+        : undefined;
+
   const loadMotivoSelectOptions = useCallback(
-    (query: string, signal: AbortSignal) => loadMotivoVisitaSelectOptions(query, signal),
-    [],
+    (query: string, signal: AbortSignal) =>
+      loadMotivoVisitaSelectOptions(query, signal, { sedeId: motivoSedeId }),
+    [motivoSedeId],
   );
 
   const resolveMotivoSelectOption = useCallback(
@@ -419,10 +427,21 @@ export default function VisitasPage() {
 
       try {
         const persona = await obtenerPersona(personaId);
+        // El portero tiene la sede fija (solo lectura); para el resto de roles,
+        // al elegir persona se actualiza la sede con la que le corresponde.
+        const nextSedeId =
+          user?.role !== "portero" && persona.sedeId != null
+            ? String(persona.sedeId)
+            : null;
+        if (nextSedeId != null) {
+          setSelectedTarjeta(null);
+        }
         setForm((current) => {
           if (current.personaId !== value) {
             return current;
           }
+
+          const sedeChanged = nextSedeId != null && nextSedeId !== current.sedeId;
 
           return {
             ...current,
@@ -432,6 +451,9 @@ export default function VisitasPage() {
             responsableValue: persona.ultimoResponsable
               ? toResponsableSelectValue(persona.ultimoResponsable)
               : "",
+            sedeId: nextSedeId ?? current.sedeId,
+            credencialNumero: sedeChanged ? "" : current.credencialNumero,
+            tarjetaColor: sedeChanged ? "" : current.tarjetaColor,
           };
         });
       } catch (personaError) {
@@ -442,7 +464,7 @@ export default function VisitasPage() {
         toast.error(message, "Visitas");
       }
     },
-    [editing, toast],
+    [editing, toast, user?.role],
   );
 
   const handlePersonaCreated = useCallback((persona: Persona) => {
@@ -900,12 +922,16 @@ export default function VisitasPage() {
                     value={form.sedeId}
                     onChange={(value) => {
                       if (value !== form.sedeId) setSelectedTarjeta(null);
-                      setForm((current) => ({
-                        ...current,
-                        sedeId: value,
-                        credencialNumero: value === current.sedeId ? current.credencialNumero : "",
-                        tarjetaColor: value === current.sedeId ? current.tarjetaColor : "",
-                      }));
+                      setForm((current) => {
+                        const sedeChanged = value !== current.sedeId;
+                        return {
+                          ...current,
+                          sedeId: value,
+                          motivoVisitaId: sedeChanged ? "" : current.motivoVisitaId,
+                          credencialNumero: sedeChanged ? "" : current.credencialNumero,
+                          tarjetaColor: sedeChanged ? "" : current.tarjetaColor,
+                        };
+                      });
                       setRequiredErrors((current) => ({ ...current, credencialNumero: false }));
                     }}
                     onLoadOptions={loadSedeOptions}

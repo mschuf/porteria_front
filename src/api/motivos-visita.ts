@@ -77,11 +77,11 @@ export async function obtenerMotivoVisita(
 export async function searchMotivoVisitCandidates(
   search = "",
   limit = 20,
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal; sedeId?: number },
 ): Promise<MotivoVisitCandidateListado> {
   return apiClient.get<MotivoVisitCandidateListado>("/motivos-visita/visit-candidates", {
-    ...options,
-    query: { search: search || undefined, limit },
+    signal: options?.signal,
+    query: { search: search || undefined, limit, sedeId: options?.sedeId },
   });
 }
 

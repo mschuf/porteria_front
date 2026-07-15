@@ -75,9 +75,12 @@ export function mapMotivoCandidatesToSelectOptions(
 export async function loadMotivoVisitaSelectOptions(
   query: string,
   signal: AbortSignal,
-  limit = 20,
+  options?: { limit?: number; sedeId?: number },
 ): Promise<SearchableSelectOption[]> {
-  const result = await searchMotivoVisitCandidates(query, limit, { signal });
+  const result = await searchMotivoVisitCandidates(query, options?.limit ?? 20, {
+    signal,
+    sedeId: options?.sedeId,
+  });
   return mapMotivoCandidatesToSelectOptions(result.items);
 }
 
