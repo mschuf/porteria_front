@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { getTarjetaDisplayColor } from "@/lib/tarjeta-color-display";
 
 const PALETTE = [
   { name: "Rojo", value: "#FF0000" },
@@ -48,10 +49,10 @@ export function TarjetaColorSelector({
               type="button"
               aria-label={`Seleccionar color ${color.name}`}
               onClick={() => onChange(color.value)}
-              className={`h-8 w-8 rounded-full border-2 border-border transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+              className={`h-8 w-8 rounded-full border-2 border-black/20 shadow-sm transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/30 ${
                 value.toUpperCase() === color.value ? "ring-2 ring-ring ring-offset-2" : ""
               }`}
-              style={{ backgroundColor: color.value }}
+              style={{ backgroundColor: getTarjetaDisplayColor(color.value) }}
             />
             <span
               role="tooltip"

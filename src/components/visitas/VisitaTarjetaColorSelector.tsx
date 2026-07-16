@@ -7,6 +7,7 @@ import type { VisitaTarjetaCandidate } from "@/api/visitas";
 import type { TarjetaIcono } from "@/api/tarjetas";
 import { Label } from "@/components/ui/label";
 import { TARJETA_ICON_COMPONENTS } from "@/lib/tarjeta-iconos";
+import { getTarjetaContrastColor, getTarjetaDisplayColor } from "@/lib/tarjeta-color-display";
 
 interface VisitaTarjetaColorSelectorProps {
   tarjeta: VisitaTarjetaCandidate | null;
@@ -21,6 +22,7 @@ export function VisitaTarjetaColorSelector({
   const Icon = tarjeta
     ? TARJETA_ICON_COMPONENTS[tarjeta.icono as TarjetaIcono] ?? IdCard
     : IdCard;
+  const displayColor = tarjeta ? getTarjetaDisplayColor(tarjeta.color) : "";
 
   return (
     <div className="space-y-1.5">
@@ -29,17 +31,17 @@ export function VisitaTarjetaColorSelector({
         <div
           className="relative flex w-full items-center gap-3 rounded-xl border p-3 text-left shadow-sm ring-2 ring-offset-2 ring-offset-background"
           style={{
-            borderColor: `${tarjeta.color}99`,
-            background: `linear-gradient(135deg, ${tarjeta.color}26, ${tarjeta.color}0D, transparent)`,
-            boxShadow: `0 0 0 2px ${tarjeta.color}66`,
+            borderColor: `${displayColor}99`,
+            background: `linear-gradient(135deg, ${displayColor}30, ${displayColor}14, transparent)`,
+            boxShadow: `0 0 0 2px ${displayColor}66`,
           }}
         >
           <span
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border"
             style={{
-              borderColor: `${tarjeta.color}80`,
-              backgroundColor: `${tarjeta.color}20`,
-              color: tarjeta.color,
+              borderColor: `${displayColor}CC`,
+              backgroundColor: displayColor,
+              color: getTarjetaContrastColor(tarjeta.color),
             }}
             aria-hidden="true"
           >
@@ -56,8 +58,11 @@ export function VisitaTarjetaColorSelector({
           </span>
 
           <span
-            className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm"
-            style={{ backgroundColor: tarjeta.color }}
+            className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full shadow-sm ring-1 ring-black/15 dark:ring-white/20"
+            style={{
+              backgroundColor: displayColor,
+              color: getTarjetaContrastColor(tarjeta.color),
+            }}
             aria-hidden="true"
           >
             <Check className="h-3 w-3" strokeWidth={3} />
