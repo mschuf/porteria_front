@@ -108,6 +108,7 @@ export function SedesTable({
                   onSortColumnChange={onSortColumnChange}
                 />
               ))}
+              <th className="px-4 py-3 font-semibold">Aprobación</th>
               <th className="px-4 py-3 font-semibold">Estado</th>
               <th className="px-4 py-3 font-semibold">Acciones</th>
             </tr>
@@ -120,6 +121,11 @@ export function SedesTable({
                 <td className="px-4 py-3">{sede.empresaNombre}</td>
                 <td className="px-4 py-3">{sede.direccion ?? "-"}</td>
                 <td className="px-4 py-3 tabular-nums">{sede.telefono ?? "-"}</td>
+                <td className="px-4 py-3">
+                  <Badge variant={sede.visitaRequiereAprobacion ? "info" : "default"}>
+                    {sede.visitaRequiereAprobacion ? "Requerida" : "Automática"}
+                  </Badge>
+                </td>
                 <td className="px-4 py-3">
                   <Badge variant={sede.activo ? "success" : "danger"}>
                     {sede.activo ? "Activo" : "Inactivo"}

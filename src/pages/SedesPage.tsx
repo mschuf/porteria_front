@@ -22,6 +22,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
   ServerSearchableSelect,
   type ServerSearchableSelectHandle,
@@ -42,6 +43,7 @@ interface SedeFormState {
   direccion: string;
   telefono: string;
   activo: boolean;
+  visitaRequiereAprobacion: boolean;
 }
 
 const EMPTY_FORM: SedeFormState = {
@@ -50,6 +52,7 @@ const EMPTY_FORM: SedeFormState = {
   direccion: "",
   telefono: "",
   activo: true,
+  visitaRequiereAprobacion: true,
 };
 
 /** CRUD de sedes con filtros, orden y paginacion. */
@@ -111,6 +114,7 @@ export default function SedesPage() {
       direccion: sede.direccion ?? "",
       telefono: sede.telefono ?? "",
       activo: sede.activo,
+      visitaRequiereAprobacion: sede.visitaRequiereAprobacion,
     });
     setRequiredErrors({ empresaId: false });
     setDialogOpen(true);
@@ -146,6 +150,7 @@ export default function SedesPage() {
         direccion: form.direccion.trim(),
         telefono: form.telefono.trim(),
         activo: form.activo,
+        visitaRequiereAprobacion: form.visitaRequiereAprobacion,
       };
 
       if (editing) {
@@ -357,6 +362,28 @@ export default function SedesPage() {
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
               placeholder="Ej: 021555123"
             />
+          </Field>
+          <Field id="sede-visita-aprobacion" label="Aprobación de visitas">
+            <label
+              className={cn(
+                "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
+                form.visitaRequiereAprobacion
+                  ? "border-primary bg-primary/5"
+                  : "hover:border-primary/40 hover:bg-muted/50",
+              )}
+            >
+              <input
+                id="sede-visita-aprobacion"
+                type="checkbox"
+                className="h-4 w-4 accent-primary"
+                checked={form.visitaRequiereAprobacion}
+                onChange={(e) => setForm({ ...form, visitaRequiereAprobacion: e.target.checked })}
+              />
+              <span className="text-sm font-medium">¿Visita requiere aprobación?</span>
+            </label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Si se desmarca, las visitas de esta sede se aprueban automáticamente al crearse.
+            </p>
           </Field>
           {editing ? (
             <Field id="sede-activo" label="Estado">

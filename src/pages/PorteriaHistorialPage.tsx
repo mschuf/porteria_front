@@ -3,6 +3,7 @@
  * @description Vista de historial de visitas en Porteria.
  */
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "react-router-dom";
 import { Select } from "@/components/ui/select";
 import { PorteriaHistoryFilters } from "@/components/porteria/PorteriaHistoryFilters";
 import { PorteriaHistoryTable } from "@/components/porteria/PorteriaHistoryTable";
@@ -18,6 +19,7 @@ import {
 
 /** @returns Tabla paginada del historial de visitas. */
 export default function PorteriaHistorialPage() {
+  const [searchParams] = useSearchParams();
   const {
     historyRows,
     historyPagination,
@@ -34,7 +36,10 @@ export default function PorteriaHistorialPage() {
     selectRecord,
     clearSelectedRecord,
     refresh,
-  } = usePorteriaHistorial();
+  } = usePorteriaHistorial({
+    entradaFrom: searchParams.get("entradaFrom") ?? "",
+    entradaTo: searchParams.get("entradaTo") ?? "",
+  });
 
   useRegisterPorteriaRefresh(refresh, historyLoading);
 

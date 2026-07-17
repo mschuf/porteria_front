@@ -7,6 +7,18 @@ import type { AuthUser } from "../types/auth";
 /** Flags mínimos para evaluar permisos de módulos. */
 export interface AccessFlags {
   role: AuthUser["role"] | null;
+  sedes: AuthUser["sedes"];
+}
+
+/**
+ * Indica si el usuario accede al módulo de aprobación de visitas.
+ * Un usuario cuyas sedes se aprueban todas automáticamente no tiene nada que revisar.
+ * @param flags - Flags de sesión del usuario.
+ */
+export function canAccessAprobacionVisitas(flags: AccessFlags): boolean {
+  if (flags.role === "super_admin") return true;
+  if (flags.role !== "admin_empresa" && flags.role !== "encargado_visita") return false;
+  return flags.sedes.some((sede) => sede.visitaRequiereAprobacion);
 }
 
 /** Indica si el rol tiene acceso administrativo. */
@@ -29,8 +41,14 @@ export function isPorteriaRole(role: AuthUser["role"] | null): boolean {
  * @param flags - Flags de sesión del usuario.
  * @returns Ruta por defecto para usuarios autenticados.
  */
-export function resolveDefaultAuthenticatedPath(flags: AccessFlags): "/porteria" | "/aprobacion-visitas" | "/admin/reporte-porteria" {
-  if (flags.role === "encargado_visita") return "/aprobacion-visitas";
+export function resolveDefaultAuthenticatedPath(
+  flags: AccessFlags,
+): "/porteria" | "/aprobacion-visitas" | "/porteria/historial" | "/admin/reporte-porteria" {
+  if (flags.role === "encargado_visita") {
+    // Sin aprobación que revisar, /aprobacion-visitas le queda bloqueada y redirigir
+    // ahí produciría un bucle: su otra pantalla es el historial.
+    return canAccessAprobacionVisitas(flags) ? "/aprobacion-visitas" : "/porteria/historial";
+  }
   return isPorteroRole(flags.role) ? "/porteria" : "/admin/reporte-porteria";
 }
 
@@ -42,5 +60,6 @@ export function resolveDefaultAuthenticatedPath(flags: AccessFlags): "/porteria"
 export function accessFlagsFromUser(user: AuthUser | null): AccessFlags {
   return {
     role: user?.role ?? null,
+    sedes: user?.sedes ?? [],
   };
 }

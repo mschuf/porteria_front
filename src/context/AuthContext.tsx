@@ -15,6 +15,8 @@ import type {
 import { clearAuthPublicKeyCache, encryptPassword, loadAuthPublicKey } from "../utils/crypto";
 import { parseExpiresInSeconds } from "../utils/parseExpiresIn";
 import {
+  accessFlagsFromUser,
+  canAccessAprobacionVisitas,
   isAdminRole,
   isPorteriaRole,
 } from "../utils/auth-access";
@@ -177,6 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const role = resolveRole(user);
   const isSuperAdmin = isAdminRole(role);
   const isPorteriaUser = isPorteriaRole(role);
+  const canApproveVisitas = canAccessAprobacionVisitas(accessFlagsFromUser(user));
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -187,12 +190,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isTechnician: isTechnicianRole(role),
       isSuperAdmin,
       isPorteriaUser,
+      canApproveVisitas,
       login,
       logout,
       clearSession,
       refreshSession
     }),
-    [user, role, isBootstrapping, isSuperAdmin, isPorteriaUser, login, logout, clearSession, refreshSession]
+    [user, role, isBootstrapping, isSuperAdmin, isPorteriaUser, canApproveVisitas, login, logout, clearSession, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

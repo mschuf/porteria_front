@@ -166,10 +166,18 @@ export function usePorteriaIndicadores(): UsePorteriaIndicadoresResult {
  * Maneja filtros, orden y paginacion del historial de Porteria.
  * @returns Estado del historial de Porteria.
  */
-export function usePorteriaHistorial(): UsePorteriaHistorialResult {
+export function usePorteriaHistorial(
+  initialFilters: Partial<PorteriaHistoryFilterState> = {},
+): UsePorteriaHistorialResult {
   const [selectedRecord, setSelectedRecord] = useState<PorteriaHistoryRecord | null>(null);
-  const [filters, setFiltersState] = useState(createInitialPorteriaHistoryFilters);
-  const [appliedFilters, setAppliedFilters] = useState(createInitialPorteriaHistoryFilters);
+  const [filters, setFiltersState] = useState<PorteriaHistoryFilterState>(() => ({
+    ...createInitialPorteriaHistoryFilters(),
+    ...initialFilters,
+  }));
+  const [appliedFilters, setAppliedFilters] = useState<PorteriaHistoryFilterState>(() => ({
+    ...createInitialPorteriaHistoryFilters(),
+    ...initialFilters,
+  }));
   const [page, setPageState] = useState(1);
   const [pageLimit, setPageLimitState] = useState<PorteriaPageSize>(PORTERIA_PAGE_SIZE);
   const [sort, setSortState] = useState<PorteriaHistorySortState | null>(null);

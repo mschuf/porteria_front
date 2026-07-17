@@ -16,6 +16,7 @@ import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 
 import PorteriaRoute from "@/components/PorteriaRoute";
 import NonEncargadoVisitaRoute from "@/components/NonEncargadoVisitaRoute";
+import AprobacionVisitasRoute from "@/components/AprobacionVisitasRoute";
 
 import SuperAdminRoute from "@/components/SuperAdminRoute";
 import StrictSuperAdminRoute from "@/components/StrictSuperAdminRoute";
@@ -193,7 +194,7 @@ export default function App() {
 
           >
 
-            <Route index element={user?.role === "encargado_visita" ? <Navigate to="/aprobacion-visitas" replace /> : <PorteriaIndicadoresPage />} />
+            <Route index element={user?.role === "encargado_visita" ? <Navigate to={defaultAuthenticatedPath} replace /> : <PorteriaIndicadoresPage />} />
 
             <Route path="historial" element={user?.role === "encargado_visita" ? <EncargadoVisitaHistorialPage /> : <PorteriaHistorialPage />} />
 
@@ -210,10 +211,12 @@ export default function App() {
           <Route
             path="aprobacion-visitas"
             element={
-              <ProtectedRoute roles={["super_admin", "admin_empresa", "encargado_seguridad", "encargado_porteria", "encargado_visita"]}>
-                <PorteriaRefreshProvider>
-                  <EncargadoVisitaPage />
-                </PorteriaRefreshProvider>
+              <ProtectedRoute roles={["super_admin", "admin_empresa", "encargado_visita"]}>
+                <AprobacionVisitasRoute>
+                  <PorteriaRefreshProvider>
+                    <EncargadoVisitaPage />
+                  </PorteriaRefreshProvider>
+                </AprobacionVisitasRoute>
               </ProtectedRoute>
             }
           />

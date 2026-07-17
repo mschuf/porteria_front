@@ -20,6 +20,8 @@ export interface AuthContextValue {
   isTechnician: boolean;
   isSuperAdmin: boolean;
   isPorteriaUser: boolean;
+  /** Accede al módulo de aprobación de visitas: rol habilitado y alguna sede que la exija. */
+  canApproveVisitas: boolean;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   logout: (options?: LogoutOptions) => Promise<void>;
   clearSession: () => void;

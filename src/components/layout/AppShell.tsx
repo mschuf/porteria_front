@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { resolvePorteriaTab } from "@/lib/porteria-navigation";
 import type { PorteriaTab } from "@/types/pages/porteria-page.types";
+import { accessFlagsFromUser, resolveDefaultAuthenticatedPath } from "@/utils/auth-access";
 import { roleLabel } from "@/utils/role";
 
 interface AppShellProps {
@@ -197,7 +198,7 @@ function NavSubSection({ title, icon: Icon, expanded, onToggle, children }: NavS
 export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const { isAuthenticated, user, role, isSuperAdmin, isPorteriaUser, logout } = useAuth();
+  const { isAuthenticated, user, role, isSuperAdmin, isPorteriaUser, canApproveVisitas, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const onPorteriaRoute = location.pathname.startsWith("/porteria");
@@ -208,7 +209,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
   const onAuditoriaRoute = auditoriaNavItems.some((item) =>
     isNavPathActive(location.pathname, item.path),
   );
-  const homePath = role === "encargado_visita" ? "/aprobacion-visitas" : isPorteriaUser ? "/porteria" : "/admin/reporte-porteria";
+  const homePath = resolveDefaultAuthenticatedPath(accessFlagsFromUser(user));
   const [porteriaExpanded, setPorteriaExpanded] = useState(onPorteriaRoute);
   const [superAdminExpanded, setSuperAdminExpanded] = useState(onSuperAdminRoute);
   const [asignacionesExpanded, setAsignacionesExpanded] = useState(onAsignacionesRoute);
@@ -358,7 +359,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
           </Button>
         </div>
         <nav className="flex-1 space-y-1 p-3">
-          {role && role !== "portero" ? (
+          {canApproveVisitas ? (
             <NavItemButton
               label="Aprobación de visitas"
               icon={ShieldCheck}

@@ -66,31 +66,42 @@ export function PorteriaHistoryFilters({
 
   return (
     <div className="overflow-visible rounded-md border bg-card p-3">
-      <div className="relative pb-0.5">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={filters.search}
-          onChange={(event) => update("search", event.target.value)}
-          placeholder="Buscar visita por visitante, documento, empresa... Para mas opciones, usa los filtros avanzados."
-          className="pl-9 pr-10"
-        />
-        <button
-          type="button"
-          onClick={() => setExpanded((current) => !current)}
-          aria-expanded={expanded}
-          aria-label={expanded ? "Ocultar filtros avanzados" : "Mostrar filtros avanzados"}
-          title={expanded ? "Ocultar filtros" : "Mostrar filtros"}
-          className="absolute right-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <ChevronDown
-            className={cn("h-4 w-4 transition-transform duration-200", expanded && "rotate-180")}
-            aria-hidden="true"
+      <div className="flex items-stretch gap-2 pb-0.5">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={filters.search}
+            onChange={(event) => update("search", event.target.value)}
+            placeholder="Buscar visita por visitante, documento, empresa... Para mas opciones, usa los filtros avanzados."
+            className="pl-9 pr-10"
           />
-        </button>
+          <button
+            type="button"
+            onClick={() => setExpanded((current) => !current)}
+            aria-expanded={expanded}
+            aria-label={expanded ? "Ocultar filtros avanzados" : "Mostrar filtros avanzados"}
+            title={expanded ? "Ocultar filtros" : "Mostrar filtros"}
+            className="absolute right-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ChevronDown
+              className={cn("h-4 w-4 transition-transform duration-200", expanded && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          className="shrink-0 gap-1 self-center"
+          onClick={() => handleApply(filters)}
+        >
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
+          Buscar
+        </Button>
       </div>
 
       {expanded ? (
-        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[auto_repeat(4,minmax(0,1fr))_minmax(0,1.2fr)_auto]">
+        <div className="mt-3 grid grid-cols-1 items-end gap-2 overflow-visible pb-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[auto_repeat(4,minmax(0,1fr))_minmax(0,1.2fr)]">
           <div className="col-span-full grid w-full grid-cols-2 gap-2 sm:col-span-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-wrap xl:col-span-1">
             <label className="flex min-w-0 flex-col gap-1 pb-0.5 text-sm sm:w-[8.75rem] sm:shrink-0">
               <span className="text-muted-foreground">Desde</span>
@@ -196,20 +207,6 @@ export function PorteriaHistoryFilters({
             />
           </label>
 
-          <div className="flex w-fit flex-col items-center justify-end gap-1 justify-self-center pb-0.5">
-            <span className="pointer-events-none invisible text-sm leading-none" aria-hidden="true">
-              &nbsp;
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              className="w-fit shrink-0 gap-1 px-2"
-              onClick={() => handleApply(filters)}
-            >
-              <Search className="h-3.5 w-3.5" aria-hidden="true" />
-              Buscar
-            </Button>
-          </div>
         </div>
       ) : null}
     </div>

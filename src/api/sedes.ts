@@ -12,6 +12,8 @@ export interface Sede {
   direccion: string | null;
   telefono: string | null;
   activo: boolean;
+  /** false: las visitas de la sede se aprueban automaticamente al crearse. */
+  visitaRequiereAprobacion: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +47,7 @@ export interface CrearSedePayload {
   direccion?: string;
   telefono?: string;
   activo?: boolean;
+  visitaRequiereAprobacion?: boolean;
 }
 
 export type ActualizarSedePayload = Partial<CrearSedePayload>;

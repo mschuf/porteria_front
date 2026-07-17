@@ -19,7 +19,14 @@ export interface AuthUser {
   sedeName: string | null;
   empresaName: string | null;
   empresaPorteriaName: string | null;
-  sedes: Array<{ id: number; nombre: string; empresaId: number; empresaNombre: string }>;
+  sedes: Array<{
+    id: number;
+    nombre: string;
+    empresaId: number;
+    empresaNombre: string;
+    /** false: las visitas de la sede se aprueban automáticamente al crearse. */
+    visitaRequiereAprobacion: boolean;
+  }>;
 }
 
 /** Credenciales enviadas al endpoint de login. */
