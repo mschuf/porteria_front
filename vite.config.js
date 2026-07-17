@@ -8,6 +8,8 @@ import { fileURLToPath, URL } from "node:url";
 export default defineConfig({
     plugins: [react()],
     server: {
+        port: 2002,
+        strictPort: true,
         proxy: {
             "/api": {
                 target: "http://localhost:2001",
