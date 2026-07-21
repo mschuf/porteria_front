@@ -90,8 +90,11 @@ export const VisitaTarjetaCombobox = forwardRef<
     )
       .then((nextItems) => {
         if (controller.signal.aborted) return;
-        setItems(nextItems);
-        const firstSelectable = nextItems.findIndex((item) => item.selectable && visitaSedeId);
+        const sedeItems = visitaSedeId
+          ? nextItems.filter((item) => item.sedeId === visitaSedeId)
+          : [];
+        setItems(sedeItems);
+        const firstSelectable = sedeItems.findIndex((item) => item.selectable);
         setHighlightedIndex(firstSelectable);
       })
       .catch(() => {
@@ -210,43 +213,45 @@ export const VisitaTarjetaCombobox = forwardRef<
           style={position}
         >
           <ul id={listboxId} role="listbox" aria-label="Tarjetas">
-            {loading && items.length === 0 ? (
+            {loading ? (
               <li className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Buscando…
               </li>
-            ) : null}
-            {!loading && items.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-muted-foreground">Sin tarjetas coincidentes</li>
-            ) : null}
-            {items.map((item, index) => {
-              const blocked = !item.selectable || !visitaSedeId;
-              return (
-                <li key={item.id} role="presentation">
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={String(item.numero) === value && item.sedeId === visitaSedeId}
-                    aria-disabled={blocked}
-                    disabled={blocked}
-                    className={cn(
-                      "flex w-full items-center justify-between gap-3 rounded-sm px-3 py-2 text-left text-sm",
-                      !blocked && "hover:bg-accent hover:text-accent-foreground",
-                      index === highlightedIndex && !blocked && "bg-accent text-accent-foreground",
-                      blocked && "cursor-not-allowed text-muted-foreground opacity-70",
-                      item.enUso && "line-through",
-                    )}
-                    onMouseEnter={() => { if (!blocked) setHighlightedIndex(index); }}
-                    onClick={() => choose(item)}
-                  >
-                    <span className="min-w-0 truncate font-medium">Nº {item.numero}</span>
-                    <span className="flex shrink-0 items-center gap-2 text-xs">
-                      <span>{item.sedeNombre}</span>
-                      {item.blockedReason ? <span>{BLOCK_LABEL[item.blockedReason]}</span> : null}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
+            ) : selectableIndexes.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-muted-foreground">
+                {debouncedQuery.trim() ? "Sin tarjetas coincidentes" : "No hay tarjetas disponibles"}
+              </li>
+            ) : (
+              items.map((item, index) => {
+                const blocked = !item.selectable || !visitaSedeId;
+                return (
+                  <li key={item.id} role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={String(item.numero) === value && item.sedeId === visitaSedeId}
+                      aria-disabled={blocked}
+                      disabled={blocked}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-3 rounded-sm px-3 py-2 text-left text-sm",
+                        !blocked && "hover:bg-accent hover:text-accent-foreground",
+                        index === highlightedIndex && !blocked && "bg-accent text-accent-foreground",
+                        blocked && "cursor-not-allowed text-muted-foreground opacity-70",
+                        item.enUso && "line-through",
+                      )}
+                      onMouseEnter={() => { if (!blocked) setHighlightedIndex(index); }}
+                      onClick={() => choose(item)}
+                    >
+                      <span className="min-w-0 truncate font-medium">Nº {item.numero}</span>
+                      <span className="flex shrink-0 items-center gap-2 text-xs">
+                        <span>{item.sedeNombre}</span>
+                        {item.blockedReason ? <span>{BLOCK_LABEL[item.blockedReason]}</span> : null}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })
+            )}
           </ul>
         </div>
       ) : null}
