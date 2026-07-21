@@ -288,6 +288,11 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
       onToggle: () => setAuditoriaExpanded((current) => !current),
     },
   ].sort((a, b) => a.label.localeCompare(b.label, "es"));
+  const visiblePorteriaCrudItems = role === "encargado_visita"
+    ? [{ label: "Historial", icon: History, path: "/porteria/historial" }]
+    : role === "portero"
+      ? porteriaCrudItems.filter((item) => item.path !== "/porteria/motivos-visita")
+      : porteriaCrudItems;
 
   return (
     <div className="min-h-screen bg-background">
@@ -393,7 +398,7 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
                   </button>
                 );
               })}
-              {(role === "encargado_visita" ? [{ label: "Historial", icon: History, path: "/porteria/historial" }] : porteriaCrudItems).map((item) => {
+              {visiblePorteriaCrudItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isNavPathActive(location.pathname, item.path);
                 return (
@@ -503,7 +508,14 @@ export function AppShell({ children, theme, onToggleTheme }: AppShellProps) {
         />
       ) : null}
 
-      <main className="container py-5 pb-7 sm:py-7">{children}</main>
+      <main
+        className={cn(
+          "py-5 pb-7 sm:py-7",
+          location.pathname === "/porteria/visitas" ? "w-full px-4" : "container",
+        )}
+      >
+        {children}
+      </main>
     </div>
   );
 }

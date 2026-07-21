@@ -156,6 +156,7 @@ export function PorteriaSeguimientoCards({ visitors }: PorteriaSeguimientoCardsP
           return (
             <article
               key={visitor.id}
+              data-tracking-visitor-card
               className={cn(
                 "relative rounded-xl border p-4 shadow-soft transition-shadow hover:shadow-md",
                 hasIncident ? "overflow-visible" : "overflow-hidden",
@@ -185,6 +186,7 @@ export function PorteriaSeguimientoCards({ visitors }: PorteriaSeguimientoCardsP
                   hasPersonaFoto={visitor.hasPersonaFoto}
                   name={visitor.name}
                   previewMaxSizePx={600}
+                  centerPreviewOnCard
                   className="absolute right-0 top-2 z-10 h-[8.75rem] w-[8.75rem]"
                 />
 

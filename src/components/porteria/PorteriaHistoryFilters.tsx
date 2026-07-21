@@ -170,6 +170,7 @@ export function PorteriaHistoryFilters({
             <Select value={filters.estadoAprobacion} onChange={(event)=>update("estadoAprobacion",event.target.value)}>
               <option value="">Todas</option><option value="pendiente">Pendiente</option>
               <option value="aprobada">Aprobado</option><option value="rechazada">Rechazado</option>
+              <option value="cancelada">Cancelada</option>
             </Select>
           </label>
 

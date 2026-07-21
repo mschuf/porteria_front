@@ -12,6 +12,8 @@ export interface AddToastInput {
   type?: ToastType;
   /** Duración en milisegundos antes de auto-ocultar; omitir para persistir. */
   duration?: number;
+  /** Aplica una animación breve para destacar avisos que requieren atención inmediata. */
+  attention?: boolean;
 }
 
 /** API del contexto de toasts disponible vía hook. */

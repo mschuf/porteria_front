@@ -5,7 +5,7 @@ export interface NotificacionAprobacion {
   id:number;
   grupoDecisionId:number;
   visitaId:number;
-  estadoAprobacion:Exclude<EstadoAprobacion,"pendiente">;
+  estadoAprobacion:Extract<EstadoAprobacion,"aprobada"|"rechazada">;
   motivoRechazo:string|null;
   visitante:string;
   sedeNombre:string;

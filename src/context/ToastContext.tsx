@@ -55,9 +55,9 @@ export function ToastProvider({ children }: ToastProviderProps) {
    * @returns ID generado del toast insertado.
    */
   const addToast = useCallback(
-    ({ title, message, type = "info", duration = 4500 }: AddToastInput): string => {
+    ({ title, message, type = "info", duration = 4500, attention }: AddToastInput): string => {
       const id = buildId();
-      setToasts((prev) => [...prev, { id, title, message, type }]);
+      setToasts((prev) => [...prev, { id, title, message, type, attention }]);
 
       const timeout = setTimeout(() => removeToast(id), duration);
       timeoutMap.current.set(id, timeout);

@@ -8,7 +8,7 @@ import type { VisitaTarjetaColor } from "@/lib/visita-tarjeta-color";
 const VISITA_PHOTO_UPLOAD_TIMEOUT_MS = 180_000;
 
 export type VisitaEstado = "programada" | "activa" | "sin_salida" | "finalizada" | "cancelada";
-export type EstadoAprobacion = "pendiente" | "aprobada" | "rechazada";
+export type EstadoAprobacion = "pendiente" | "aprobada" | "rechazada" | "cancelada";
 
 export type EliminarVisitaResult = { id: number; deleted: true } | { id: number; cancelled: true };
 
@@ -195,6 +195,15 @@ export interface VisitaTarjetaCandidateQuery {
   visitaSedeId?: number;
   excludeVisitaId?: number;
   limit?: number;
+}
+
+/** Comprueba si existe al menos una tarjeta disponible en el alcance indicado. */
+export async function hayTarjetasDisponibles(visitaSedeId?: number): Promise<boolean> {
+  const response = await apiClient.get<{ available: boolean }>("/visitas/tarjetas-disponibles", {
+    showBackdrop: false,
+    query: { visitaSedeId },
+  });
+  return response.available;
 }
 
 /** Busca tarjetas autorizadas y calcula su disponibilidad para una visita. */

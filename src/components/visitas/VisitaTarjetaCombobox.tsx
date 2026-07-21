@@ -179,6 +179,7 @@ export const VisitaTarjetaCombobox = forwardRef<
         aria-expanded={open}
         aria-controls={listboxId}
         aria-autocomplete="list"
+        autoComplete="off"
         value={query}
         placeholder={visitaSedeId ? "Buscar número de tarjeta…" : "Seleccione una sede primero"}
         disabled={disabled || !visitaSedeId}

@@ -10,6 +10,7 @@ import {
   crearVisita,
   eliminarVisita,
   finalizarVisita,
+  hayTarjetasDisponibles,
   listarVisitasActivas,
   requiereCancelacionAlEliminar,
   subirFotoVisita,
@@ -20,7 +21,7 @@ import {
   type VisitaEstado,
   type VisitaTarjetaCandidate,
 } from "@/api/visitas";
-import { obtenerPersona, type Persona } from "@/api/personas";
+import { obtenerPersona, subirFotoPersona, type Persona } from "@/api/personas";
 import { PersonaFormDialog } from "@/components/personas/PersonaFormDialog";
 import { PersonaMrzScannerDialog } from "@/components/personas/PersonaMrzScannerDialog";
 import type { ParsedMrz } from "@/lib/mrz";
@@ -215,6 +216,7 @@ export default function VisitasPage() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [finalizeLoading, setFinalizeLoading] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<File | null>(null);
+  const [selectedPhotoPersona, setSelectedPhotoPersona] = useState<Persona | null>(null);
   const [personaSelectedOption, setPersonaSelectedOption] = useState<SearchableSelectOption | null>(null);
   const [selectedTarjeta, setSelectedTarjeta] = useState<VisitaTarjetaCandidate | null>(null);
   const [requiredErrors, setRequiredErrors] = useState<VisitaRequiredErrors>(EMPTY_REQUIRED_ERRORS);
@@ -222,8 +224,10 @@ export default function VisitasPage() {
   const motivoRef = useRef<ServerSearchableSelectHandle | null>(null);
   const responsableRef = useRef<ServerSearchableSelectHandle | null>(null);
   const credencialRef = useRef<VisitaTarjetaComboboxHandle | null>(null);
+  const personaLoadRequestRef = useRef(0);
   const createVisitNavigationHandledRef = useRef(false);
   const returnToMetricsAfterCreateRef = useRef(false);
+  const createFlowStartingRef = useRef(false);
 
   const numericLimit =
     typeof pagination.limit === "number" ? pagination.limit : PORTERIA_PAGE_SIZE_OPTIONS[0];
@@ -311,8 +315,10 @@ export default function VisitasPage() {
 
   /** Prepara el formulario de creación en blanco sin abrir aún ningún modal. */
   const prepareCreateForm = useCallback(() => {
+    personaLoadRequestRef.current += 1;
     setEditing(null);
     setCapturedPhoto(null);
+    setSelectedPhotoPersona(null);
     setPersonaCreateOpen(false);
     setPersonaSelectedOption(null);
     setPendingMrz(null);
@@ -325,16 +331,38 @@ export default function VisitasPage() {
     });
   }, [user?.sedeId]);
 
-  /** Paso 1: abre el escaneo de cédula antes del modal de visita. */
-  const startCreateFlow = useCallback((returnToMetrics: boolean) => {
-    returnToMetricsAfterCreateRef.current = returnToMetrics;
-    prepareCreateForm();
-    setCedulaScanOpen(true);
-    void refreshVisitasActivas();
-  }, [prepareCreateForm, refreshVisitasActivas]);
+  /** Comprueba que exista al menos una tarjeta libre antes de iniciar la creación. */
+  const startCreateFlow = useCallback(async (returnToMetrics: boolean) => {
+    if (createFlowStartingRef.current) return;
+    createFlowStartingRef.current = true;
+    try {
+      const available = await hayTarjetasDisponibles(user?.sedeId ?? undefined);
+      if (!available) {
+        toast.addToast({
+          title: "Visitas",
+          message: "No hay tarjetas disponibles para registrar una nueva visita.",
+          type: "error",
+          attention: true,
+        });
+        return;
+      }
+
+      returnToMetricsAfterCreateRef.current = returnToMetrics;
+      prepareCreateForm();
+      setCedulaScanOpen(true);
+      void refreshVisitasActivas();
+    } catch (error) {
+      const message = error instanceof ApiError
+        ? error.message
+        : "No se pudo comprobar la disponibilidad de tarjetas.";
+      toast.error(message, "Visitas");
+    } finally {
+      createFlowStartingRef.current = false;
+    }
+  }, [prepareCreateForm, refreshVisitasActivas, toast, user?.sedeId]);
 
   const openCreateDialog = useCallback(() => {
-    startCreateFlow(false);
+    void startCreateFlow(false);
   }, [startCreateFlow]);
 
   useEffect(() => {
@@ -342,7 +370,7 @@ export default function VisitasPage() {
     if (!navigationState?.openCreateVisit || createVisitNavigationHandledRef.current) return;
 
     createVisitNavigationHandledRef.current = true;
-    startCreateFlow(true);
+    void startCreateFlow(true);
     navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
   }, [location.pathname, location.search, location.state, navigate, startCreateFlow]);
 
@@ -350,6 +378,8 @@ export default function VisitasPage() {
     (visita: Visita) => {
       returnToMetricsAfterCreateRef.current = false;
       setEditing(visita);
+      personaLoadRequestRef.current += 1;
+      setSelectedPhotoPersona(null);
       setPersonaCreateOpen(false);
       setPersonaSelectedOption(null);
       setRequiredErrors(EMPTY_REQUIRED_ERRORS);
@@ -408,12 +438,16 @@ export default function VisitasPage() {
 
   const handlePersonaChange = useCallback(
     async (value: string) => {
+      const requestId = ++personaLoadRequestRef.current;
       setForm((current) => ({ ...current, personaId: value }));
       setRequiredErrors((current) => ({ ...current, personaId: false }));
 
       if (editing) {
         return;
       }
+
+      setCapturedPhoto(null);
+      setSelectedPhotoPersona(null);
 
       const personaId = parsePersonaSelectValue(value);
       if (personaId == null) {
@@ -427,6 +461,8 @@ export default function VisitasPage() {
 
       try {
         const persona = await obtenerPersona(personaId);
+        if (personaLoadRequestRef.current !== requestId) return;
+        setSelectedPhotoPersona(persona);
         // El portero tiene la sede fija (solo lectura); para el resto de roles,
         // al elegir persona se actualiza la sede con la que le corresponde.
         const nextSedeId =
@@ -457,6 +493,7 @@ export default function VisitasPage() {
           };
         });
       } catch (personaError) {
+        if (personaLoadRequestRef.current !== requestId) return;
         const message =
           personaError instanceof ApiError
             ? personaError.message
@@ -468,7 +505,10 @@ export default function VisitasPage() {
   );
 
   const handlePersonaCreated = useCallback((persona: Persona) => {
+    personaLoadRequestRef.current += 1;
     const value = toPersonaSelectValue(persona.id);
+    setCapturedPhoto(null);
+    setSelectedPhotoPersona(persona);
     setForm((current) => ({
       ...current,
       personaId: value,
@@ -679,14 +719,19 @@ export default function VisitasPage() {
       } else {
         const visita = await crearVisita(payload);
         if (capturedPhoto) {
-          try {
-            await subirFotoVisita(visita.id, capturedPhoto);
-          } catch (photoError) {
-            const message =
-              photoError instanceof ApiError
-                ? photoError.message
-                : "No se pudo guardar la foto de la visita.";
-            toast.error(`${message} La visita fue creada igualmente.`, "Visitas");
+          const [personaPhotoResult, visitaPhotoResult] = await Promise.allSettled([
+            subirFotoPersona(personaId, capturedPhoto),
+            subirFotoVisita(visita.id, capturedPhoto),
+          ]);
+          const failedTargets = [
+            personaPhotoResult.status === "rejected" ? "la persona" : null,
+            visitaPhotoResult.status === "rejected" ? "la visita" : null,
+          ].filter(Boolean);
+          if (failedTargets.length > 0) {
+            toast.error(
+              `No se pudo guardar la foto en ${failedTargets.join(" y ")}. La visita fue creada igualmente.`,
+              "Visitas",
+            );
           }
         }
         toast.success("Visita creada.", "Visitas");
@@ -752,7 +797,7 @@ export default function VisitasPage() {
   }, [finalizeObservaciones, finalizeVisitaTarget, reload, toast]);
 
   return (
-    <div className="w-full min-w-0 space-y-5 min-[1600px]:w-[80vw] min-[1600px]:ml-[calc(50%_-_40vw)] min-[1600px]:mr-0">
+    <div className="w-full min-w-0 space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="w-full min-w-0 flex-1">
           <VisitasFilters
@@ -775,6 +820,7 @@ export default function VisitasPage() {
       ) : (
         <VisitasTable
           rows={items}
+          showSede={user?.role !== "portero"}
           sortColumn={sort?.column ?? null}
           sortOrder={sort?.order ?? null}
           onSortColumnChange={setSortColumn}
@@ -851,7 +897,9 @@ export default function VisitasPage() {
           setDialogOpen(open);
           if (!open) {
             returnToMetricsAfterCreateRef.current = false;
+            personaLoadRequestRef.current += 1;
             setCapturedPhoto(null);
+            setSelectedPhotoPersona(null);
             setPersonaCreateOpen(false);
             setRequiredErrors(EMPTY_REQUIRED_ERRORS);
           }
@@ -1068,6 +1116,8 @@ export default function VisitasPage() {
 
           {!editing ? (
             <VisitaWebcamCapture
+              persona={selectedPhotoPersona}
+              photoFile={capturedPhoto}
               onCapture={setCapturedPhoto}
               disabled={saving}
             />

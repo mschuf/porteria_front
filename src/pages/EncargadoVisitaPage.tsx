@@ -418,6 +418,14 @@ export default function EncargadoVisitaPage() {
       ) : (
         <>
           <VisitSection
+            title="Por aprobar"
+            visits={pending}
+            onDecide={decide}
+            open={pendingOpen}
+            onOpenChange={setPendingOpen}
+            sectionRef={pendingSectionRef}
+          />
+          <VisitSection
             title="Visitas aprobadas"
             visits={approved}
             onDecide={decide}
@@ -425,14 +433,6 @@ export default function EncargadoVisitaPage() {
             onOpenChange={setApprovedOpen}
             sectionRef={approvedSectionRef}
             highlightStillInside
-          />
-          <VisitSection
-            title="Por aprobar"
-            visits={pending}
-            onDecide={decide}
-            open={pendingOpen}
-            onOpenChange={setPendingOpen}
-            sectionRef={pendingSectionRef}
           />
           <VisitSection
             title="Visitas rechazadas"

@@ -27,7 +27,10 @@ export default function ToastContainer({ toasts, removeToast }: ToastContainerPr
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-3">
       {toasts.map((toast) => (
-        <div key={toast.id} className="pointer-events-auto">
+        <div
+          key={toast.id}
+          className={`pointer-events-auto${toast.attention ? " toast-attention-shake" : ""}`}
+        >
           <ToastView
             title={toast.title}
             message={toast.message}

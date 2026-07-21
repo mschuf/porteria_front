@@ -17,10 +17,10 @@ interface TrackingVisitorPhotoProps {
   name: string;
   className?: string;
   previewMaxSizePx?: number;
+  centerPreviewOnCard?: boolean;
 }
 
 const PREVIEW_MAX_SIZE_PX = 320;
-const PREVIEW_GAP_PX = 12;
 
 /**
  * Muestra la foto de la visita o, en su defecto, la de la persona.
@@ -34,11 +34,12 @@ export function TrackingVisitorPhoto({
   name,
   className,
   previewMaxSizePx = PREVIEW_MAX_SIZE_PX,
+  centerPreviewOnCard = false,
 }: TrackingVisitorPhotoProps) {
   const anchorRef = useRef<HTMLDivElement>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
+  const [previewCenter, setPreviewCenter] = useState({ top: 0, left: 0 });
 
   const hasPhoto = hasVisitaFoto || hasPersonaFoto;
 
@@ -71,48 +72,52 @@ export function TrackingVisitorPhoto({
     };
   }, [hasPersonaFoto, hasPhoto, hasVisitaFoto, personaId, visitaId]);
 
-  const updatePreviewPosition = useCallback(() => {
-    const anchor = anchorRef.current;
-    if (!anchor) return;
+  const updatePreviewCenter = useCallback(() => {
+    const card = centerPreviewOnCard
+      ? anchorRef.current?.closest<HTMLElement>("[data-tracking-visitor-card]")
+      : null;
 
-    const rect = anchor.getBoundingClientRect();
-    setPreviewPosition({
-      top: rect.top + rect.height / 2,
-      left: rect.left - PREVIEW_GAP_PX,
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      setPreviewCenter({
+        top: rect.top + rect.height / 2,
+        left: rect.left + rect.width / 2,
+      });
+      return;
+    }
+
+    setPreviewCenter({
+      top: window.innerHeight / 2,
+      left: window.innerWidth / 2,
     });
-  }, []);
+  }, [centerPreviewOnCard]);
 
   const openPreview = useCallback(() => {
     if (!photoUrl) return;
-    updatePreviewPosition();
+    updatePreviewCenter();
     setPreviewOpen(true);
-  }, [photoUrl, updatePreviewPosition]);
-
-  const closePreview = useCallback(() => {
-    setPreviewOpen(false);
-  }, []);
+  }, [photoUrl, updatePreviewCenter]);
 
   useEffect(() => {
     if (!previewOpen) return;
 
-    const handleReposition = () => updatePreviewPosition();
-    window.addEventListener("scroll", handleReposition, true);
-    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", updatePreviewCenter, true);
+    window.addEventListener("resize", updatePreviewCenter);
 
     return () => {
-      window.removeEventListener("scroll", handleReposition, true);
-      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", updatePreviewCenter, true);
+      window.removeEventListener("resize", updatePreviewCenter);
     };
-  }, [previewOpen, updatePreviewPosition]);
+  }, [previewOpen, updatePreviewCenter]);
 
   return (
     <>
       <div
         ref={anchorRef}
         onMouseEnter={openPreview}
-        onMouseLeave={closePreview}
+        onMouseLeave={() => setPreviewOpen(false)}
         onFocus={openPreview}
-        onBlur={closePreview}
+        onBlur={() => setPreviewOpen(false)}
         tabIndex={photoUrl ? 0 : undefined}
         aria-label={photoUrl ? `Ver foto ampliada de ${name}` : undefined}
         className={cn(
@@ -132,24 +137,18 @@ export function TrackingVisitorPhoto({
 
       {previewOpen && photoUrl
         ? createPortal(
-            <div
-              className="pointer-events-none fixed z-[200] -translate-x-full -translate-y-1/2"
-              style={{
-                top: previewPosition.top,
-                left: previewPosition.left,
-              }}
-            >
-              <div className="overflow-hidden rounded-xl border border-border bg-background shadow-2xl ring-1 ring-black/10 dark:ring-white/10">
-                <img
-                  src={photoUrl}
-                  alt={`Foto ampliada de ${name}`}
-                  className="block object-contain"
-                  style={{
-                    maxHeight: previewMaxSizePx,
-                    maxWidth: previewMaxSizePx,
-                  }}
-                />
-              </div>
+            <div className="pointer-events-none fixed inset-0 z-[200] bg-black/25">
+              <img
+                src={photoUrl}
+                alt={`Foto ampliada de ${name}`}
+                className="fixed -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/20 object-contain shadow-2xl"
+                style={{
+                  top: previewCenter.top,
+                  left: previewCenter.left,
+                  maxHeight: `min(75vh, ${previewMaxSizePx}px)`,
+                  maxWidth: `min(75vw, ${previewMaxSizePx}px)`,
+                }}
+              />
             </div>,
             document.body,
           )

@@ -50,6 +50,7 @@ function PorteriaLayoutContent() {
         <PageHeader
           title="porterIA"
           description="Seguimiento de visitas y control de ingresos."
+          sessionBadgesNearTitle={location.pathname === "/porteria/visitas"}
           actions={
             <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
               {showRefresh ? (

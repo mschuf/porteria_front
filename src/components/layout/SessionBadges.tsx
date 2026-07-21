@@ -39,31 +39,35 @@ function SessionBadge({ label, value, variant }: SessionBadgeProps) {
 export function SessionBadges({ user }: SessionBadgesProps) {
   const isSuperAdmin = user.role === "super_admin";
   const isCompanyAdmin = user.role === "admin_empresa";
+  const isPortero = user.role === "portero";
   const administeredCompanyNames = [
     ...new Set(user.sedes.map((sede) => sede.empresaNombre).filter(Boolean)),
   ];
   const administeredSedeNames = user.sedes.map((sede) => sede.nombre).filter(Boolean);
   const companyValue = user.empresaName ?? (isCompanyAdmin ? administeredCompanyNames.join(", ") : "");
   const sedeValue = user.sedeName ?? (isCompanyAdmin ? administeredSedeNames.join(", ") : "");
+  const porteroLocationValue = [companyValue, sedeValue].filter(Boolean).join(" · ");
 
   return (
     <div className="flex min-w-0 max-w-full flex-wrap items-center gap-1.5" aria-label="Datos del usuario logueado">
-      {companyValue ? (
+      {isPortero && porteroLocationValue ? (
+        <SessionBadge label="Empresa" value={porteroLocationValue} variant="info" />
+      ) : companyValue ? (
         <SessionBadge label="Empresa" value={companyValue} variant="info" />
       ) : isSuperAdmin ? (
         <SessionBadge label="Empresa" value="Todas" variant="info" />
       ) : null}
-      {sedeValue ? (
+      {!isPortero && sedeValue ? (
         <SessionBadge label={isCompanyAdmin ? "Sedes" : "Sede"} value={sedeValue} variant="success" />
       ) : isSuperAdmin ? (
         <SessionBadge label="Sede" value="Todas" variant="success" />
       ) : null}
-      {user.empresaPorteriaName ? (
+      {!isPortero && user.empresaPorteriaName ? (
         <SessionBadge label="Empresa seguridad" value={user.empresaPorteriaName} variant="warning" />
       ) : isSuperAdmin ? (
         <SessionBadge label="Empresa seguridad" value="Todas" variant="warning" />
       ) : null}
-      <SessionBadge label="Rol" value={roleLabel(user.role)} variant="default" />
+      {!isPortero ? <SessionBadge label="Rol" value={roleLabel(user.role)} variant="default" /> : null}
       <SessionBadge label="Nombre" value={user.name} variant="accent" />
     </div>
   );

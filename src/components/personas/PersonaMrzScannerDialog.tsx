@@ -348,11 +348,6 @@ export function PersonaMrzScannerDialog({
   const actions = (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-2">
-        {onSkip ? (
-          <Button type="button" variant="outline" onClick={onSkip} disabled={scanningPhoto}>
-            {skipLabel}
-          </Button>
-        ) : null}
         <Button
           type="button"
           onClick={() =>
@@ -374,6 +369,11 @@ export function PersonaMrzScannerDialog({
               ? "Escaneando…"
               : "Capturar y escanear"}
         </Button>
+        {onSkip ? (
+          <Button type="button" variant="outline" onClick={onSkip} disabled={scanningPhoto}>
+            {skipLabel}
+          </Button>
+        ) : null}
       </div>
       <p className="text-xs text-muted-foreground">
         Intentos OCR: {ocrAttempts}. Si no detecta, probá más luz, menos reflejos y acercar la cédula.

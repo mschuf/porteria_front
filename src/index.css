@@ -143,6 +143,27 @@
     }
   }
 
+  @keyframes toast-attention-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    20%,
+    60% {
+      transform: translateX(-5px);
+    }
+
+    40%,
+    80% {
+      transform: translateX(5px);
+    }
+  }
+
+  .toast-attention-shake {
+    animation: toast-attention-shake 420ms ease-in-out;
+  }
+
   .porteria-blink-alerta {
     animation: porteria-alert-border 1.15s ease-in-out infinite;
     outline-style: solid;
@@ -159,8 +180,13 @@
 
   @media (prefers-reduced-motion: reduce) {
     .porteria-blink-alerta,
-    .porteria-blink-peligro {
+    .porteria-blink-peligro,
+    .toast-attention-shake {
       animation: none;
+    }
+
+    .porteria-blink-alerta,
+    .porteria-blink-peligro {
       outline-width: 3px;
     }
 

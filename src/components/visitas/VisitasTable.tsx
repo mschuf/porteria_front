@@ -17,6 +17,7 @@ import { AprobacionBadge } from "./AprobacionBadge";
 
 interface VisitasTableProps {
   rows: Visita[];
+  showSede?: boolean;
   sortColumn?: VisitaSortColumn | null;
   sortOrder?: VisitaSortOrder | null;
   onSortColumnChange?: (column: VisitaSortColumn) => void;
@@ -126,6 +127,7 @@ function SortableHeader({
 /** Tabla ordenable de visitas con acciones CRUD. */
 export function VisitasTable({
   rows,
+  showSede = true,
   sortColumn,
   sortOrder,
   onSortColumnChange,
@@ -133,6 +135,10 @@ export function VisitasTable({
   onFinalizar,
   onDelete,
 }: VisitasTableProps) {
+  const visibleColumns = showSede
+    ? SORTABLE_COLUMNS
+    : SORTABLE_COLUMNS.filter(({ id }) => id !== "sede");
+
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -148,7 +154,7 @@ export function VisitasTable({
         <table className="w-full min-w-[80rem] border-collapse text-left text-sm">
           <thead className="bg-muted text-xs uppercase tracking-normal text-muted-foreground">
             <tr>
-              {SORTABLE_COLUMNS.map(({ id, label }) => (
+              {visibleColumns.map(({ id, label }) => (
                 <SortableHeader
                   key={id}
                   column={id}
@@ -170,7 +176,7 @@ export function VisitasTable({
                 <td className="px-4 py-3 font-medium">{visita.visitante}</td>
                 <td className="px-4 py-3">{visita.documento}</td>
                 <td className="px-4 py-3">{visita.empresa ?? "—"}</td>
-                <td className="px-4 py-3">{visita.sedeNombre || "—"}</td>
+                {showSede ? <td className="px-4 py-3">{visita.sedeNombre || "—"}</td> : null}
                 <td className="px-4 py-3">{visita.motivo}</td>
                 <td className="px-4 py-3">{visita.responsableNombre}</td>
                 <td className="px-4 py-3">{visita.usuarioCreadorNombre || "—"}</td>

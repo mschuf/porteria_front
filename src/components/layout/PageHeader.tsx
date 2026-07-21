@@ -5,12 +5,14 @@
 import type { ReactNode } from "react";
 import { SessionBadges } from "@/components/layout/SessionBadges";
 import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   eyebrow?: string;
   title: ReactNode;
   description?: string;
   actions?: ReactNode;
+  sessionBadgesNearTitle?: boolean;
 }
 
 /**
@@ -18,11 +20,24 @@ interface PageHeaderProps {
  * @param props - Eyebrow, titulo, descripcion y acciones opcionales (tabs, refresh, etc).
  * @returns Fila de encabezado con titulo a la izquierda y badges/acciones a la derecha.
  */
-export function PageHeader({ eyebrow, title, description, actions }: PageHeaderProps) {
+export function PageHeader({
+  eyebrow,
+  title,
+  description,
+  actions,
+  sessionBadgesNearTitle = false,
+}: PageHeaderProps) {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(16rem,1fr)_minmax(0,2fr)_auto] lg:items-start">
+    <div
+      className={cn(
+        "flex flex-col gap-4 lg:grid lg:items-start",
+        sessionBadgesNearTitle
+          ? "lg:grid-cols-[auto_minmax(0,1fr)_auto]"
+          : "lg:grid-cols-[minmax(16rem,1fr)_minmax(0,2fr)_auto]",
+      )}
+    >
       <div className="min-w-0">
         {eyebrow ? <p className="text-xs text-muted-foreground">{eyebrow}</p> : null}
         <h1 className="text-lg font-semibold">{title}</h1>

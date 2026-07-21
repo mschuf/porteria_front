@@ -12,6 +12,7 @@ export interface Toast {
   title: string;
   message: string;
   type: ToastType;
+  attention?: boolean;
 }
 
 /** Props del componente ToastContainer. */

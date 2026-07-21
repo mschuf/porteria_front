@@ -194,6 +194,7 @@ export function VisitasFilters({ filters, onChange, onApply, onCreateVisit }: Vi
               <option value="pendiente">Pendiente</option>
               <option value="aprobada">Aprobado</option>
               <option value="rechazada">Rechazado</option>
+              <option value="cancelada">Cancelada</option>
             </Select>
           </label>
 
