@@ -16,6 +16,7 @@ import {
 } from "@/api/visitas";
 import { Input } from "@/components/ui/input";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { getTarjetaDisplayColor } from "@/lib/tarjeta-color-display";
 import { cn } from "@/lib/utils";
 
 export interface VisitaTarjetaComboboxHandle {
@@ -25,6 +26,7 @@ export interface VisitaTarjetaComboboxHandle {
 interface VisitaTarjetaComboboxProps {
   id?: string;
   value: string;
+  selectedColor?: string;
   visitaSedeId?: number;
   excludeVisitaId?: number;
   onChange: (candidate: VisitaTarjetaCandidate | null) => void;
@@ -38,12 +40,12 @@ const BLOCK_LABEL = {
   inactive: "Inactiva",
 } as const;
 
-/** Combobox remoto de tarjetas, con opciones ocupadas visibles pero no seleccionables. */
+/** Combobox remoto que muestra solamente las tarjetas disponibles de la sede. */
 export const VisitaTarjetaCombobox = forwardRef<
   VisitaTarjetaComboboxHandle,
   VisitaTarjetaComboboxProps
 >(function VisitaTarjetaCombobox(
-  { id, value, visitaSedeId, excludeVisitaId, onChange, disabled, invalid },
+  { id, value, selectedColor, visitaSedeId, excludeVisitaId, onChange, disabled, invalid },
   ref,
 ) {
   const [open, setOpen] = useState(false);
@@ -91,7 +93,7 @@ export const VisitaTarjetaCombobox = forwardRef<
       .then((nextItems) => {
         if (controller.signal.aborted) return;
         const sedeItems = visitaSedeId
-          ? nextItems.filter((item) => item.sedeId === visitaSedeId)
+          ? nextItems.filter((item) => item.sedeId === visitaSedeId && !item.enUso)
           : [];
         setItems(sedeItems);
         const firstSelectable = sedeItems.findIndex((item) => item.selectable);
@@ -174,7 +176,15 @@ export const VisitaTarjetaCombobox = forwardRef<
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+      {selectedColor && value ? (
+        <span
+          className="pointer-events-none absolute left-3 top-3 h-4 w-4 rounded-full border border-black/20 shadow-sm dark:border-white/30"
+          style={{ backgroundColor: getTarjetaDisplayColor(selectedColor) }}
+          aria-hidden="true"
+        />
+      ) : (
+        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+      )}
       <Input
         ref={inputRef}
         id={id}
@@ -242,7 +252,18 @@ export const VisitaTarjetaCombobox = forwardRef<
                       onMouseEnter={() => { if (!blocked) setHighlightedIndex(index); }}
                       onClick={() => choose(item)}
                     >
-                      <span className="min-w-0 truncate font-medium">Nº {item.numero}</span>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span
+                          className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/20 shadow-sm dark:border-white/30"
+                          style={{ backgroundColor: getTarjetaDisplayColor(item.color) }}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate font-medium">
+                          Nº {item.numero} ({item.areas.length
+                            ? item.areas.map((area) => area.nombre).join(" · ")
+                            : "Sin áreas"})
+                        </span>
+                      </span>
                       <span className="flex shrink-0 items-center gap-2 text-xs">
                         <span>{item.sedeNombre}</span>
                         {item.blockedReason ? <span>{BLOCK_LABEL[item.blockedReason]}</span> : null}

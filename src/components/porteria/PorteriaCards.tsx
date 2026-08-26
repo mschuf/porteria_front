@@ -57,12 +57,10 @@ export function PorteriaCards({ metrics, onIngresosHoyClick }: PorteriaCardsProp
         {metrics.map((metric) => {
           const style = METRIC_STYLES[metric.id] ?? DEFAULT_STYLE;
           const Icon = style.icon;
-          const isAlert = metric.id === "staleCheckout" && Number(metric.value) > 0;
           const isIngresosHoy = metric.id === "day" && Boolean(onIngresosHoyClick);
           const className = cn(
             "relative overflow-hidden rounded-xl border p-4 text-left shadow-soft transition-shadow hover:shadow-md",
             style.cardClassName,
-            isAlert && "porteria-blink-peligro",
             isIngresosHoy &&
               "w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           );

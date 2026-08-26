@@ -12,6 +12,12 @@ import {
   VISITA_TARJETA_COLOR_LABELS,
   type VisitaTarjetaColor,
 } from "@/lib/visita-tarjeta-color";
+import {
+  getDefaultVisitaTableColumnIds,
+  VISITA_TABLE_COLUMNS,
+  type VisitaTableColumnDefinition,
+  type VisitaTableColumnId,
+} from "@/lib/visitas-table-columns";
 import { cn } from "@/lib/utils";
 import { AprobacionBadge } from "./AprobacionBadge";
 
@@ -20,26 +26,12 @@ interface VisitasTableProps {
   showSede?: boolean;
   sortColumn?: VisitaSortColumn | null;
   sortOrder?: VisitaSortOrder | null;
+  visibleColumnIds?: readonly VisitaTableColumnId[];
   onSortColumnChange?: (column: VisitaSortColumn) => void;
   onEdit: (visita: Visita) => void;
   onFinalizar: (visita: Visita) => void;
   onDelete: (visita: Visita) => void;
 }
-
-const SORTABLE_COLUMNS: Array<{ id: VisitaSortColumn; label: string }> = [
-  { id: "id", label: "Visita" },
-  { id: "visitante", label: "Visitante" },
-  { id: "documento", label: "Documento" },
-  { id: "empresa", label: "Empresa" },
-  { id: "sede", label: "Sede" },
-  { id: "motivo", label: "Motivo" },
-  { id: "responsable", label: "Responsable" },
-  { id: "creador", label: "Creado por" },
-  { id: "estado", label: "Estado" },
-  { id: "estadoAprobacion", label: "Aprobación" },
-  { id: "entradaAt", label: "Entrada" },
-  { id: "salidaAt", label: "Salida" },
-];
 
 const TARJETA_SWATCH_CLASS: Record<VisitaTarjetaColor, string> = {
   rojo: "bg-red-500 ring-red-300/60 dark:bg-red-600 dark:ring-red-700/45",
@@ -66,6 +58,15 @@ function formatTime(value: string | null): string {
   });
 }
 
+function TarjetaColorSwatch({ color }: { color: VisitaTarjetaColor }) {
+  return (
+    <span
+      className={cn("h-3.5 w-3.5 shrink-0 rounded-full ring-1", TARJETA_SWATCH_CLASS[color])}
+      aria-hidden
+    />
+  );
+}
+
 function TarjetaColorCell({ color }: { color: VisitaTarjetaColor | null }) {
   if (!isVisitaTarjetaColor(color)) {
     return <span className="text-muted-foreground">—</span>;
@@ -73,10 +74,7 @@ function TarjetaColorCell({ color }: { color: VisitaTarjetaColor | null }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <span
-        className={cn("h-3.5 w-3.5 shrink-0 rounded-full ring-1", TARJETA_SWATCH_CLASS[color])}
-        aria-hidden
-      />
+      <TarjetaColorSwatch color={color} />
       <span>{VISITA_TARJETA_COLOR_LABELS[color]}</span>
     </span>
   );
@@ -124,20 +122,170 @@ function SortableHeader({
   );
 }
 
+function VisitaTableHeader({
+  column,
+  sortColumn,
+  sortOrder,
+  onSortColumnChange,
+}: {
+  column: VisitaTableColumnDefinition;
+  sortColumn?: VisitaSortColumn | null;
+  sortOrder?: VisitaSortOrder | null;
+  onSortColumnChange?: (column: VisitaSortColumn) => void;
+}) {
+  if (!column.sortColumn) {
+    return <th className="px-4 py-3 font-semibold">{column.label}</th>;
+  }
+
+  return (
+    <SortableHeader
+      column={column.sortColumn}
+      label={column.label}
+      sortColumn={sortColumn}
+      sortOrder={sortOrder}
+      onSortColumnChange={onSortColumnChange}
+    />
+  );
+}
+
+function VisitaTableCell({
+  columnId,
+  visita,
+  onEdit,
+  onFinalizar,
+  onDelete,
+}: {
+  columnId: VisitaTableColumnId;
+  visita: Visita;
+  onEdit: (visita: Visita) => void;
+  onFinalizar: (visita: Visita) => void;
+  onDelete: (visita: Visita) => void;
+}) {
+  switch (columnId) {
+    case "id":
+      return <td className="px-4 py-3 tabular-nums">{visita.id}</td>;
+    case "visitante":
+      return <td className="px-4 py-3 font-medium">{visita.visitante}</td>;
+    case "documento":
+      return <td className="px-4 py-3">{visita.documento}</td>;
+    case "empresa":
+      return <td className="px-4 py-3">{visita.empresa ?? "—"}</td>;
+    case "sede":
+      return <td className="px-4 py-3">{visita.sedeNombre || "—"}</td>;
+    case "motivo":
+      return <td className="px-4 py-3">{visita.motivo}</td>;
+    case "responsable":
+      return <td className="px-4 py-3">{visita.responsableNombre}</td>;
+    case "creador":
+      return <td className="px-4 py-3">{visita.usuarioCreadorNombre || "—"}</td>;
+    case "estado":
+      return (
+        <td className="px-4 py-3">
+          <Badge variant={ESTADO_VARIANT[visita.estado]}>
+            {VISITA_ESTADO_LABELS[visita.estado]}
+          </Badge>
+        </td>
+      );
+    case "estadoAprobacion":
+      return (
+        <td className="px-4 py-3">
+          <AprobacionBadge
+            estado={visita.estadoAprobacion}
+            motivoRechazo={visita.motivoRechazo}
+          />
+        </td>
+      );
+    case "entradaAt":
+      return (
+        <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+          {formatTime(visita.entradaAt)}
+        </td>
+      );
+    case "salidaAt":
+      return (
+        <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+          {visita.estado === "activa" ? (
+            <span className="inline-block w-full text-center">-</span>
+          ) : (
+            formatTime(visita.salidaAt)
+          )}
+        </td>
+      );
+    case "credencialNumero":
+      return (
+        <td className="px-4 py-3 tabular-nums">
+          <span className="inline-flex items-center gap-2">
+            {visita.credencialNumero && isVisitaTarjetaColor(visita.tarjetaColor) ? (
+              <TarjetaColorSwatch color={visita.tarjetaColor} />
+            ) : null}
+            <span>{visita.credencialNumero ?? "—"}</span>
+          </span>
+        </td>
+      );
+    case "tarjetaColor":
+      return (
+        <td className="whitespace-nowrap px-4 py-3">
+          <TarjetaColorCell color={visita.tarjetaColor} />
+        </td>
+      );
+    case "acciones":
+      return (
+        <td className="px-4 py-3">
+          <div className="flex flex-nowrap items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Editar"
+              title="Editar"
+              onClick={() => onEdit(visita)}
+              className={cn(actionIconButtonClass, "border-border hover:bg-muted")}
+            >
+              <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+            {visita.estado === "activa" || visita.estado === "sin_salida" ? (
+              <button
+                type="button"
+                aria-label="Finalizar visita"
+                title="Finalizar visita"
+                onClick={() => onFinalizar(visita)}
+                className={cn(actionIconButtonClass, "border-red-300 text-red-700 hover:bg-red-50")}
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            ) : null}
+            {isVisitaEliminable(visita.estado) ? (
+              <button
+                type="button"
+                aria-label={requiereCancelacionAlEliminar(visita.estado) ? "Eliminar visita activa" : "Eliminar"}
+                title={requiereCancelacionAlEliminar(visita.estado) ? "Eliminar visita activa" : "Eliminar"}
+                onClick={() => onDelete(visita)}
+                className={cn(actionIconButtonClass, "border-red-300 text-red-700 hover:bg-red-50")}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        </td>
+      );
+  }
+}
+
 /** Tabla ordenable de visitas con acciones CRUD. */
 export function VisitasTable({
   rows,
   showSede = true,
   sortColumn,
   sortOrder,
+  visibleColumnIds = getDefaultVisitaTableColumnIds(),
   onSortColumnChange,
   onEdit,
   onFinalizar,
   onDelete,
 }: VisitasTableProps) {
-  const visibleColumns = showSede
-    ? SORTABLE_COLUMNS
-    : SORTABLE_COLUMNS.filter(({ id }) => id !== "sede");
+  const selectedColumns = new Set(visibleColumnIds);
+  const availableColumns = showSede
+    ? VISITA_TABLE_COLUMNS
+    : VISITA_TABLE_COLUMNS.filter(({ id }) => id !== "sede");
+  const visibleColumns = availableColumns.filter(({ id }) => selectedColumns.has(id));
 
   if (rows.length === 0) {
     return (
@@ -151,86 +299,33 @@ export function VisitasTable({
   return (
     <div className="w-full min-w-0 overflow-hidden rounded-md border bg-card shadow-soft">
       <div className="w-full min-w-0 overflow-x-auto">
-        <table className="w-full min-w-[80rem] border-collapse text-left text-sm">
+        <table className="w-full min-w-max border-collapse text-left text-sm">
           <thead className="bg-muted text-xs uppercase tracking-normal text-muted-foreground">
             <tr>
-              {visibleColumns.map(({ id, label }) => (
-                <SortableHeader
-                  key={id}
-                  column={id}
-                  label={label}
+              {visibleColumns.map((column) => (
+                <VisitaTableHeader
+                  key={column.id}
+                  column={column}
                   sortColumn={sortColumn}
                   sortOrder={sortOrder}
                   onSortColumnChange={onSortColumnChange}
                 />
               ))}
-              <th className="px-4 py-3 font-semibold">Nº tarjeta</th>
-              <th className="px-4 py-3 font-semibold">Color tarjeta</th>
-              <th className="px-4 py-3 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {rows.map((visita) => (
               <tr key={visita.id} className="hover:bg-muted/40">
-                <td className="px-4 py-3 tabular-nums">{visita.id}</td>
-                <td className="px-4 py-3 font-medium">{visita.visitante}</td>
-                <td className="px-4 py-3">{visita.documento}</td>
-                <td className="px-4 py-3">{visita.empresa ?? "—"}</td>
-                {showSede ? <td className="px-4 py-3">{visita.sedeNombre || "—"}</td> : null}
-                <td className="px-4 py-3">{visita.motivo}</td>
-                <td className="px-4 py-3">{visita.responsableNombre}</td>
-                <td className="px-4 py-3">{visita.usuarioCreadorNombre || "—"}</td>
-                <td className="px-4 py-3">
-                  <Badge variant={ESTADO_VARIANT[visita.estado]}>{VISITA_ESTADO_LABELS[visita.estado]}</Badge>
-                </td>
-                <td className="px-4 py-3"><AprobacionBadge estado={visita.estadoAprobacion} motivoRechazo={visita.motivoRechazo}/></td>
-                <td className="px-4 py-3 whitespace-nowrap tabular-nums">{formatTime(visita.entradaAt)}</td>
-                <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                  {visita.estado === "activa" ? (
-                    <span className="inline-block w-full text-center">-</span>
-                  ) : (
-                    formatTime(visita.salidaAt)
-                  )}
-                </td>
-                <td className="px-4 py-3 tabular-nums">{visita.credencialNumero ?? "—"}</td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <TarjetaColorCell color={visita.tarjetaColor} />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-nowrap items-center gap-1.5">
-                    <button
-                      type="button"
-                      aria-label="Editar"
-                      title="Editar"
-                      onClick={() => onEdit(visita)}
-                      className={cn(actionIconButtonClass, "border-border hover:bg-muted")}
-                    >
-                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>
-                    {visita.estado === "activa" || visita.estado === "sin_salida" ? (
-                      <button
-                        type="button"
-                        aria-label="Finalizar visita"
-                        title="Finalizar visita"
-                        onClick={() => onFinalizar(visita)}
-                        className={cn(actionIconButtonClass, "border-red-300 text-red-700 hover:bg-red-50")}
-                      >
-                        <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    ) : null}
-                    {isVisitaEliminable(visita.estado) ? (
-                      <button
-                        type="button"
-                        aria-label={requiereCancelacionAlEliminar(visita.estado) ? "Eliminar visita activa" : "Eliminar"}
-                        title={requiereCancelacionAlEliminar(visita.estado) ? "Eliminar visita activa" : "Eliminar"}
-                        onClick={() => onDelete(visita)}
-                        className={cn(actionIconButtonClass, "border-red-300 text-red-700 hover:bg-red-50")}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    ) : null}
-                  </div>
-                </td>
+                {visibleColumns.map(({ id }) => (
+                  <VisitaTableCell
+                    key={id}
+                    columnId={id}
+                    visita={visita}
+                    onEdit={onEdit}
+                    onFinalizar={onFinalizar}
+                    onDelete={onDelete}
+                  />
+                ))}
               </tr>
             ))}
           </tbody>

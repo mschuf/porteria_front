@@ -2,8 +2,8 @@
  * @file VisitasPage.tsx
  * @description CRUD de visitas del módulo Portería.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Camera, Columns3, Plus } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   actualizarVisita,
@@ -28,6 +28,7 @@ import type { ParsedMrz } from "@/lib/mrz";
 import { ApiError } from "@/api/apiClient";
 import { VisitasFilters } from "@/components/visitas/VisitasFilters";
 import { VisitasTable } from "@/components/visitas/VisitasTable";
+import { VisitasColumnEditorDialog } from "@/components/visitas/VisitasColumnEditorDialog";
 import { VisitaBarcodeScannerDialog } from "@/components/visitas/VisitaBarcodeScannerDialog";
 import {
   VisitaTarjetaCombobox,
@@ -78,6 +79,12 @@ import {
   type VisitaTarjetaColor,
 } from "@/lib/visita-tarjeta-color";
 import { normalizeCredencialNumero } from "@/lib/visita-credencial";
+import {
+  readVisitaTableColumnPreference,
+  VISITA_TABLE_COLUMNS,
+  writeVisitaTableColumnPreference,
+  type VisitaTableColumnId,
+} from "@/lib/visitas-table-columns";
 import {
   findVisitaActivaDePersona,
   personaEnVisitaActivaMessage,
@@ -200,6 +207,7 @@ export default function VisitasPage() {
   useRegisterPorteriaRefresh(reload, loading);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [columnEditorOpen, setColumnEditorOpen] = useState(false);
   const [cedulaScanOpen, setCedulaScanOpen] = useState(false);
   const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
   const [pendingMrz, setPendingMrz] = useState<ParsedMrz | null>(null);
@@ -220,6 +228,9 @@ export default function VisitasPage() {
   const [personaSelectedOption, setPersonaSelectedOption] = useState<SearchableSelectOption | null>(null);
   const [selectedTarjeta, setSelectedTarjeta] = useState<VisitaTarjetaCandidate | null>(null);
   const [requiredErrors, setRequiredErrors] = useState<VisitaRequiredErrors>(EMPTY_REQUIRED_ERRORS);
+  const [preferredColumnIds, setPreferredColumnIds] = useState<VisitaTableColumnId[]>(() =>
+    readVisitaTableColumnPreference(user?.id),
+  );
   const personaRef = useRef<ServerSearchableSelectHandle | null>(null);
   const motivoRef = useRef<ServerSearchableSelectHandle | null>(null);
   const responsableRef = useRef<ServerSearchableSelectHandle | null>(null);
@@ -228,6 +239,28 @@ export default function VisitasPage() {
   const createVisitNavigationHandledRef = useRef(false);
   const returnToMetricsAfterCreateRef = useRef(false);
   const createFlowStartingRef = useRef(false);
+
+  const showSedeColumn = user?.role !== "portero";
+  const availableColumns = useMemo(
+    () => showSedeColumn
+      ? VISITA_TABLE_COLUMNS
+      : VISITA_TABLE_COLUMNS.filter(({ id }) => id !== "sede"),
+    [showSedeColumn],
+  );
+  const visibleColumnIds = useMemo(() => {
+    const availableIds = new Set(availableColumns.map(({ id }) => id));
+    const visibleIds = preferredColumnIds.filter((id) => availableIds.has(id));
+    return visibleIds.length ? visibleIds : availableColumns.map(({ id }) => id);
+  }, [availableColumns, preferredColumnIds]);
+
+  useEffect(() => {
+    setPreferredColumnIds(readVisitaTableColumnPreference(user?.id));
+  }, [user?.id]);
+
+  const saveColumnPreference = useCallback((columnIds: VisitaTableColumnId[]) => {
+    setPreferredColumnIds(columnIds);
+    writeVisitaTableColumnPreference(user?.id, columnIds);
+  }, [user?.id]);
 
   const numericLimit =
     typeof pagination.limit === "number" ? pagination.limit : PORTERIA_PAGE_SIZE_OPTIONS[0];
@@ -820,7 +853,8 @@ export default function VisitasPage() {
       ) : (
         <VisitasTable
           rows={items}
-          showSede={user?.role !== "portero"}
+          showSede={showSedeColumn}
+          visibleColumnIds={visibleColumnIds}
           sortColumn={sort?.column ?? null}
           sortOrder={sort?.order ?? null}
           onSortColumnChange={setSortColumn}
@@ -863,8 +897,18 @@ export default function VisitasPage() {
               Mostrando {paginationFrom}-{paginationTo} de {pagination.total} visitas
             </p>
           </div>
-          {!showingAll ? (
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setColumnEditorOpen(true)}
+            >
+              <Columns3 className="h-4 w-4" aria-hidden="true" />
+              Editar columnas
+            </Button>
+            {!showingAll ? (
+              <>
               <Button
                 type="button"
                 variant="outline"
@@ -886,10 +930,19 @@ export default function VisitasPage() {
               >
                 Siguiente
               </Button>
-            </div>
-          ) : null}
+              </>
+            ) : null}
+          </div>
         </div>
       ) : null}
+
+      <VisitasColumnEditorDialog
+        open={columnEditorOpen}
+        columns={availableColumns}
+        visibleColumnIds={visibleColumnIds}
+        onOpenChange={setColumnEditorOpen}
+        onSave={saveColumnPreference}
+      />
 
       <Dialog
         open={dialogOpen}
@@ -1061,6 +1114,7 @@ export default function VisitasPage() {
                   ref={credencialRef}
                   id="visita-credencial"
                   value={form.credencialNumero}
+                  selectedColor={selectedTarjeta?.color}
                   visitaSedeId={form.sedeId ? Number(form.sedeId) : undefined}
                   excludeVisitaId={editing?.id}
                   onChange={(candidate) => {

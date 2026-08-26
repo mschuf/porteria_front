@@ -52,7 +52,7 @@ function createEmptyMetricCards(): PorteriaMetricCard[] {
       id: "staleCheckout",
       title: "Sin salidas en el mes",
       value: "0",
-      subtitle: "Requieren marcar salida",
+      subtitle: "",
     },
   ];
 }
@@ -79,7 +79,7 @@ function mapMetricsToCards(
       id: "staleCheckout",
       title: "Sin salidas en el mes",
       value: String(monthData.activeStaleWithoutCheckout),
-      subtitle: "Requieren marcar salida",
+      subtitle: "",
     },
   ];
 }

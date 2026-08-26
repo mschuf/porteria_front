@@ -36,6 +36,11 @@ export function UsuariosAdminFilters({ filters, onChange, onApply, actions }: Us
           <Input
             value={filters.search}
             onChange={(event) => update("search", event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              onApply();
+            }}
             placeholder="Buscar en todos los campos..."
             className="pl-9 pr-10"
           />

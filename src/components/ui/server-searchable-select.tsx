@@ -209,14 +209,21 @@ export const ServerSearchableSelect = forwardRef<ServerSearchableSelectHandle, S
       }
 
       const rect = element.getBoundingClientRect();
+      const viewportPadding = 8;
+      const maxDropdownWidth = Math.max(0, window.innerWidth - viewportPadding * 2);
+      const dropdownWidth = Math.min(rect.width, maxDropdownWidth);
+      const maxDropdownLeft = Math.max(
+        viewportPadding,
+        window.innerWidth - viewportPadding - dropdownWidth,
+      );
       const dropdownMaxHeight = 280;
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       const nextPlacement = spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow ? "top" : "bottom";
       setPlacement(nextPlacement);
       setDropdownPosition({
-        left: rect.left,
-        width: rect.width,
+        left: Math.min(Math.max(rect.left, viewportPadding), maxDropdownLeft),
+        width: dropdownWidth,
         ...(nextPlacement === "bottom"
           ? { top: rect.bottom + 4 }
           : { bottom: window.innerHeight - rect.top + 4 }),
@@ -307,7 +314,7 @@ export const ServerSearchableSelect = forwardRef<ServerSearchableSelectHandle, S
   };
 
   return (
-    <div ref={containerRef} className="relative" onKeyDown={handleKeyDown}>
+    <div ref={containerRef} className="relative min-w-0 w-full" onKeyDown={handleKeyDown}>
       <button
         ref={buttonRef}
         id={id}
@@ -318,7 +325,7 @@ export const ServerSearchableSelect = forwardRef<ServerSearchableSelectHandle, S
         aria-controls={listboxId}
         aria-describedby={ariaDescribedBy}
         className={cn(
-          "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          "flex min-h-10 min-w-0 w-full items-center justify-between gap-2 overflow-hidden rounded-md border border-input bg-background px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 sm:h-10",
           invalid && "border-destructive focus-visible:ring-destructive",
           (!value || !selectedOption?.label) && "text-muted-foreground",
         )}
@@ -330,7 +337,12 @@ export const ServerSearchableSelect = forwardRef<ServerSearchableSelectHandle, S
           setOpen((current) => !current);
         }}
       >
-        <span className="truncate">{selectedOption?.label || placeholder}</span>
+        <span
+          className="min-w-0 flex-1 whitespace-normal break-words sm:truncate"
+          title={selectedOption?.label || undefined}
+        >
+          {selectedOption?.label || placeholder}
+        </span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 opacity-60 transition-transform", open && "rotate-180")} aria-hidden="true" />
       </button>
 
@@ -351,7 +363,7 @@ export const ServerSearchableSelect = forwardRef<ServerSearchableSelectHandle, S
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+              className="h-8 min-w-0 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
               aria-label={searchPlaceholder}
             />
             {loading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin opacity-60" aria-hidden="true" /> : null}
@@ -370,14 +382,19 @@ export const ServerSearchableSelect = forwardRef<ServerSearchableSelectHandle, S
                     role="option"
                     aria-selected={option.value === value}
                     className={cn(
-                      "flex w-full rounded-sm px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                      "flex min-w-0 w-full overflow-hidden rounded-sm px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
                       index === highlightedIndex && "bg-accent text-accent-foreground",
                       option.value === value && "font-medium",
                     )}
                     onMouseEnter={() => setHighlightedIndex(index)}
                     onClick={() => selectOption(option.value)}
                   >
-                    {option.label}
+                    <span
+                      className="min-w-0 flex-1 whitespace-normal break-words leading-snug"
+                      title={option.label}
+                    >
+                      {option.label}
+                    </span>
                   </button>
                 </li>
               ))
