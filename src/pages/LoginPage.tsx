@@ -16,6 +16,38 @@ import { ApiError } from "@/api/apiClient";
 import { accessFlagsFromUser, resolveDefaultAuthenticatedPath } from "@/utils/auth-access";
 
 /**
+ * Extrae `remainingAttempts` del sobre de error de la API (1 a 5).
+ * @param error - Error capturado en el submit de login.
+ * @returns Entero 1-5 o `null` si no aplica.
+ */
+function readRemainingAttempts(error: unknown): number | null {
+  if (!(error instanceof ApiError) || error.details == null || typeof error.details !== "object") {
+    return null;
+  }
+
+  const inner = (error.details as { details?: unknown }).details;
+  if (inner == null || typeof inner !== "object") {
+    return null;
+  }
+
+  const remaining = (inner as { remainingAttempts?: unknown }).remainingAttempts;
+  if (typeof remaining !== "number" || remaining < 1 || remaining > 5) {
+    return null;
+  }
+
+  return remaining;
+}
+
+/**
+ * Indica si el error es un bloqueo por demasiados intentos.
+ * @param error - Error capturado en el submit de login.
+ * @returns `true` si es 429 / `RATE_LIMITED`.
+ */
+function isLoginRateLimited(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 429 || error.code === "RATE_LIMITED");
+}
+
+/**
  * Formulario de login y redirección tras autenticación exitosa.
  * @returns Pantalla de inicio de sesión.
  */
@@ -26,6 +58,7 @@ export default function LoginPage() {
   const [form, setForm] = useState<LoginPayload>({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [revealPassword, setRevealPassword] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
 
   /**
    * Envía credenciales al contexto de auth y redirige al inicio del perfil.
@@ -38,9 +71,16 @@ export default function LoginPage() {
 
     try {
       const response = await login(form);
+      setRemainingAttempts(null);
       toast.success("Inicio de sesión correcto.");
       navigate(resolveDefaultAuthenticatedPath(accessFlagsFromUser(response.user)), { replace: true });
     } catch (error) {
+      if (isLoginRateLimited(error)) {
+        setRemainingAttempts(null);
+      } else {
+        setRemainingAttempts(readRemainingAttempts(error));
+      }
+
       const message =
         error instanceof ApiError || error instanceof Error
           ? error.message
@@ -74,7 +114,10 @@ export default function LoginPage() {
               id="login-username"
               name="username"
               value={form.username}
-              onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
+              onChange={(event) => {
+                setRemainingAttempts(null);
+                setForm((prev) => ({ ...prev, username: event.target.value }));
+              }}
               required
               autoComplete="username"
               placeholder="usuario"
@@ -114,6 +157,17 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Ingresando…" : "Ingresar"}
           </Button>
+
+          {remainingAttempts != null ? (
+            <p
+              className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-center text-sm text-destructive"
+              role="status"
+            >
+              {remainingAttempts === 1
+                ? "Queda 1 intento."
+                : `Quedan ${remainingAttempts} intentos.`}
+            </p>
+          ) : null}
 
           <div className="text-center text-sm">
             <Link
