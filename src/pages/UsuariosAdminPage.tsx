@@ -17,7 +17,6 @@ import {
   listarPorteriaAssignmentCandidates,
   obtenerAsignacionUsuarioAdmin,
   type PorteriaAssignmentCandidate,
-  reemplazarSedesUsuarioAdmin,
 } from "@/api/usuariosAdmin";
 import { ApiError } from "@/api/apiClient";
 import { listarSedes, type Sede } from "@/api/sedes";
@@ -64,6 +63,17 @@ const EMPTY_FORM: UsuarioFormState = {
   adminSedeIds: [],
 };
 
+const PORTERIA_ASSIGNMENT_ROLES = new Set<UsuarioAdminRol>([
+  "portero",
+  "encargado_porteria",
+  "encargado_seguridad",
+]);
+
+const ADMIN_EMPRESA_CHANGEABLE_ROLES = new Set<UsuarioAdminRol>([
+  ...PORTERIA_ASSIGNMENT_ROLES,
+  "encargado_visita",
+]);
+
 type RequiredUsuarioField = "usuario" | "nombre" | "password";
 
 const REQUIRED_CREATE_FIELDS: Array<{ key: RequiredUsuarioField; label: string }> = [
@@ -77,7 +87,6 @@ export default function UsuariosAdminPage() {
   const toast = useToast();
   const { role } = useAuth();
   const isCompanyAdmin = role === "admin_empresa";
-  const canCreateSecurityManager = role === "super_admin";
   const canCreatePorteriaManager = role === "super_admin" || role === "admin_empresa" || role === "encargado_seguridad";
   const [assignmentCandidates, setAssignmentCandidates] = useState<PorteriaAssignmentCandidate[]>([]);
   const [adminSedeCandidates, setAdminSedeCandidates] = useState<Sede[]>([]);
@@ -106,6 +115,11 @@ export default function UsuariosAdminPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [editing, setEditing] = useState<UsuarioAdmin | null>(null);
+  const isAdminManagedRoleEdit = isCompanyAdmin
+    && editing !== null
+    && ADMIN_EMPRESA_CHANGEABLE_ROLES.has(editing.rol);
+  const canSelectSecurityManager = role === "super_admin" || isAdminManagedRoleEdit;
+  const canChangeEditingRole = role === "super_admin" || isAdminManagedRoleEdit;
   const [confirmUsuario, setConfirmUsuario] = useState<UsuarioAdmin | null>(null);
   const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate" | null>(null);
   const [resetUsuario, setResetUsuario] = useState<UsuarioAdmin | null>(null);
@@ -137,9 +151,14 @@ export default function UsuariosAdminPage() {
     () => REQUIRED_CREATE_FIELDS.find((field) => !form[field.key].trim()) ?? null,
     [form],
   );
-  const isSecurityRole = form.rol === "portero" || form.rol === "encargado_porteria" || form.rol === "encargado_seguridad";
-  const assignmentRequired = !editing && isSecurityRole;
-  const adminSedesRequired = !editing && (form.rol === "admin_empresa" || form.rol === "encargado_visita");
+  const isSecurityRole = PORTERIA_ASSIGNMENT_ROLES.has(form.rol);
+  const editingPorteriaRole = editing !== null && PORTERIA_ASSIGNMENT_ROLES.has(editing.rol);
+  const assignmentKindChanged = editing !== null
+    && isSecurityRole
+    && (!editingPorteriaRole
+      || (editing.rol === "encargado_seguridad") !== (form.rol === "encargado_seguridad"));
+  const assignmentRequired = isSecurityRole && (!editing || assignmentKindChanged);
+  const adminSedesRequired = form.rol === "encargado_visita" || (!editing && form.rol === "admin_empresa");
   const isCreateFormComplete = !firstMissingCreateField &&
     (!assignmentRequired || Boolean(form.porteriaAssignmentId)) &&
     (!adminSedesRequired || Boolean(form.adminEmpresaId) && form.adminSedeIds.length > 0);
@@ -243,11 +262,9 @@ export default function UsuariosAdminPage() {
           rol: form.rol,
           activo: form.activo,
           ...(assignment ? { porteriaAssignment: { empresaPorteriaId: assignment.empresaPorteriaId, ...(form.rol === "encargado_seguridad" ? {} : { sedeEmpresaPorteriaId: assignment.id }) } } : {}),
+          ...(form.rol === "encargado_visita" ? { sedeIds: form.adminSedeIds } : {}),
         };
         await actualizarUsuarioAdmin(editing.id, payload);
-        if (form.rol === "encargado_visita") {
-          await reemplazarSedesUsuarioAdmin(editing.id, form.adminSedeIds);
-        }
       } else {
         const assignment = assignmentCandidates.find((candidate) => String(candidate.id) === form.porteriaAssignmentId);
         const payload: CrearUsuarioAdminPayload = {
@@ -479,11 +496,12 @@ export default function UsuariosAdminPage() {
             <Select
               id="usuario-rol"
               value={form.rol}
+              disabled={editing !== null && !canChangeEditingRole}
               onChange={(e) => setForm({ ...form, rol: e.target.value as UsuarioAdminRol, porteriaAssignmentId: "", adminEmpresaId: "", adminSedeIds: [] })}
             >
               {role === "super_admin" ? <option value="super_admin">Super admin</option> : null}
               {role === "super_admin" ? <option value="admin_empresa">Admin empresa</option> : null}
-              {canCreateSecurityManager ? <option value="encargado_seguridad">Encargado de seguridad</option> : null}
+              {canSelectSecurityManager ? <option value="encargado_seguridad">Encargado de seguridad</option> : null}
               {canCreatePorteriaManager ? <option value="encargado_porteria">Encargado de portería</option> : null}
               {role === "super_admin" || role === "admin_empresa" ? <option value="encargado_visita">Encargado de visita</option> : null}
               <option value="portero">Portero</option>
