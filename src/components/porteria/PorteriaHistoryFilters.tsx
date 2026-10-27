@@ -48,7 +48,7 @@ export function PorteriaHistoryFilters({
   onChange,
   onApply,
 }: PorteriaHistoryFiltersProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const update = useCallback(
     (key: keyof PorteriaHistoryFilterState, value: string) => {

@@ -6,7 +6,11 @@
 
  */
 
-import type { EstadoAprobacion, VisitaEstado } from "@/api/visitas";
+import type {
+  EstadoAprobacion,
+  HistorialVisitasExportFormat,
+  VisitaEstado,
+} from "@/api/visitas";
 import type { PorteriaPageSize } from "@/lib/porteria";
 
 
@@ -228,4 +232,6 @@ export interface UsePorteriaHistorialResult {
   selectRecord: (record: PorteriaHistoryRecord) => void;
   clearSelectedRecord: () => void;
   refresh: () => Promise<void>;
+  exporting: HistorialVisitasExportFormat | null;
+  downloadHistory: (format: HistorialVisitasExportFormat) => Promise<void>;
 }

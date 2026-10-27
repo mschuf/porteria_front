@@ -3,6 +3,7 @@
  * @description Vista de historial de visitas en Porteria.
  */
 import { Button } from "@/components/ui/button";
+import { ExcelFileIcon, PdfFileIcon } from "@/components/ui/file-type-icons";
 import { useSearchParams } from "react-router-dom";
 import { Select } from "@/components/ui/select";
 import { PorteriaHistoryFilters } from "@/components/porteria/PorteriaHistoryFilters";
@@ -20,6 +21,8 @@ import {
 /** @returns Tabla paginada del historial de visitas. */
 export default function PorteriaHistorialPage() {
   const [searchParams] = useSearchParams();
+  const initialEntradaFrom = searchParams.get("entradaFrom");
+  const initialEntradaTo = searchParams.get("entradaTo");
   const {
     historyRows,
     historyPagination,
@@ -36,9 +39,11 @@ export default function PorteriaHistorialPage() {
     selectRecord,
     clearSelectedRecord,
     refresh,
+    exporting,
+    downloadHistory,
   } = usePorteriaHistorial({
-    entradaFrom: searchParams.get("entradaFrom") ?? "",
-    entradaTo: searchParams.get("entradaTo") ?? "",
+    ...(initialEntradaFrom ? { entradaFrom: initialEntradaFrom } : {}),
+    ...(initialEntradaTo ? { entradaTo: initialEntradaTo } : {}),
   });
 
   useRegisterPorteriaRefresh(refresh, historyLoading);
@@ -82,6 +87,29 @@ export default function PorteriaHistorialPage() {
           onRowClick={selectRecord}
         />
       )}
+
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={Boolean(exporting) || historyLoading || historyPagination.total === 0}
+          onClick={() => void downloadHistory("pdf")}
+        >
+          <PdfFileIcon className="mr-2 h-4 w-4 shrink-0" />
+          {exporting === "pdf" ? "Generando PDF..." : "Descargar PDF"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={Boolean(exporting) || historyLoading || historyPagination.total === 0}
+          onClick={() => void downloadHistory("xlsx")}
+        >
+          <ExcelFileIcon className="mr-2 h-4 w-4 shrink-0" />
+          {exporting === "xlsx" ? "Generando Excel..." : "Descargar Excel"}
+        </Button>
+      </div>
 
       {historyPagination.total > 0 ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

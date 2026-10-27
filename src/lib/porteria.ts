@@ -385,8 +385,14 @@ export function getHistoryEstadoBadgeVariant(
   return HISTORY_ESTADO_VARIANT[estado];
 }
 
-/** @returns Estado inicial de filtros del historial. */
+/**
+ * @returns Estado inicial de filtros del historial con el mes actual aplicado
+ * (desde el día 1 hasta hoy), igual que el reporte de portería.
+ */
 export function createInitialPorteriaHistoryFilters(): PorteriaHistoryFilterState {
+  const today = getLocalTodayYmd();
+  const firstDay = `${today.slice(0, 7)}-01`;
+
   return {
     search: "",
     visitante: "",
@@ -395,8 +401,8 @@ export function createInitialPorteriaHistoryFilters(): PorteriaHistoryFilterStat
     motivo: "",
     responsable: "",
     estadoAprobacion: "",
-    entradaFrom: "",
-    entradaTo: "",
+    entradaFrom: firstDay,
+    entradaTo: today,
   };
 }
 

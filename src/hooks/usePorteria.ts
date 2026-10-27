@@ -5,11 +5,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/api/apiClient";
 import {
+  descargarHistorialVisitas,
   listarVisitas,
   listarVisitasActivas,
   obtenerMetricasVisitas,
+  type ExportHistorialVisitasQuery,
+  type HistorialVisitasExportFormat,
   type ListarVisitasQuery,
 } from "@/api/visitas";
+import { triggerBrowserDownload } from "@/api/reports";
+import { useToast } from "@/context/ToastContext";
 import {
   createInitialPorteriaHistoryFilters,
   isPorteriaAllPageSize,
@@ -26,7 +31,7 @@ import { resolveMotivoVisitaNombre } from "@/lib/porteria-motivos-visita";
 import { resolveCandidateFullName } from "@/lib/porteria-personas";
 import { resolveProveedorNombre } from "@/lib/porteria-proveedores";
 import { resolveResponsableFullName } from "@/lib/visitas-responsables";
-import { toApiDateFrom, toApiDateTo } from "@/lib/pagination";
+
 import type {
   PorteriaHistoryFilterState,
   PorteriaHistoryRecord,
@@ -84,6 +89,24 @@ function mapMetricsToCards(
   ];
 }
 
+/** Convierte una fecha YYYY-MM-DD al inicio del día en hora local, en ISO. */
+function toHistoryApiDateFrom(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = new Date(`${trimmed}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return parsed.toISOString();
+}
+
+/** Convierte una fecha YYYY-MM-DD al final del día en hora local, en ISO. */
+function toHistoryApiDateTo(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = new Date(`${trimmed}T23:59:59.999`);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return parsed.toISOString();
+}
+
 /** Mapea filtros UI del historial a query params del backend. */
 function toHistoryListParams(
   filters: PorteriaHistoryFilterState,
@@ -101,8 +124,30 @@ function toHistoryListParams(
     motivo: filters.motivo || undefined,
     responsable: filters.responsable || undefined,
     estadoAprobacion: filters.estadoAprobacion || undefined,
-    entradaFrom: toApiDateFrom(filters.entradaFrom),
-    entradaTo: toApiDateTo(filters.entradaTo),
+    entradaFrom: toHistoryApiDateFrom(filters.entradaFrom),
+    entradaTo: toHistoryApiDateTo(filters.entradaTo),
+    sortBy: sort?.column as ListarVisitasQuery["sortBy"],
+    sortOrder: sort?.order,
+  };
+}
+
+/** Mapea los filtros aplicados y el orden del historial a la query de exportación. */
+function toHistoryExportParams(
+  filters: PorteriaHistoryFilterState,
+  sort: PorteriaHistorySortState | null,
+  format: HistorialVisitasExportFormat,
+): ExportHistorialVisitasQuery {
+  return {
+    format,
+    search: filters.search || undefined,
+    visitante: filters.visitante || undefined,
+    documento: filters.documento || undefined,
+    empresa: filters.empresa || undefined,
+    motivo: filters.motivo || undefined,
+    responsable: filters.responsable || undefined,
+    estadoAprobacion: filters.estadoAprobacion || undefined,
+    entradaFrom: toHistoryApiDateFrom(filters.entradaFrom),
+    entradaTo: toHistoryApiDateTo(filters.entradaTo),
     sortBy: sort?.column as ListarVisitasQuery["sortBy"],
     sortOrder: sort?.order,
   };
@@ -169,6 +214,7 @@ export function usePorteriaIndicadores(): UsePorteriaIndicadoresResult {
 export function usePorteriaHistorial(
   initialFilters: Partial<PorteriaHistoryFilterState> = {},
 ): UsePorteriaHistorialResult {
+  const toast = useToast();
   const [selectedRecord, setSelectedRecord] = useState<PorteriaHistoryRecord | null>(null);
   const [filters, setFiltersState] = useState<PorteriaHistoryFilterState>(() => ({
     ...createInitialPorteriaHistoryFilters(),
@@ -186,6 +232,7 @@ export function usePorteriaHistorial(
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
   const [reloadToken, setReloadToken] = useState(0);
+  const [exporting, setExporting] = useState<HistorialVisitasExportFormat | null>(null);
 
   const refresh = useCallback(async () => {
     setReloadToken((value) => value + 1);
@@ -289,6 +336,29 @@ export function usePorteriaHistorial(
     setSelectedRecord(null);
   }
 
+  const downloadHistory = useCallback(
+    async (format: HistorialVisitasExportFormat) => {
+      setExporting(format);
+      try {
+        const { blob, filename } = await descargarHistorialVisitas(
+          toHistoryExportParams(appliedFilters, sort, format),
+        );
+        triggerBrowserDownload(blob, filename);
+        toast.success(
+          format === "pdf" ? "PDF descargado." : "Excel descargado.",
+          "Historial",
+        );
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "No se pudo descargar el historial";
+        toast.error(message, "Historial");
+      } finally {
+        setExporting(null);
+      }
+    },
+    [appliedFilters, sort, toast],
+  );
+
   return {
     historyRows,
     historyPagination: {
@@ -310,5 +380,7 @@ export function usePorteriaHistorial(
     selectRecord,
     clearSelectedRecord,
     refresh,
+    exporting,
+    downloadHistory,
   };
 }

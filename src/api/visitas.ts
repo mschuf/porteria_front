@@ -255,6 +255,22 @@ export async function listarVisitas(query: ListarVisitasQuery = {}): Promise<Vis
   });
 }
 
+export type HistorialVisitasExportFormat = "pdf" | "xlsx";
+
+export interface ExportHistorialVisitasQuery
+  extends Omit<ListarVisitasQuery, "page" | "limit"> {
+  format: HistorialVisitasExportFormat;
+}
+
+/** Descarga el historial filtrado como PDF o Excel. */
+export async function descargarHistorialVisitas(
+  query: ExportHistorialVisitasQuery,
+): Promise<{ blob: Blob; filename: string }> {
+  return apiClient.download("/visitas/export", {
+    query: query as unknown as Record<string, string | number | boolean | undefined | null>,
+  });
+}
+
 /** Obtiene métricas agregadas de visitas para cards de Portería. */
 export async function obtenerMetricasVisitas(query: VisitaMetricsQuery = {}): Promise<VisitaMetrics> {
   return apiClient.get<VisitaMetrics>("/visitas/metrics", {
